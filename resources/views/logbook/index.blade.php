@@ -28,62 +28,27 @@
     @endauth
     
     {{-- Dive Activity --}}
-    <div class="bg-slate-800 rounded-xl p-6 mb-12 shadow">
+<div 
+    class="bg-slate-800 rounded-xl p-6 mb-12 shadow"
+    x-data="{ selectedYear: '{{ $selectedYear }}' }" 
+    x-init="$watch('selectedYear', value => fetchChart(value))"
+>
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
         <h2 class="text-white font-semibold text-lg">📅 Dive Activity</h2>
 
-        {{-- Year Dropdown --}}
-        <form method="GET" action="{{ route('logbook.index') }}">
-            <select name="year" onchange="this.form.submit()"
+        {{-- Year Dropdown (AJAX via Alpine) --}}
+        <select x-model="selectedYear"
                 class="bg-slate-900 text-white border border-slate-600 px-3 py-1 rounded text-sm">
-                @foreach ($availableYears as $year)
-                    <option value="{{ $year }}" @selected($year == $selectedYear)>
-                        {{ $year }}
-                    </option>
-                @endforeach
-            </select>
-        </form>
+            @foreach ($availableYears as $year)
+                <option value="{{ $year }}">{{ $year }}</option>
+            @endforeach
+        </select>
     </div>
 
-    @php
-        use Carbon\Carbon;
-
-        $startDate = Carbon::create($selectedYear, 1, 1)->startOfWeek(Carbon::SUNDAY);
-        $endDate = Carbon::create($selectedYear, 12, 31)->endOfWeek(Carbon::SATURDAY);
-
-        $days = collect();
-        $cursor = $startDate->copy();
-
-        while ($cursor <= $endDate) {
-            $days->push($cursor->copy());
-            $cursor->addDay();
-        }
-
-        $weeks = $days->chunk(7); // Each column is a week
-        $monthLabels = [];
-        $monthsSeen = [];
-
-        foreach ($weeks as $i => $week) {
-            $label = '';
-            foreach ($week as $day) {
-                if ($day->day === 1 && $day->year == $selectedYear) {
-                    $month = $day->format('M');
-                    if (!in_array($month, $monthsSeen)) {
-                        $monthsSeen[] = $month;
-                        $label = $month;
-                        break;
-                    }
-                }
-            }
-            $monthLabels[$i] = $label;
-        }
-
-        $dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    @endphp
-
+    {{-- Dive Activity Chart Container --}}
     <div id="chartContainer">
-    @include('logbook._chart')
-</div>
+        @include('logbook._chart')
+    </div>
 
     {{-- Legend --}}
     <div class="flex items-center gap-2 text-xs text-slate-400 mt-4">
@@ -180,6 +145,14 @@ if (sites.length > 0) {
     const bounds = new mapboxgl.LngLatBounds();
     sites.forEach(site => bounds.extend([site.lng, site.lat]));
     map.fitBounds(bounds, { padding: 50 });
+}
+
+function fetchChart(year) {
+    fetch(`/logbook/chart?year=${year}`)
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('chartContainer').innerHTML = html;
+        });
 }
 </script>
 @endpush

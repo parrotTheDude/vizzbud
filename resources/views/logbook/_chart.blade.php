@@ -8,12 +8,12 @@
 </div>
 
 <div class="flex">
-{{-- Day Labels (aligned using grid) --}}
-<div class="grid grid-rows-7 gap-[2px] text-xs text-slate-400 mr-2">
-    @foreach ($dayLabels as $label)
-        <div class="flex items-center h-full">{{ $label }}</div>
-    @endforeach
-</div>
+    {{-- Day Labels (aligned using grid) --}}
+    <div class="grid grid-rows-7 gap-[2px] text-xs text-slate-400 mr-2">
+        @foreach ($dayLabels as $label)
+            <div class="flex items-center h-full">{{ $label }}</div>
+        @endforeach
+    </div>
 
     {{-- Stretchy Heatmap Grid --}}
     <div class="flex-1">
@@ -31,7 +31,7 @@
                             };
                         @endphp
                         <div class="aspect-square w-full {{ $color }} rounded-sm"
-                            title="{{ $day->format('Y-m-d') }}: {{ $count }} dive{{ $count === 1 ? '' : 's' }}">
+                             title="{{ $day->format('Y-m-d') }}: {{ $count }} dive{{ $count === 1 ? '' : 's' }}">
                         </div>
                     @endforeach
                 </div>

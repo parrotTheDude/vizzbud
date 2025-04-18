@@ -6,36 +6,39 @@ use App\Models\UserDiveLog;
 use App\Models\DiveSite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class UserDiveLogController extends Controller
 {
     public function index(Request $request)
     {
         $userId = auth()->id();
-    
-        // All logs (for stats and table)
+
+        // All logs for stats + table
         $logs = UserDiveLog::with('site')
             ->where('user_id', $userId)
             ->latest('dive_date')
             ->get();
-    
-        // 🔍 Filter just for chart
+
+        // Selected year for the chart
         $selectedYear = $request->input('year', now()->year);
-        $chartLogs = $logs->filter(function ($log) use ($selectedYear) {
-            return \Carbon\Carbon::parse($log->dive_date)->year == $selectedYear;
-        });
-    
-        // 📊 Build daily counts for chart year
+
+        // Filter logs for the selected year (chart only)
+        $chartLogs = $logs->filter(fn($log) =>
+            Carbon::parse($log->dive_date)->year == $selectedYear
+        );
+
+        // Daily counts for the chart
         $dailyDiveCounts = $chartLogs->groupBy(function ($log) {
-            return \Carbon\Carbon::parse($log->dive_date)->format('Y-m-d');
+            return Carbon::parse($log->dive_date)->format('Y-m-d');
         })->map->count();
-    
-        // 📆 Available years from logs
+
+        // Available years for dropdown
         $availableYears = $logs->pluck('dive_date')->map(function ($date) {
-            return \Carbon\Carbon::parse($date)->year;
+            return Carbon::parse($date)->year;
         })->unique()->sortDesc()->values();
-    
-        // 🧠 Stats (all years)
+
+        // Dive stats across ALL years
         $totalDives = $logs->count();
         $totalMinutes = $logs->sum('duration');
         $totalHours = floor($totalMinutes / 60);
@@ -44,26 +47,58 @@ class UserDiveLogController extends Controller
         $longestDive = $logs->max('duration');
         $averageDepth = round($logs->avg('depth'), 1);
         $averageDuration = round($logs->avg('duration'));
-    
+
         $mostDivedSiteId = $logs->groupBy('dive_site_id')
             ->map(fn($group) => $group->count())
             ->sortDesc()
             ->keys()
             ->first();
-        $siteName = optional(\App\Models\DiveSite::find($mostDivedSiteId))->name ?? 'N/A';
-    
-        // 🌍 For map
+
+        $siteName = optional(DiveSite::find($mostDivedSiteId))->name ?? 'N/A';
+
+        // Dive site markers for map
         $siteCoords = $logs->pluck('site')->filter()->unique('id')->map(fn($site) => [
             'name' => $site->name,
             'lat' => $site->lat,
             'lng' => $site->lng,
         ])->values();
-    
+
+        // --- Chart layout prep (same as chart() method) ---
+        $startDate = Carbon::create($selectedYear, 1, 1)->startOfWeek(Carbon::SUNDAY);
+        $endDate = Carbon::create($selectedYear, 12, 31)->endOfWeek(Carbon::SATURDAY);
+
+        $days = collect();
+        for ($cursor = $startDate->copy(); $cursor <= $endDate; $cursor->addDay()) {
+            $days->push($cursor->copy());
+        }
+
+        $weeks = $days->chunk(7);
+        $monthLabels = [];
+        $monthsSeen = [];
+
+        foreach ($weeks as $i => $week) {
+            $label = '';
+            foreach ($week as $day) {
+                if ($day->day === 1 && $day->year == $selectedYear) {
+                    $month = $day->format('M');
+                    if (!in_array($month, $monthsSeen)) {
+                        $monthsSeen[] = $month;
+                        $label = $month;
+                        break;
+                    }
+                }
+            }
+            $monthLabels[$i] = $label;
+        }
+
+        $dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
         return view('logbook.index', compact(
             'logs', 'totalDives', 'totalHours', 'remainingMinutes',
             'deepestDive', 'longestDive', 'averageDepth', 'averageDuration',
             'siteName', 'dailyDiveCounts', 'siteCoords',
-            'availableYears', 'selectedYear'
+            'availableYears', 'selectedYear',
+            'monthLabels', 'dayLabels', 'weeks'
         ));
     }
 
@@ -100,51 +135,51 @@ class UserDiveLogController extends Controller
     }
 
     public function chart(Request $request)
-{
-    $userId = auth()->id();
-    $selectedYear = $request->input('year', now()->year);
+    {
+        $selectedYear = $request->input('year', now()->year);
+        $userId = auth()->id();
 
-    $logs = UserDiveLog::where('user_id', $userId)->get();
+        $logs = UserDiveLog::where('user_id', $userId)->get();
 
-    $chartLogs = $logs->filter(function ($log) use ($selectedYear) {
-        return \Carbon\Carbon::parse($log->dive_date)->year == $selectedYear;
-    });
+        $chartLogs = $logs->filter(fn($log) =>
+            Carbon::parse($log->dive_date)->year == $selectedYear
+        );
 
-    $dailyDiveCounts = $chartLogs->groupBy(function ($log) {
-        return \Carbon\Carbon::parse($log->dive_date)->format('Y-m-d');
-    })->map->count();
+        $dailyDiveCounts = $chartLogs->groupBy(function ($log) {
+            return Carbon::parse($log->dive_date)->format('Y-m-d');
+        })->map->count();
 
-    $startDate = Carbon::create($selectedYear, 1, 1)->startOfWeek(Carbon::SUNDAY);
-    $endDate = Carbon::create($selectedYear, 12, 31)->endOfWeek(Carbon::SATURDAY);
+        $startDate = Carbon::create($selectedYear, 1, 1)->startOfWeek(Carbon::SUNDAY);
+        $endDate = Carbon::create($selectedYear, 12, 31)->endOfWeek(Carbon::SATURDAY);
 
-    $days = collect();
-    $cursor = $startDate->copy();
-    while ($cursor <= $endDate) {
-        $days->push($cursor->copy());
-        $cursor->addDay();
-    }
+        $days = collect();
+        for ($cursor = $startDate->copy(); $cursor <= $endDate; $cursor->addDay()) {
+            $days->push($cursor->copy());
+        }
 
-    $weeks = $days->chunk(7);
+        $weeks = $days->chunk(7);
+        $monthLabels = [];
+        $monthsSeen = [];
 
-    $monthLabels = [];
-    $monthsSeen = [];
-    foreach ($weeks as $i => $week) {
-        $label = '';
-        foreach ($week as $day) {
-            if ($day->day === 1 && $day->year == $selectedYear) {
-                $month = $day->format('M');
-                if (!in_array($month, $monthsSeen)) {
-                    $monthsSeen[] = $month;
-                    $label = $month;
-                    break;
+        foreach ($weeks as $i => $week) {
+            $label = '';
+            foreach ($week as $day) {
+                if ($day->day === 1 && $day->year == $selectedYear) {
+                    $month = $day->format('M');
+                    if (!in_array($month, $monthsSeen)) {
+                        $monthsSeen[] = $month;
+                        $label = $month;
+                        break;
+                    }
                 }
             }
+            $monthLabels[$i] = $label;
         }
-        $monthLabels[$i] = $label;
+
+        $dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+        return view('logbook._chart', compact(
+            'monthLabels', 'dayLabels', 'weeks', 'dailyDiveCounts'
+        ))->render();
     }
-
-    $dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-    return view('logbook._chart', compact('monthLabels', 'dayLabels', 'weeks', 'dailyDiveCounts'))->render();
-}
 }
