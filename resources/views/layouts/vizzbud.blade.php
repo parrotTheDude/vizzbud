@@ -30,10 +30,25 @@
         </a>
 
         <!-- Navigation Links -->
-        <nav class="space-x-6 text-sm font-medium">
+        <nav class="space-x-6 text-sm font-medium flex items-center">
             <a href="{{ route('dive-sites.index') }}" class="text-white hover:text-cyan-400 transition">Site Map</a>
             <a href="{{ route('logbook.index') }}" class="text-white hover:text-cyan-400 transition">Dive Log</a>
             <a href="#" class="text-white hover:text-cyan-400 transition">About</a>
+
+            @auth
+                <!-- Logged-in user: Logout button -->
+                <form method="POST" action="{{ route('logout') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="ml-4 text-sm text-cyan-400 hover:underline">
+                        Logout
+                    </button>
+                </form>
+            @else
+                <!-- Guest: Login link -->
+                <a href="{{ route('login') }}" class="ml-4 text-sm text-cyan-400 hover:underline">
+                    Login
+                </a>
+            @endauth
         </nav>
     </div>
 </header>

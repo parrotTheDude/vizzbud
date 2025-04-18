@@ -12,4 +12,9 @@ class ConditionReport extends Model
         'comment',
         'reported_at',
     ];
+
+    public function site()
+    {
+        return $this->belongsTo(DiveSite::class, 'dive_site_id');
+    }
 }

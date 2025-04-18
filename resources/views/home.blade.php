@@ -99,3 +99,58 @@
 </section>
 
 @endsection
+@if ($featured && $featured->lat && $featured->lng)
+@push('scripts')
+<script>
+window.addEventListener('load', function () {
+    mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN') }}';
+
+    const map = new mapboxgl.Map({
+        container: 'featured-map',
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [{{ $featured->lng }}, {{ $featured->lat }}],
+        zoom: 13,
+        interactive: false
+    });
+
+    const featuredGeoJSON = {
+        type: 'FeatureCollection',
+        features: [{
+            type: 'Feature',
+            properties: {
+                waveHeight: {{ data_get($featured->latestCondition->data, 'hours.0.waveHeight.noaa', 'null') }},
+            },
+            geometry: {
+                type: 'Point',
+                coordinates: [{{ $featured->lng }}, {{ $featured->lat }}]
+            }
+        }]
+    };
+
+    map.on('load', () => {
+        map.addSource('featured-site', {
+            type: 'geojson',
+            data: featuredGeoJSON
+        });
+
+        map.addLayer({
+            id: 'featured-pin',
+            type: 'circle',
+            source: 'featured-site',
+            paint: {
+                'circle-radius': 10,
+                'circle-color': [
+                    'case',
+                    ['<', ['get', 'waveHeight'], 1], '#00ff88',
+                    ['<', ['get', 'waveHeight'], 2], '#ffcc00',
+                    '#ff4444'
+                ],
+                'circle-stroke-width': 2,
+                'circle-stroke-color': '#ffffff'
+            }
+        });
+    });
+});
+</script>
+@endpush
+@endif
