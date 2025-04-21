@@ -25,8 +25,11 @@
     <header class="bg-slate-900 border-b border-slate-800 shadow-md">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <!-- Logo -->
-        <a href="{{ route('home') }}" class="text-2xl font-bold tracking-tight text-white hover:text-cyan-400 transition">
-            Vizzbud
+        <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
+            <img src="{{ asset('vizzbudLogo.png') }}" alt="Vizzbud Logo" class="w-8 h-8 transition-transform group-hover:scale-105">
+            <span class="text-2xl font-bold tracking-tight text-white group-hover:text-cyan-400 transition">
+                Vizzbud
+            </span>
         </a>
 
         <!-- Navigation Links -->

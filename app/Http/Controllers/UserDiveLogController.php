@@ -14,11 +14,17 @@ class UserDiveLogController extends Controller
     {
         $userId = auth()->id();
 
-        // All logs for stats + table
         $logs = UserDiveLog::with('site')
             ->where('user_id', $userId)
-            ->latest('dive_date')
-            ->get();
+            ->orderByDesc('dive_date')
+            ->get()
+            ->values();
+        
+        $totalDives = $logs->count();
+        
+        $logs->each(function ($log, $index) use ($totalDives) {
+            $log->dive_number = $totalDives - $index;
+        });
 
         // Selected year for the chart
         $selectedYear = $request->input('year', now()->year);
@@ -47,6 +53,7 @@ class UserDiveLogController extends Controller
         $longestDive = $logs->max('duration');
         $averageDepth = round($logs->avg('depth'), 1);
         $averageDuration = round($logs->avg('duration'));
+        $recentDives = $logs->take(3); // Already sorted latest first
 
         $mostDivedSiteId = $logs->groupBy('dive_site_id')
             ->map(fn($group) => $group->count())
@@ -62,6 +69,8 @@ class UserDiveLogController extends Controller
             'lat' => $site->lat,
             'lng' => $site->lng,
         ])->values();
+
+        $uniqueSitesVisited = $logs->pluck('dive_site_id')->filter()->unique()->count();
 
         // --- Chart layout prep (same as chart() method) ---
         $startDate = Carbon::create($selectedYear, 1, 1)->startOfWeek(Carbon::SUNDAY);
@@ -94,45 +103,58 @@ class UserDiveLogController extends Controller
         $dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
         return view('logbook.index', compact(
-            'logs', 'totalDives', 'totalHours', 'remainingMinutes',
+            'logs', 'recentDives', 'totalDives', 'totalHours', 'remainingMinutes',
             'deepestDive', 'longestDive', 'averageDepth', 'averageDuration',
             'siteName', 'dailyDiveCounts', 'siteCoords',
             'availableYears', 'selectedYear',
-            'monthLabels', 'dayLabels', 'weeks'
+            'monthLabels', 'dayLabels', 'weeks',
+            'uniqueSitesVisited'
         ));
     }
 
     public function create()
     {
         $sites = DiveSite::orderBy('name')->get();
-        return view('logbook.create', compact('sites'));
+        $siteOptions = $sites->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'name' => $s->name,
+                'lat' => $s->lat,
+                'lng' => $s->lng,
+            ];
+        });
+        return view('logbook.create', compact('sites', 'siteOptions'));
     }
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'dive_site_id' => 'nullable|exists:dive_sites,id',
-            'dive_date' => 'required|date',
-            'depth' => 'nullable|numeric|min:0',
-            'duration' => 'nullable|integer|min:0',
-            'buddy' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-            'air_start' => 'nullable|numeric|min:0',
-            'air_end' => 'nullable|numeric|min:0',
-            'temperature' => 'nullable|numeric',
-            'suit_type' => 'nullable|string|max:100',
-            'tank_type' => 'nullable|string|max:100',
-            'weight_used' => 'nullable|string|max:100',
-            'visibility' => 'nullable|numeric|min:0',
-            'rating' => 'nullable|integer|min:1|max:5',
-        ]);
+{
+    $validated = $request->validate([
+        'dive_site_id' => 'nullable|exists:dive_sites,id',
+        'dive_date' => 'required|date',
+        'depth' => 'required|numeric|min:0',
+        'duration' => 'required|integer|min:0',
+        'buddy' => 'nullable|string|max:255',
+        'notes' => 'nullable|string',
+        'air_start' => 'nullable|numeric|min:0',
+        'air_end' => 'nullable|numeric|min:0',
+        'temperature' => 'nullable|numeric',
+        'suit_type' => 'nullable|string|max:100',
+        'tank_type' => 'nullable|string|max:100',
+        'weight_used' => 'nullable|string|max:100',
+        'visibility' => 'nullable|numeric|min:0',
+        'rating' => 'nullable|integer|min:1|max:5',
+    ]);
 
-        $validated['user_id'] = auth()->id();
+    // Force time to now even if user only picked date
+    $date = Carbon::parse($validated['dive_date'])->setTimeFrom(Carbon::now());
+    $validated['dive_date'] = $date;
 
-        UserDiveLog::create($validated);
+    $validated['user_id'] = auth()->id();
 
-        return redirect()->route('logbook.index')->with('success', 'Dive logged!');
-    }
+    UserDiveLog::create($validated);
+
+    return redirect()->route('logbook.index')->with('success', 'Dive logged!');
+}
 
     public function chart(Request $request)
     {
@@ -181,5 +203,53 @@ class UserDiveLogController extends Controller
         return view('logbook._chart', compact(
             'monthLabels', 'dayLabels', 'weeks', 'dailyDiveCounts'
         ))->render();
+    }
+
+    public function table(Request $request)
+    {
+        $userId = auth()->id();
+
+        $query = UserDiveLog::with('site')
+            ->where('user_id', $userId)
+            ->latest('dive_date');
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('site', fn($site) => $site->where('name', 'like', "%{$search}%"))
+                ->orWhere('notes', 'like', "%{$search}%")
+                ->orWhere('depth', $search)
+                ->orWhere('duration', $search);
+            });
+        }
+
+        $logs = $query->paginate(20)->withQueryString();
+
+        return view('logbook._table', compact('logs'));
+    }
+
+    public function show($id)
+{
+    $log = UserDiveLog::with('site')->where('user_id', auth()->id())->findOrFail($id);
+
+    $sortedLogs = UserDiveLog::where('user_id', auth()->id())
+        ->orderByDesc('dive_date')
+        ->pluck('id')
+        ->toArray();
+
+    $index = array_search($log->id, $sortedLogs);
+    $diveNumber = $index + 1;
+
+    $prevId = $sortedLogs[$index + 1] ?? null;
+    $nextId = $sortedLogs[$index - 1] ?? null;
+
+    return view('logbook.show', compact('log', 'diveNumber', 'prevId', 'nextId'));
+}
+
+    protected function getSortedDiveIds(): array
+    {
+        return UserDiveLog::where('user_id', auth()->id())
+            ->orderBy('dive_date', 'desc')
+            ->pluck('id')
+            ->toArray();
     }
 }

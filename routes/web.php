@@ -34,6 +34,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/logbook/create', [UserDiveLogController::class, 'create'])->name('logbook.create');
     Route::post('/logbook', [UserDiveLogController::class, 'store'])->name('logbook.store');
     Route::get('/logbook/chart', [UserDiveLogController::class, 'chart'])->name('logbook.chart');
+    Route::get('/logbook/table', [UserDiveLogController::class, 'table'])->name('logbook.table');
+    Route::get('/logbook/{log}', [UserDiveLogController::class, 'show'])->name('logbook.show');
 });
 
 require __DIR__.'/auth.php';
