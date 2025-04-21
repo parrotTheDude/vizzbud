@@ -21,8 +21,8 @@
 </head>
 <body class="bg-slate-900 text-white font-sans">
 
-    <!-- Navbar -->
-    <header class="bg-slate-900 border-b border-slate-800 shadow-md">
+<!-- Navbar -->
+<header class="bg-slate-900 border-b border-slate-800 shadow-md" x-data="{ open: false }">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <!-- Logo -->
         <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
@@ -32,28 +32,76 @@
             </span>
         </a>
 
-        <!-- Navigation Links -->
-        <nav class="space-x-6 text-sm font-medium flex items-center">
+        <!-- Desktop Nav -->
+        <nav class="hidden sm:flex space-x-6 text-sm font-medium items-center">
             <a href="{{ route('dive-sites.index') }}" class="text-white hover:text-cyan-400 transition">Site Map</a>
             <a href="{{ route('logbook.index') }}" class="text-white hover:text-cyan-400 transition">Dive Log</a>
             <a href="#" class="text-white hover:text-cyan-400 transition">About</a>
 
             @auth
-                <!-- Logged-in user: Logout button -->
                 <form method="POST" action="{{ route('logout') }}" class="inline">
                     @csrf
-                    <button type="submit" class="ml-4 text-sm text-cyan-400 hover:underline">
-                        Logout
-                    </button>
+                    <button type="submit" class="ml-4 text-sm text-cyan-400 hover:underline">Logout</button>
                 </form>
             @else
-                <!-- Guest: Login link -->
-                <a href="{{ route('login') }}" class="ml-4 text-sm text-cyan-400 hover:underline">
-                    Login
-                </a>
+                <a href="{{ route('login') }}" class="ml-4 text-sm text-cyan-400 hover:underline">Login</a>
             @endauth
         </nav>
+
+        <!-- Hamburger Button -->
+        <div class="sm:hidden">
+            <button @click="open = !open" class="text-gray-400 hover:text-white focus:outline-none">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path x-show="!open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6h16M4 12h16M4 18h16" />
+                    <path x-show="open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
     </div>
+
+<!-- Full-Screen Mobile Menu -->
+<div
+    x-show="open"
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="translate-x-full opacity-0"
+    x-transition:enter-end="translate-x-0 opacity-100"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="translate-x-0 opacity-100"
+    x-transition:leave-end="translate-x-full opacity-0"
+    class="fixed inset-0 z-50 bg-slate-900 text-white flex flex-col sm:hidden"
+    @click.away="open = false"
+    style="display: none;"
+>
+    <!-- Close button top-right -->
+    <div class="absolute top-6 right-6">
+        <button @click="open = false" class="text-gray-400 hover:text-white focus:outline-none">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Centered Logo + Nav -->
+    <div class="flex-1 flex flex-col justify-center items-center space-y-6 text-lg">
+        <div class="text-3xl font-bold text-cyan-400">Vizzbud</div>
+
+        <a href="{{ route('dive-sites.index') }}" class="hover:text-cyan-400 transition">Site Map</a>
+        <a href="{{ route('logbook.index') }}" class="hover:text-cyan-400 transition">Dive Log</a>
+        <a href="#" class="hover:text-cyan-400 transition">About</a>
+
+        @auth
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="text-cyan-400 hover:underline">Logout</button>
+            </form>
+        @else
+            <a href="{{ route('login') }}" class="text-cyan-400 hover:underline">Login</a>
+        @endauth
+    </div>
+</div>
 </header>
 
     <!-- Main Content -->
