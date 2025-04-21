@@ -20,6 +20,7 @@
     </div>
 
     {{-- Dive Site Map --}}
+    @auth
     <div class="mb-6">
         {{-- Mobile Map --}}
         <div class="sm:hidden w-full h-[200px] relative rounded-md overflow-hidden mb-4">
@@ -32,6 +33,7 @@
             <div id="personal-dive-map-desktop" class="h-80 w-full rounded-md"></div>
         </div>
     </div>
+    @endauth
 
     {{-- Log a Dive Button --}}
     @auth
@@ -104,6 +106,7 @@
     @endauth
 
     {{-- Dive Activity Chart --}}
+    @auth
 <div 
     class="bg-slate-800 rounded-xl p-4 sm:p-6 mb-12 shadow text-white text-sm sm:text-base"
     x-data="{ selectedYear: '{{ $selectedYear }}' }" 
@@ -136,42 +139,42 @@
         <span>More dives</span>
     </div>
 </div>
+@endauth
 
-    {{-- All Dives Table --}}
-    @auth
-    <div 
-        x-data="{
-            rawLogs: @js($logs->values()),
-            search: '',
-            get logs() {
-                return this.rawLogs.slice().sort((a, b) => new Date(b.dive_date) - new Date(a.dive_date));
-            },
-            get filteredLogs() {
-                return this.logs.filter(log => {
-                    const site = log.site?.name?.toLowerCase() || '';
-                    const notes = log.notes?.toLowerCase() || '';
-                    const depth = log.depth?.toString() || '';
-                    const duration = log.duration?.toString() || '';
-                    const query = this.search.toLowerCase();
-                    return site.includes(query)
-                        || notes.includes(query)
-                        || depth.includes(query)
-                        || duration.includes(query);
-                });
-            },
-            get totalDives() {
-                return this.filteredLogs.length;
-            }
-        }"
-        class="mt-12"
-    >
-        <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h2 class="text-xl font-semibold text-white">🗂️ All Dives</h2>
-            <input type="text" x-model="search" placeholder="Search dives..." class="bg-slate-900 text-white border border-slate-700 px-3 py-2 rounded text-sm w-full sm:w-64" />
-        </div>
+{{-- All Dives Table --}}
+@auth
+<div 
+    x-data="{
+        rawLogs: @js($logs->values()),
+        search: '',
+        get logs() {
+            return this.rawLogs.slice().sort((a, b) => new Date(b.dive_date) - new Date(a.dive_date));
+        },
+        get filteredLogs() {
+            return this.logs.filter(log => {
+                const site = log.site?.name?.toLowerCase() || '';
+                const notes = log.notes?.toLowerCase() || '';
+                const depth = log.depth?.toString() || '';
+                const duration = log.duration?.toString() || '';
+                const query = this.search.toLowerCase();
+                return site.includes(query)
+                    || notes.includes(query)
+                    || depth.includes(query)
+                    || duration.includes(query);
+            });
+        }
+    }"
+    class="mt-12"
+>
+    <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 class="text-xl font-semibold text-white">🗂️ All Dives</h2>
+        <input type="text" x-model="search" placeholder="Search dives..." class="bg-slate-900 text-white border border-slate-700 px-3 py-2 rounded text-sm w-full sm:w-64" />
+    </div>
 
-        <template x-if="filteredLogs.length > 0">
-            <div class="overflow-x-auto bg-slate-800 rounded-xl shadow">
+    <template x-if="filteredLogs.length > 0">
+        <div>
+            {{-- Desktop Table --}}
+            <div class="hidden sm:block overflow-x-auto bg-slate-800 rounded-xl shadow">
                 <table class="min-w-full text-left text-sm text-slate-200">
                     <thead class="bg-slate-900 text-slate-400">
                         <tr>
@@ -183,7 +186,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="(log, index) in filteredLogs" :key="log.id">
+                        <template x-for="log in filteredLogs" :key="log.id">
                             <tr 
                                 class="group border-b border-slate-700 hover:bg-slate-700/40 cursor-pointer transition"
                                 @click="window.location.href = `/logbook/${log.id}`"
@@ -201,13 +204,34 @@
                     </tbody>
                 </table>
             </div>
-        </template>
 
-        <template x-if="filteredLogs.length === 0">
-            <div class="text-slate-400 mt-6">No dives found matching your search.</div>
-        </template>
-    </div>
-    @endauth
+            {{-- Mobile Card View --}}
+            <div class="space-y-4 sm:hidden">
+                <template x-for="log in filteredLogs" :key="log.id">
+                    <div 
+                        @click="window.location.href = `/logbook/${log.id}`"
+                        class="bg-slate-800 rounded-xl p-4 shadow hover:bg-slate-700/50 transition cursor-pointer"
+                    >
+                        <div class="flex justify-between items-center mb-1">
+                            <h3 class="text-cyan-400 font-semibold text-lg" x-text="log.site?.name || '—'"></h3>
+                            <span class="text-slate-400 text-sm" x-text="new Date(log.dive_date).toLocaleDateString()"></span>
+                        </div>
+                        <div class="text-slate-300 text-sm space-y-1">
+                            <div><strong>#</strong> <span x-text="log.dive_number"></span></div>
+                            <div><strong>Depth:</strong> <span x-text="log.depth ? `${log.depth} m` : '—'"></span></div>
+                            <div><strong>Duration:</strong> <span x-text="log.duration ? `${log.duration} min` : '—'"></span></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </template>
+
+    <template x-if="filteredLogs.length === 0">
+        <div class="text-slate-400 mt-6">No dives found matching your search.</div>
+    </template>
+</div>
+@endauth
 
     {{-- Guest Message --}}
     @guest
