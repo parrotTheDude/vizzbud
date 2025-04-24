@@ -10,5 +10,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command(FetchExternalConditions::class)
-    ->twiceDaily(5, 17)
+    ->everyMinute()
     ->runInBackground();
