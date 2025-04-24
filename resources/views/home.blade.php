@@ -9,11 +9,11 @@
 @endif
 
 @if ($featured)
-<section class="relative bg-cover bg-center text-white py-16 sm:py-20" style="background-image: url('/bg-waves.png');" data-aos="fade-up">
+<section class="relative bg-cover bg-center text-white min-h-screen flex items-center justify-center" style="background-image: url('/bg-waves.png');">
     <div class="absolute inset-0 bg-slate-950/70"></div>
 
-    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 text-center">
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-10">📍 Featured Dive Site</h2>
+    <div class="relative z-10 max-w-5xl w-full px-4 sm:px-6 text-center">
+        <h2 class="text-3xl sm:text-4xl font-bold mb-10">📍 Featured Dive Site</h2>
 
         <div class="bg-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col md:grid md:grid-cols-2 mb-10">
             <div id="featured-map" class="h-64 md:h-full w-full"></div>
@@ -39,26 +39,66 @@
             </div>
         </div>
 
-        <!-- Report Form -->
-        <div x-data="{ openReport: false }" class="text-center">
+        {{-- Quick Report Button + Form --}}
+        <div x-data="reportForm()" class="text-center">
             <button @click="openReport = !openReport"
                 class="bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-full font-semibold text-white mb-4 transition w-full sm:w-auto">
                 📝 <span x-text="openReport ? 'Close Report Form' : 'Submit a Quick Dive Report'"></span>
             </button>
 
-            <div x-show="openReport" x-transition class="bg-slate-900 rounded-xl p-6 mt-4 text-left max-w-2xl mx-auto">
-                <form method="POST" action="{{ route('report.store') }}" class="space-y-4">
+            {{-- Show status outside of the form --}}
+            <div x-show="status" class="text-sm mb-4 text-center" 
+                :class="error ? 'text-red-400' : 'text-green-400'" 
+                x-text="status"></div>
+
+            <div x-show="openReport" x-transition class="bg-slate-900 rounded-xl p-6 mt-4 text-left max-w-md mx-auto">
+                <form @submit.prevent="submitReport" class="space-y-4">
                     @csrf
-                    <select name="dive_site_id" class="w-full rounded p-3 text-black text-base" required>
-                        <option value="">Choose a site...</option>
-                        @foreach ($sites ?? \App\Models\DiveSite::all() as $site)
-                            <option value="{{ $site->id }}">{{ $site->name }}</option>
-                        @endforeach
-                    </select>
-                    <input type="number" step="0.1" name="viz_rating" class="w-full rounded p-3 text-black text-base" placeholder="Visibility (m)" />
-                    <textarea name="comment" rows="3" class="w-full rounded p-3 text-black text-base" placeholder="Comments (optional)"></textarea>
-                    <input type="datetime-local" name="reported_at" class="w-full rounded p-3 text-black text-base" required value="{{ now()->format('Y-m-d\TH:i') }}">
-                    <button type="submit" class="bg-green-500 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold w-full sm:w-auto text-base">
+
+                    {{-- Dive Site Search --}}
+                    <label class="block relative">
+                        <span class="block mb-1 text-sm text-white">Dive Site <span class="text-red-500">*</span></span>
+                        <input
+                            type="text"
+                            x-model="query"
+                            @focus="open = true"
+                            @click.away="open = false"
+                            @keydown.arrow-down.prevent="move(1)"
+                            @keydown.arrow-up.prevent="move(-1)"
+                            @keydown.enter.prevent="select(focusedIndex)"
+                            placeholder="Search dive sites..."
+                            class="w-full rounded p-2 text-black"
+                        >
+                        <input type="hidden" name="dive_site_id" :value="selectedId">
+                        <ul x-show="open && filtered.length"
+                            class="absolute z-10 bg-white text-black rounded shadow w-full mt-1 max-h-60 overflow-y-auto border border-gray-300"
+                            x-transition>
+                            <template x-for="(site, index) in filtered" :key="site.id">
+                                <li
+                                    :class="{
+                                        'bg-cyan-100': index === focusedIndex,
+                                        'px-4 py-2 cursor-pointer': true
+                                    }"
+                                    @click="select(index)"
+                                    @mouseover="focusedIndex = index"
+                                    x-text="site.name"
+                                ></li>
+                            </template>
+                        </ul>
+                    </label>
+
+                    {{-- Visibility --}}
+                    <input type="number" step="0.1" name="viz_rating"
+                        class="w-full rounded p-3 text-black text-base"
+                        placeholder="Visibility (m)" required />
+
+                    {{-- Hidden Timestamp --}}
+                    <input type="hidden" name="reported_at" value="{{ now()->format('Y-m-d\TH:i') }}">
+                    <input type="text" name="website" style="display: none;">
+
+                    <button type="submit"
+                        x-bind:disabled="submitting"
+                        class="bg-green-500 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold w-full sm:w-auto text-base">
                         ✅ Submit Report
                     </button>
                 </form>
@@ -67,36 +107,6 @@
     </div>
 </section>
 @endif
-
-<!-- Recent Conditions -->
-<section class="bg-white py-12 sm:py-16" data-aos="fade-up">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6">
-        <h3 class="text-2xl font-bold text-gray-800 mb-6">🧭 Recent Dive Conditions</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            @foreach ($recentSites ?? [] as $site)
-            <div class="bg-slate-100 rounded-xl shadow p-5">
-                <h4 class="text-cyan-700 font-semibold text-lg mb-2">{{ $site->name }}</h4>
-                <ul class="text-sm text-gray-700">
-                    <li>🌊 Wave: {{ $site->wave_height ?? 'N/A' }} m</li>
-                    <li>🌡 Temp: {{ $site->water_temp ?? 'N/A' }} °C</li>
-                    <li>🧭 Wind: {{ $site->wind_speed ?? 'N/A' }} kn</li>
-                </ul>
-            </div>
-            @endforeach
-        </div>
-    </div>
-</section>
-
-<!-- CTA -->
-<section class="bg-cyan-600 text-white py-16" data-aos="fade-up">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-        <h3 class="text-2xl sm:text-3xl font-bold mb-4">🌊 Dive Deeper with Vizzbud</h3>
-        <p class="text-lg mb-6">Help keep dive data fresh. Submit reports, explore sites, and stay ocean-smart.</p>
-        <a href="{{ route('report.index') }}" class="bg-white text-cyan-700 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition">
-            📝 Join VizzBud
-        </a>
-    </div>
-</section>
 
 @endsection
 
@@ -152,6 +162,82 @@ window.addEventListener('load', function () {
         });
     });
 });
+
+function reportForm() {
+    return {
+        openReport: false,
+        submitting: false,
+        sites: @json($siteOptions),
+        query: '',
+        selectedId: null,
+        focusedIndex: 0,
+        open: false,
+        status: null,
+        error: false,
+
+        get filtered() {
+            return this.sites.filter(site =>
+                site.name.toLowerCase().includes(this.query.toLowerCase())
+            );
+        },
+
+        move(direction) {
+            if (!this.filtered.length) return;
+            this.focusedIndex = (this.focusedIndex + direction + this.filtered.length) % this.filtered.length;
+        },
+
+        select(index) {
+            const site = this.filtered[index];
+            if (site) {
+                this.query = site.name;
+                this.selectedId = site.id;
+
+                // Slight delay before closing to allow smoother UX
+                setTimeout(() => {
+                    this.open = false;
+                }, 150);
+            }
+        },
+
+        submitReport() {
+            if (this.submitting) return;
+
+            this.submitting = true;
+            const formData = new FormData();
+            formData.append('dive_site_id', this.selectedId);
+            formData.append('viz_rating', this.$el.querySelector('[name="viz_rating"]').value);
+            formData.append('reported_at', this.$el.querySelector('[name="reported_at"]').value);
+
+            fetch('{{ route('report.store') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to submit');
+                return response.json();
+            })
+            .then(() => {
+                this.status = '✅ Report submitted successfully!';
+                this.error = false;
+                this.query = '';
+                this.selectedId = null;
+                this.$el.querySelector('[name="viz_rating"]').value = '';
+                this.openReport = false;
+            })
+            .catch(() => {
+                this.status = '❌ Failed to submit report. Please try again.';
+                this.error = true;
+            });
+            setTimeout(() => {
+                this.submitting = false;
+            }, 3000);
+        }
+    };
+}
 </script>
 @endpush
 @endif

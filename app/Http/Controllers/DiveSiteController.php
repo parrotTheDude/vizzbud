@@ -35,9 +35,12 @@ class DiveSiteController extends Controller
                 'windSpeed' => $conditions['windSpeed']['noaa'] ?? null,
             ];
         });
+        
+        $siteOptions = DiveSite::select('id', 'name')->orderBy('name')->get();
     
         return view('dive-sites.index', [
             'sites' => $formattedSites,
+            'siteOptions' => $siteOptions,
         ]);
     }
 }

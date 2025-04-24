@@ -15,7 +15,9 @@ Route::get('/', function () {
 
     $sites = DiveSite::all();
 
-    return view('home', compact('featured', 'sites'));
+    $siteOptions = DiveSite::select('id', 'name')->orderBy('name')->get();
+
+    return view('home', compact('featured', 'sites', 'siteOptions'));
 })->name('home');
 
 // 📍 Dive Sites Map/List
@@ -24,7 +26,9 @@ Route::get('/dive-sites', [DiveSiteController::class, 'index'])->name('dive-site
 // 🌊 Public Condition Reports
 Route::get('/reports', [ConditionReportController::class, 'index'])->name('report.index');
 Route::get('/report', [ConditionReportController::class, 'create'])->name('report.create');
-Route::post('/report', [ConditionReportController::class, 'store'])->name('report.store');
+Route::post('/report', [ConditionReportController::class, 'store'])
+    ->middleware('throttle:5,1') // max 5 submissions per minute
+    ->name('report.store');
 
 // 📘 Personal Dive Log (guest-friendly view)
 Route::get('/logbook', [UserDiveLogController::class, 'index'])->name('logbook.index');

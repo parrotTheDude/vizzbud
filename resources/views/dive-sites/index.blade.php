@@ -3,7 +3,7 @@
 @section('content')
 <div class="relative h-[calc(100vh-64px)] w-full" x-data="{ filtersOpen: false }">
     {{-- Top Search Bar --}}
-    <div class="absolute top-4 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-sm z-50"
+    <div class="absolute top-4 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-sm z-20"
          x-data="diveSiteSelect({ sites: @js($sites), map: map })">
         <input
             type="text"
@@ -17,7 +17,7 @@
             class="w-full rounded p-2 text-black shadow"
         >
         <ul x-show="open && filtered.length"
-            class="absolute z-50 bg-white text-black rounded shadow w-full mt-1 max-h-60 overflow-y-auto border border-gray-300"
+            class="absolute z-20 bg-white text-black rounded shadow w-full mt-1 max-h-60 overflow-y-auto border border-gray-300"
             x-transition>
             <template x-for="(site, index) in filtered" :key="site.id">
                 <li
@@ -38,19 +38,19 @@
 
     {{-- Toggle Filters Button --}}
     <button @click="filtersOpen = !filtersOpen"
-        class="absolute bottom-4 left-4 z-50 bg-white text-slate-800 p-2 rounded-full shadow hover:bg-slate-100 focus:outline-none">
+        class="absolute bottom-4 left-4 z-20 bg-white text-slate-800 p-2 rounded-full shadow hover:bg-slate-100 focus:outline-none">
         ⚙️
     </button>
 
     {{-- Recenter Button --}}
     <button @click="map.flyTo({ center: [userLng, userLat], zoom: 11 })"
-        class="absolute bottom-4 right-4 z-50 bg-white text-slate-800 p-2 rounded-full shadow hover:bg-slate-100 focus:outline-none">
+        class="absolute bottom-4 right-4 z-20 bg-white text-slate-800 p-2 rounded-full shadow hover:bg-slate-100 focus:outline-none">
         🎯
     </button>
 
     {{-- Bottom Drawer Filters --}}
     <div x-show="filtersOpen" x-transition
-        class="absolute bottom-16 left-4 right-4 sm:left-auto sm:right-auto sm:w-[340px] bg-white text-black rounded-xl shadow-lg p-4 space-y-4 text-sm z-40">
+        class="absolute bottom-16 left-4 right-4 sm:left-auto sm:right-auto sm:w-[340px] bg-white text-black rounded-xl shadow-lg p-4 space-y-4 text-sm z-20">
 
         {{-- Filter: Suitability --}}
         <select id="filterSuitability" class="w-full border border-slate-300 px-3 py-2 rounded">
@@ -111,6 +111,8 @@ function buildGeojsonFeatures(list) {
             wavePeriod: site.conditions?.wavePeriod?.noaa ?? null,
             waveDirection: site.conditions?.waveDirection?.noaa ?? null,
             waterTemp: site.conditions?.waterTemperature?.noaa ?? null,
+            windSpeed: site.conditions?.windSpeed?.noaa ?? null,         
+            windDirection: site.conditions?.windDirection?.noaa ?? null, 
             updatedAt: site.retrieved_at ?? null,
             maxDepth: site.max_depth,
             avgDepth: site.avg_depth
@@ -136,6 +138,24 @@ function getDistance(lat1, lon1, lat2, lon2) {
 function degreesToCompass(deg) {
     const directions = ['N','NE','E','SE','S','SW','W','NW'];
     return directions[Math.round(deg / 45) % 8];
+}
+
+function formatUtcToLocal(utcString) {
+    if (!utcString) return 'N/A';
+
+    const utcDate = new Date(utcString + 'Z'); // 'Z' means UTC explicitly
+
+    if (isNaN(utcDate.getTime())) return 'Invalid date';
+
+    return utcDate.toLocaleString(undefined, {
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
 }
 
 // Add markers
@@ -175,6 +195,7 @@ function renderSites(filtered) {
 
         map.on('click', 'dive-site-points', (e) => {
             const p = e.features[0].properties;
+
             const html = `
                 <div class="text-slate-800 text-sm">
                     <strong class="text-sky-500">${p.name}</strong><br>
@@ -186,9 +207,13 @@ function renderSites(filtered) {
                     🌊 <strong>Wave:</strong> ${p.waveHeight ?? 'N/A'} m @ ${p.wavePeriod ?? '?'} s<br>
                     🧭 <strong>Direction:</strong> ${p.waveDirection ? degreesToCompass(p.waveDirection) : '—'}<br>
                     🌡️ <strong>Water Temp:</strong> ${p.waterTemp ?? '—'}°C<br>
-                    📅 <small>Updated: ${p.updatedAt ? new Date(p.updatedAt).toLocaleString() : '—'}</small>
+                    🌬️ <strong>Wind:</strong> ${typeof p.windSpeed === 'number'
+                        ? (p.windSpeed * 1.94384).toFixed(1) + ' kn'
+                        : 'N/A'} from ${p.windDirection ? degreesToCompass(p.windDirection) : '—'}<br>
+                    📅 <small>Updated: ${p.updatedAt ? formatUtcToLocal(p.updatedAt) : '—'}</small>
                 </div>
             `;
+
             new mapboxgl.Popup().setLngLat(e.lngLat).setHTML(html).addTo(map);
         });
     }
@@ -286,7 +311,7 @@ function diveSiteSelect({ sites, map }) {
                         ⏱️ <strong>Set Time:</strong> ${typeof props.wavePeriod === 'number' ? props.wavePeriod.toFixed(1) : 'N/A'} s<br>
                         🧭 <strong>Direction:</strong> ${props.waveDirection ? degreesToCompass(props.waveDirection) : 'N/A'}<br>
                         <hr class="my-2 border-gray-300">
-                        📅 <em class="text-xs text-slate-600">Updated: ${props.updatedAt ? new Date(props.updatedAt).toLocaleString() : 'N/A'}</em>
+                        📅 <em class="text-xs text-slate-600">Updated: ${formatUtcToLocal(props.updatedAt)}</em>
                     </div>
                 `;
 
