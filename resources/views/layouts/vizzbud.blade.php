@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $title ?? 'Vizzbud' }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>@yield('title', 'Vizzbud | Scuba Dive Sites & Conditions')</title>
+    <meta name="description" content="@yield('meta_description', 'View your personal dive logs, track statistics, and explore new dive sites on Vizzbud.')">
 
     <!-- Mapbox -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
