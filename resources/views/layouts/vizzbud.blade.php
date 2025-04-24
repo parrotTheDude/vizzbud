@@ -38,7 +38,6 @@
         <nav class="hidden sm:flex space-x-6 text-sm font-medium items-center">
             <a href="{{ route('dive-sites.index') }}" class="text-white hover:text-cyan-400 transition">Site Map</a>
             <a href="{{ route('logbook.index') }}" class="text-white hover:text-cyan-400 transition">Dive Log</a>
-            <a href="#" class="text-white hover:text-cyan-400 transition">About</a>
 
             @auth
                 <form method="POST" action="{{ route('logout') }}" class="inline">
@@ -92,7 +91,6 @@
 
         <a href="{{ route('dive-sites.index') }}" class="hover:text-cyan-400 transition">Site Map</a>
         <a href="{{ route('logbook.index') }}" class="hover:text-cyan-400 transition">Dive Log</a>
-        <a href="#" class="hover:text-cyan-400 transition">About</a>
 
         @auth
             <form method="POST" action="{{ route('logout') }}">

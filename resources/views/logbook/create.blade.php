@@ -21,6 +21,12 @@
                 return valid;
             }
         }"
+        x-init="
+            const now = new Date();
+            const offset = now.getTimezoneOffset();
+            now.setMinutes(now.getMinutes() - offset); // Convert to local timezone
+            $refs.diveDate.value = now.toISOString().slice(0, 16);
+        "
         @submit.prevent="if (validateDiveSite()) $el.submit();"
     >
         @csrf
@@ -65,12 +71,12 @@
         {{-- Dive Date --}}
         <label class="block">
             <span class="block mb-1 text-sm text-white">Dive Date</span>
-            <input type="date"
+            <input type="datetime-local"
                 name="dive_date"
                 required
                 class="w-full rounded p-2 text-black"
-                value="{{ old('dive_date', now()->format('Y-m-d')) }}"
-                max="{{ now()->format('Y-m-d') }}">
+                x-ref="diveDate"
+            >
             @error('dive_date')
                 <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
             @enderror
@@ -170,12 +176,13 @@ function diveSiteSelect({ sites }) {
             if (site) {
                 this.query = site.name;
                 this.selectedId = site.id;
-                this.open = false;
 
+                // Focus the dive date field after selection
                 setTimeout(() => {
+                    this.open = false;
                     const nextInput = document.querySelector('input[name="dive_date"]');
                     if (nextInput) nextInput.focus();
-                }, 100);
+                }, 150);
             }
         }
     };
