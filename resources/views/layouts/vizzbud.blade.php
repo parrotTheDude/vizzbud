@@ -24,7 +24,7 @@
 <body class="bg-slate-900 text-white font-sans">
 
 <!-- Navbar -->
-<header class="bg-slate-900 border-b border-slate-800 shadow-md" x-data="{ open: false }">
+<header class="bg-slate-900 border-b border-slate-800 shadow-md z-60" x-data="{ open: false }">
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <!-- Logo -->
         <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
