@@ -10,5 +10,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command(FetchExternalConditions::class)
-    ->cron('0 1,7,13,19 * * *') // 1am, 7am, 1pm, 7pm
+    ->hourly()
     ->runInBackground();
