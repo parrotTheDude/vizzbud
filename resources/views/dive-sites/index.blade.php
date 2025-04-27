@@ -66,32 +66,31 @@
                 <button @click="centerMap" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded px-2 py-1">🎯 Center Map</button>
             </div>
         </div>
-
-        {{-- Info Panel --}}
-        <div :class="selectedSite ? 'translate-x-0' : '-translate-x-full'"
-             class="fixed top-[57px] left-0 bottom-0 max-w-[430px] w-full bg-white shadow-xl z-10 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-[30px]">
-            <div class="mt-12">
-                <div class="mb-4">
-                    <h2 class="text-xl font-semibold text-cyan-600" x-text="selectedSite.name"></h2>
-                    <p class="text-sm mt-1" x-text="selectedSite.description"></p>
-                </div>
-                <ul class="space-y-1 text-sm">
-                    <li>📏 <strong>Depth:</strong> <span x-text="`${selectedSite.avg_depth}m avg / ${selectedSite.max_depth}m max`"></span></li>
-                    <li>🚶 <strong>Entry:</strong> <span x-text="selectedSite.dive_type ?? '—'"></span></li>
-                    <li>🎓 <strong>Level:</strong> <span x-text="selectedSite.suitability ?? '—'"></span></li>
-                    <li>🌡️ <strong>Water Temp:</strong> <span x-text="selectedSite.conditions?.waterTemperature?.noaa ?? '—'"></span> °C</li>
-                    <li>🌊 <strong>Wave:</strong> <span x-text="selectedSite.conditions?.waveHeight?.noaa ?? '—'"></span> m @
-                        <span x-text="selectedSite.conditions?.wavePeriod?.noaa ?? '—'"></span> s</li>
-                    <li>🧭 <strong>Direction:</strong> <span x-text="compass(selectedSite.conditions?.waveDirection?.noaa)"></span></li>
-                    <li>🌬️ <strong>Wind:</strong> <span x-text="formatWind(selectedSite.conditions?.windSpeed?.noaa, selectedSite.conditions?.windDirection?.noaa)"></span></li>
-                    <li>📅 <strong>Updated:</strong> <span x-text="formatDate(selectedSite.retrieved_at)"></span></li>
-                </ul>
-            </div>
-        </div>
     </div>
 
     {{-- Map --}}
     <div id="map" class="w-full h-full"></div>
+
+    {{-- Info Sidebar for Desktop --}}
+    <div 
+        x-show="!isMobileView"
+        :class="selectedSite && !isMobileView ? 'translate-x-0' : '-translate-x-full'"
+        class="fixed top-[64px] left-0 bottom-0 max-w-[430px] w-full bg-white shadow-xl z-10 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-[4.5rem]">
+        @include('dive-sites.partials.info')
+    </div>
+
+    {{-- Info Bottom Sheet for Mobile --}}
+    <div 
+        x-show="isMobileView"
+        id="mobileInfoPanel"
+        :class="selectedSite && isMobileView ? 'translate-y-0' : 'translate-y-full'"
+        class="fixed bottom-0 left-0 right-0 h-1/3 bg-white shadow-xl z-20 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-6 rounded-t-2xl"
+        @touchstart="startDrag($event)"
+        @touchmove="onDrag($event)"
+        @touchend="onDrag($event)">
+        <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+        @include('dive-sites.partials.info')
+    </div>
 </div>
 @endsection
 
@@ -113,6 +112,9 @@ function diveSiteMap({ sites }) {
         filterLevel: '',
         filterType: '',
         showFilters: false,
+        isMobileView: window.innerWidth < 640,
+        dragStartY: 0,
+        dragging: false,
 
         init() {
             this.map = new mapboxgl.Map({
@@ -137,6 +139,34 @@ function diveSiteMap({ sites }) {
 
             this.$watch('filterLevel', () => this.renderSites());
             this.$watch('filterType', () => this.renderSites());
+
+            window.addEventListener('resize', () => {
+                this.isMobileView = window.innerWidth < 640;
+            });
+        },
+
+        startDrag(e) {
+            this.dragging = true;
+            this.dragStartY = e.touches[0].clientY;
+        },
+
+        onDrag(e) {
+            if (!this.dragging) return;
+            const panel = document.getElementById('mobileInfoPanel');
+            const maxTranslate = window.innerHeight * 0.7;
+            const deltaY = e.touches[0].clientY - this.dragStartY;
+            if (panel) {
+                const translateY = Math.max(0, Math.min(deltaY, maxTranslate));
+                panel.style.transform = `translateY(${translateY}px)`;
+                if (e.type === 'touchend') {
+                    if (translateY > maxTranslate / 2) {
+                        panel.style.transform = `translateY(${maxTranslate}px)`;
+                    } else {
+                        panel.style.transform = `translateY(0px)`;
+                    }
+                    this.dragging = false;
+                }
+            }
         },
 
         get filteredSites() {
