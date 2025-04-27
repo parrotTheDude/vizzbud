@@ -84,11 +84,8 @@
         x-show="isMobileView"
         id="mobileInfoPanel"
         :class="selectedSite && isMobileView ? 'translate-y-0' : 'translate-y-full'"
-        class="fixed bottom-0 left-0 right-0 h-1/3 bg-white shadow-xl z-20 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-6 rounded-t-2xl"
-        @touchstart="startDrag($event)"
-        @touchmove="onDrag($event)"
-        @touchend="onDrag($event)">
-        <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+        class="fixed bottom-0 left-0 right-0 h-[60vh] bg-white shadow-xl z-20 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-6 rounded-t-2xl"
+    >
         @include('dive-sites.partials.info')
     </div>
 </div>
@@ -143,30 +140,6 @@ function diveSiteMap({ sites }) {
             window.addEventListener('resize', () => {
                 this.isMobileView = window.innerWidth < 640;
             });
-        },
-
-        startDrag(e) {
-            this.dragging = true;
-            this.dragStartY = e.touches[0].clientY;
-        },
-
-        onDrag(e) {
-            if (!this.dragging) return;
-            const panel = document.getElementById('mobileInfoPanel');
-            const maxTranslate = window.innerHeight * 0.7;
-            const deltaY = e.touches[0].clientY - this.dragStartY;
-            if (panel) {
-                const translateY = Math.max(0, Math.min(deltaY, maxTranslate));
-                panel.style.transform = `translateY(${translateY}px)`;
-                if (e.type === 'touchend') {
-                    if (translateY > maxTranslate / 2) {
-                        panel.style.transform = `translateY(${maxTranslate}px)`;
-                    } else {
-                        panel.style.transform = `translateY(0px)`;
-                    }
-                    this.dragging = false;
-                }
-            }
         },
 
         get filteredSites() {
