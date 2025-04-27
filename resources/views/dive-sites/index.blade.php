@@ -3,60 +3,73 @@
 @section('content')
 <div class="relative h-[calc(100vh-64px)] w-full" x-data="diveSiteMap({ sites: @js($sites) })">
     {{-- Search and Controls --}}
-    <div class="absolute top-4 left-4 z-20 space-y-2 w-[364px]">
-        {{-- Search Bar --}}
-        <div class="relative z-40 mb-2" x-data="siteSearch()">
-            <input type="text"
-                   x-model="query"
-                   @focus="open = true"
-                   @click.away="open = false"
-                   @keydown.arrow-down.prevent="move(1)"
-                   @keydown.arrow-up.prevent="move(-1)"
-                   @keydown.enter.prevent="select(focusedIndex)"
-                   placeholder="Search dive sites..."
-                   class="w-full rounded-full p-2 pr-10 text-black shadow z-30 relative">
+    <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 space-y-2 w-full px-4 sm:left-1 sm:transform-none sm:max-w-[428px] sm:w-auto">
+        <div class="flex items-center gap-2">
+            {{-- Search Bar --}}
+            <div class="relative z-40 mb-2 w-full sm:w-[364px]" x-data="siteSearch()">
+            <input
+                type="text"
+                x-model="query"
+                @focus="open = true"
+                @click.away="open = false"
+                @keydown.arrow-down.prevent="move(1)"
+                @keydown.arrow-up.prevent="move(-1)"
+                @keydown.enter.prevent="select(focusedIndex)"
+                placeholder="Search dive sites..."
+                class="w-full rounded-full px-5 py-3 pr-12 text-black bg-slate-100 z-30 relative"
+            />
 
-            <button x-show="query.length" type="button" @click="query=''; selectedId=null; open=false; const m=Alpine.$data(document.querySelector('[x-data^=diveSiteMap]')); if(m) m.selectedSite=null;" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black text-2xl z-40">×</button>
+                <button x-show="query.length" type="button" @click="query=''; selectedId=null; open=false; const m=Alpine.$data(document.querySelector('[x-data^=diveSiteMap]')); if(m) m.selectedSite=null;" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black text-2xl z-40">×</button>
 
-            <input type="hidden" name="dive_site_id" :value="selectedId">
+                <input type="hidden" name="dive_site_id" :value="selectedId">
 
-            <ul x-show="open && filtered.length"
-                class="absolute z-30 bg-white text-black rounded shadow w-full mt-1 max-h-60 overflow-y-auto border border-gray-300"
-                x-transition>
-                <template x-for="(site, index) in filtered" :key="site.id">
-                    <li :class="{
-                            'bg-cyan-100': index === focusedIndex,
-                            'px-4 py-2 cursor-pointer': true
-                        }"
-                        @click="select(index)"
-                        @mouseover="focusedIndex = index"
-                        x-text="site.name"
-                    ></li>
-                </template>
-            </ul>
+                <ul x-show="open && filtered.length"
+                    class="absolute z-30 bg-white text-black rounded shadow w-full mt-1 max-h-60 overflow-y-auto border border-gray-300"
+                    x-transition>
+                    <template x-for="(site, index) in filtered" :key="site.id">
+                        <li :class="{
+                                'bg-cyan-100': index === focusedIndex,
+                                'px-4 py-2 cursor-pointer': true
+                            }"
+                            @click="select(index)"
+                            @mouseover="focusedIndex = index"
+                            x-text="site.name"
+                        ></li>
+                    </template>
+                </ul>
+            </div>
+
+            <button
+                @click="showFilters = !showFilters"
+                class="bg-cyan-500 hover:bg-cyan-600 text-white rounded-full w-10 h-10 shadow-sm flex items-center justify-center relative -top-1 z-40"
+            >
+                <img src="/icons/filter.svg" alt="Filter" class="w-6 h-6 invert">
+            </button>
         </div>
 
-        {{-- Filters --}}
-        <div class="bg-white rounded p-2 shadow space-y-2 text-sm relative z-30 w-[364px]">
-            <select x-model="filterLevel" @change="$dispatch('filter-changed')" class="w-full border border-slate-500 rounded p-2 bg-white text-slate-800 font-semibold shadow-sm">
-                <option value="">All Levels</option>
-                <option value="Open Water">Open Water</option>
-                <option value="Advanced">Advanced</option>
-                <option value="Deep">Deep</option>
-            </select>
+        <div x-show="showFilters" x-transition>
+            {{-- Filters --}}
+            <div class="bg-white rounded p-2 shadow space-y-2 text-sm relative z-30 w-full sm:w-[395px]">
+                <select x-model="filterLevel" @change="$dispatch('filter-changed')" class="w-full border border-slate-500 rounded p-2 bg-white text-slate-800 font-semibold shadow-sm">
+                    <option value="">All Levels</option>
+                    <option value="Open Water">Open Water</option>
+                    <option value="Advanced">Advanced</option>
+                    <option value="Deep">Deep</option>
+                </select>
 
-            <select x-model="filterType" @change="$dispatch('filter-changed')" class="w-full border border-slate-500 rounded p-2 bg-white text-slate-800 font-semibold shadow-sm">
-                <option value="">All Types</option>
-                <option value="shore">Shore</option>
-                <option value="boat">Boat</option>
-            </select>
+                <select x-model="filterType" @change="$dispatch('filter-changed')" class="w-full border border-slate-500 rounded p-2 bg-white text-slate-800 font-semibold shadow-sm">
+                    <option value="">All Types</option>
+                    <option value="shore">Shore</option>
+                    <option value="boat">Boat</option>
+                </select>
 
-            <button @click="centerMap" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded px-2 py-1">🎯 Center Map</button>
+                <button @click="centerMap" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded px-2 py-1">🎯 Center Map</button>
+            </div>
         </div>
 
         {{-- Info Panel --}}
         <div :class="selectedSite ? 'translate-x-0' : '-translate-x-full'"
-             class="fixed top-[57px] left-0 bottom-0 max-w-[400px] w-full bg-white shadow-xl z-10 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-[160px]">
+             class="fixed top-[57px] left-0 bottom-0 max-w-[430px] w-full bg-white shadow-xl z-10 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-[30px]">
             <div class="mt-12">
                 <div class="mb-4">
                     <h2 class="text-xl font-semibold text-cyan-600" x-text="selectedSite.name"></h2>
@@ -99,6 +112,7 @@ function diveSiteMap({ sites }) {
         userLng: null,
         filterLevel: '',
         filterType: '',
+        showFilters: false,
 
         init() {
             this.map = new mapboxgl.Map({
@@ -174,6 +188,7 @@ function diveSiteMap({ sites }) {
                 this.map.on('click', 'site-layer', (e) => {
                     const id = e.features[0].properties.id;
                     this.selectedSite = this.sites.find(site => site.id == id);
+                    this.showFilters = false;
                     const site = this.selectedSite;
                     if (site) {
                         this.map.flyTo({ center: [site.lng, site.lat], zoom: 12 });
