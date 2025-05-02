@@ -25,7 +25,7 @@ class FetchForecastConditions extends Command
                 return;
             }
 
-            foreach ($forecasts['hours'] as $entry) {
+            foreach (array_slice($forecasts['hours'], 0, 48) as $entry) {
                 ExternalConditionForecast::updateOrCreate(
                     [
                         'dive_site_id' => $site->id,
