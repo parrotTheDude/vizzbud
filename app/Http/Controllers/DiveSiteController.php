@@ -11,7 +11,7 @@ class DiveSiteController extends Controller
     public function index()
     {
         $sites = DiveSite::with(['latestCondition', 'forecasts' => function ($q) {
-            $q->orderBy('forecast_time')->take(48); // next 12 hours, adjust as needed
+            $q->orderBy('forecast_time')->take(48);
         }])->get();
     
         $formattedSites = $sites->map(function ($site) {
@@ -38,17 +38,17 @@ class DiveSiteController extends Controller
                     'windDirection'  => ['noaa' => $c->wind_direction],
                     'airTemperature' => ['noaa' => $c->air_temperature],
                 ] : null,
-        
+                        
                 'forecast' => $site->forecasts->map(function ($f) {
                     return [
-                        'time' => Carbon::parse($f->forecast_time)->toDateTimeString(),
-                        'waveHeight'     => ['noaa' => $f->wave_height],
-                        'wavePeriod'     => ['noaa' => $f->wave_period],
-                        'waveDirection'  => ['noaa' => $f->wave_direction],
-                        'waterTemperature' => ['noaa' => $f->water_temperature],
-                        'windSpeed'      => ['noaa' => $f->wind_speed],
-                        'windDirection'  => ['noaa' => $f->wind_direction],
-                        'airTemperature' => ['noaa' => $f->air_temperature],
+                        'forecast_time'     => Carbon::parse($f->forecast_time)->toDateTimeString(),
+                        'wave_height'       => $f->wave_height,
+                        'wave_period'       => $f->wave_period,
+                        'wave_direction'    => $f->wave_direction,
+                        'water_temperature' => $f->water_temperature,
+                        'wind_speed'        => $f->wind_speed,
+                        'wind_direction'    => $f->wind_direction,
+                        'air_temperature'   => $f->air_temperature,
                     ];
                 }),
             ];

@@ -71,7 +71,7 @@
                 <div class="flex items-center space-x-3 bg-slate-100 p-3 rounded-md">
                     <img src="/icons/compass.svg" class="w-5 h-5" alt="Swell Dir">
                     <div>
-                        <strong>Swell Dir</strong><br>
+                        <strong>Swell Direction</strong><br>
                         <div class="flex items-center space-x-1">
                             <span x-text="compass(selectedSite.conditions?.waveDirection?.noaa)"></span>
                             <img src="/icons/arrow.svg" class="w-4 h-4"
@@ -98,7 +98,7 @@
                 <div class="flex items-center space-x-3 bg-slate-100 p-3 rounded-md">
                     <img src="/icons/compass.svg" class="w-5 h-5" alt="Wind Dir">
                     <div>
-                        <strong>Wind Dir</strong><br>
+                        <strong>Wind Direction</strong><br>
                         <div class="flex items-center space-x-1">
                             <span x-text="compass(selectedSite.conditions?.windDirection?.noaa)"></span>
                             <img src="/icons/arrow.svg" class="w-4 h-4"
@@ -112,6 +112,14 @@
                     <img src="/icons/update.svg" class="w-3 h-3" alt="Updated">
                     <span><strong>Updated:</strong> <span x-text="formatDate(selectedSite.retrieved_at)"></span></span>
                 </div>
+            </div>
+        </div>
+
+       <!-- 🌊 Swell Height Forecast Chart -->
+       <div x-show="selectedSite.forecast && selectedSite.forecast.length" class="mt-8">
+            <h3 class="text-lg font-semibold text-slate-700 mb-3">📈 Swell Height (Next 48 Hours)</h3>
+            <div class="w-full h-64">
+                <canvas id="swellChart"></canvas>
             </div>
         </div>
 

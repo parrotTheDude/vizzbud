@@ -1,6 +1,11 @@
 @extends('layouts.vizzbud')
 
+@push('head')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@endpush
+
 @section('content')
+<img id="arrow-icon" src="/icons/right-arrow.svg" style="display:none;" />
 <div class="fixed top-[64px] left-0 right-0 bottom-0 w-full h-[calc(100vh-64px)] overflow-hidden bg-white z-10" x-data="diveSiteMap({ sites: @js($sites) })">
     {{-- Search and Controls --}}
     <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 space-y-2 w-full px-4 sm:left-1 sm:transform-none sm:max-w-[428px] sm:w-auto">
@@ -189,6 +194,8 @@ function diveSiteMap({ sites }) {
 
             this.$watch('selectedSite', site => {
                 this.renderSites();
+                if (!site || !site.forecast || !site.forecast.length) return;
+
                 if (site) {
                     const offset = this.isMobileView ? [0, -window.innerHeight * 0.3] : [0, 0];
 
@@ -198,62 +205,145 @@ function diveSiteMap({ sites }) {
                         offset
                     });
                 }
-                setTimeout(() => {
-                    const chartEl = document.getElementById('forecastChart');
-                    if (!site || !site.forecast || !site.forecast.length || !chartEl) return;
 
-                    if (window.forecastChart) {
-                        window.forecastChart.destroy();
+                setTimeout(() => {
+                    console.log("Forecast data:", site.forecast);
+
+                    const chartEl = document.getElementById('swellChart');
+                    if (!chartEl) return;
+
+                    if (window.swellChart && typeof window.swellChart.destroy === 'function') {
+                        window.swellChart.destroy();
                     }
 
                     const ctx = chartEl.getContext('2d');
-                    const labels = site.forecast.map(f =>
-                        new Date(f.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    );
-                    const waveData = site.forecast.map(f => f.waveHeight?.noaa ?? null);
-                    const directionData = site.forecast.map(f => f.waveDirection?.noaa ?? null);
 
-                    window.forecastChart = new Chart(ctx, {
+                    const forecastSlice = site.forecast.slice(0, 48);
+
+                    const labels = forecastSlice.map(f =>
+                        new Date(f.forecast_time).toLocaleTimeString([], { hour: '2-digit' })
+                    );
+                    const swellData = forecastSlice.map(f => f.wave_height ?? null);
+                    const periodData = forecastSlice.map(f => f.wave_period ?? null);
+
+                    const currentTimePlugin = {
+                        id: 'currentTimeLine',
+                        afterDraw(chart) {
+                            const now = new Date();
+                            const hour = now.getHours();
+
+                            const xAxis = chart.scales.x;
+                            const index = chart.data.labels.findIndex(label => {
+                                const labelHour = parseInt(label);
+                                return labelHour === hour;
+                            });
+
+                            if (index === -1) return;
+
+                            const ctx = chart.ctx;
+                            const x = xAxis.getPixelForValue(index);
+
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.moveTo(x, chart.chartArea.top);
+                            ctx.lineTo(x, chart.chartArea.bottom);
+                            ctx.lineWidth = 2;
+                            ctx.strokeStyle = '#3b82f6'; // Tailwind blue-500
+                            ctx.stroke();
+                            ctx.restore();
+                        }
+                    };
+
+                    const swellDirectionPlugin = {
+                        id: 'swellDirectionArrows',
+                        afterDatasetsDraw(chart, args, options) {
+                            const { ctx, data } = chart;
+                            const arrowImg = document.getElementById('arrow-icon');
+                            const forecast = data.forecastRaw;
+                            if (!forecast || !arrowImg?.complete) return;
+
+                            const xAxis = chart.scales.x;
+                            const yAxis = chart.scales.y;
+
+                            forecast.forEach((point, i) => {
+                                if (i % 3 !== 0) return; // Show arrow every 3rd hour
+
+                                const value = chart.data.datasets[0].data[i];
+                                if (value === null || value === undefined) return;
+
+                                const x = xAxis.getPixelForValue(i);
+                                const y = yAxis.getPixelForValue(value);
+
+                                const angle = (point.waveDirection - 90) * Math.PI / 180;
+
+                                const size = 16;
+                                ctx.save();
+                                ctx.translate(x, y);
+                                ctx.rotate(angle);
+                                ctx.drawImage(arrowImg, -size / 2, -size / 2, size, size);
+                                ctx.restore();
+                            });
+                        }
+                    };
+
+                    window.swellChart = new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels,
-                            datasets: [{
-                                label: 'Wave Height (m)',
-                                data: waveData,
-                                borderColor: '#0ea5e9',
-                                backgroundColor: 'rgba(14,165,233,0.15)',
-                                borderWidth: 2,
-                                tension: 0.3,
-                                pointRadius: 2
-                            }]
+                            datasets: [
+                                {
+                                    label: 'Swell Height (m)',
+                                    data: swellData,
+                                    borderColor: '#0ea5e9',
+                                    backgroundColor: 'rgba(14,165,233,0.15)',
+                                    borderWidth: 2,
+                                    tension: 0.3,
+                                    pointRadius: 2,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    label: 'Swell Period (s)',
+                                    data: periodData,
+                                    borderColor: '#10b981',
+                                    backgroundColor: 'rgba(16,185,129,0.2)',
+                                    borderDash: [4, 4],
+                                    borderWidth: 2,
+                                    tension: 0.4,
+                                    pointRadius: 3,
+                                    yAxisID: 'y1',
+                                    spanGaps: true
+                                }
+                            ],
+                            forecastRaw: forecastSlice.map(f => ({
+                                waveDirection: f.wave_direction ?? 0,
+                                wavePeriod: f.wave_period ?? null
+                            }))
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             scales: {
-                                x: {
-                                    title: { display: true, text: 'Time' },
-                                    ticks: { maxTicksLimit: 12 }
-                                },
                                 y: {
                                     title: { display: true, text: 'Height (m)' },
-                                    beginAtZero: true
-                                }
-                            },
-                            plugins: {
-                                tooltip: {
-                                    callbacks: {
-                                        afterBody: function(context) {
-                                            const i = context[0].dataIndex;
-                                            const dir = directionData[i];
-                                            return `Wave Direction: ${dir}°`;
-                                        }
-                                    }
+                                    beginAtZero: true,
+                                    position: 'left',
+                                    max: 8
+                                },
+                                y1: {
+                                    title: { display: true, text: 'Period (s)' },
+                                    beginAtZero: true,
+                                    position: 'right',
+                                    grid: { drawOnChartArea: false },
+                                    max: 16
+                                },
+                                x: {
+                                    title: { display: true, text: 'Time' }
                                 }
                             }
-                        }
+                        },
+                        plugins: [currentTimePlugin, swellDirectionPlugin]
                     });
-                }, 50); // Delay to ensure Alpine renders DOM first
+                }, 50);
             });
         },
 
