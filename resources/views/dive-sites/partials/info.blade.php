@@ -23,9 +23,17 @@
                 </div>
                 <!-- Entry -->
                 <div class="flex items-center space-x-3 bg-slate-100 p-3 rounded-md">
-                    <img src="/icons/boat.svg" class="w-5 h-5" alt="Entry">
-                    <span><strong>Entry</strong><br>
-                        <span x-text="selectedSite.dive_type ? selectedSite.dive_type.charAt(0).toUpperCase() + selectedSite.dive_type.slice(1) : '—'"></span>
+                    <img 
+                        :src="selectedSite.dive_type === 'shore' 
+                            ? '/icons/beach.svg' 
+                            : '/icons/boat.svg'" 
+                        class="w-5 h-5" 
+                        alt="Entry Type">
+                    <span>
+                        <strong>Entry</strong><br>
+                        <span x-text="selectedSite.dive_type 
+                            ? selectedSite.dive_type.charAt(0).toUpperCase() + selectedSite.dive_type.slice(1) 
+                            : '—'"></span>
                     </span>
                 </div>
                 <!-- Level -->
