@@ -28,4 +28,10 @@ class DiveSite extends Model
     {
         return $this->hasMany(ExternalConditionForecast::class);
     }
+
+    public function latestForecast()
+    {
+        return $this->hasOne(ExternalConditionForecast::class)
+                    ->latestOfMany('forecast_time');
+    }
 }

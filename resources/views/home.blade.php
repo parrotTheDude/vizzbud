@@ -13,25 +13,63 @@
     <div class="absolute inset-0 bg-slate-950/70"></div>
 
     <div class="relative z-10 max-w-5xl w-full px-4 sm:px-6 text-center">
-        <h2 class="text-3xl sm:text-4xl font-bold mb-10">📍 Featured Dive Site</h2>
+        <h2 class="text-4xl font-bold text-white mb-6">📍 Featured Dive Site</h2>
 
         <div class="bg-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col md:grid md:grid-cols-2 mb-10">
             <div id="featured-map" class="h-64 md:h-full w-full"></div>
 
             <div class="p-6 sm:p-8 flex flex-col justify-center text-left space-y-4">
-                <h3 class="text-xl sm:text-2xl font-semibold text-cyan-400">{{ $featured->name }}</h3>
+                <h3 class="text-2xl font-semibold text-cyan-400">{{ $featured->name }}</h3>
                 <p class="text-slate-300 text-sm sm:text-base">{{ $featured->description }}</p>
 
-                <ul class="text-sm space-y-1 text-slate-400">
-                    <li>🌡️ <strong class="text-white">Water Temp:</strong> {{ data_get($featured->latestCondition->data, 'hours.0.waterTemperature.noaa', 'N/A') }}°C</li>
-                    <li>🌊 <strong class="text-white">Wave Height:</strong> {{ data_get($featured->latestCondition->data, 'hours.0.waveHeight.noaa', 'N/A') }} m</li>
-                    <li>🧭 <strong class="text-white">Wind Speed:</strong>
-                        @php $wind = data_get($featured->latestCondition->data, 'hours.0.windSpeed.noaa'); @endphp
-                        {{ $wind ? number_format($wind * 1.94384, 1) . ' kn' : 'N/A' }}
-                    </li>
-                    <li>📏 <strong class="text-white">Depth:</strong> {{ $featured->avg_depth }}m avg / {{ $featured->max_depth }}m max</li>
-                    <li>🎓 <strong class="text-white">Level:</strong> {{ $featured->suitability }}</li>
-                </ul>
+                <div class="grid grid-cols-2 gap-3 text-sm text-slate-200">
+                    <!-- 🌊 Wave Height -->
+                    <div class="flex items-center space-x-3 bg-slate-700/50 p-3 rounded-xl">
+                        <img src="/icons/wave.svg" class="w-5 h-5" alt="Wave Height">
+                        <div>
+                            <div class="font-semibold text-cyan-400">Wave Height</div>
+                            <div class="text-white text-base">
+                                @php $wave = $featured->latestCondition->wave_height; @endphp
+                                {{ $wave !== null ? $wave . ' m' : 'N/A' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 🧭 Wind Speed -->
+                    <div class="flex items-center space-x-3 bg-slate-700/50 p-3 rounded-xl">
+                        <img src="/icons/wind.svg" class="w-5 h-5" alt="Wind Speed">
+                        <div>
+                            <div class="font-semibold text-cyan-400">Wind Speed</div>
+                            <div class="text-white text-base">
+                                @php $wind = $featured->latestCondition->wind_speed; @endphp
+                                {{ $wind !== null ? number_format($wind * 1.94384, 1) . ' kn' : 'N/A' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 🌡️ Water Temp -->
+                    <div class="flex items-center space-x-3 bg-slate-700/50 p-3 rounded-xl">
+                        <img src="/icons/temperature.svg" class="w-5 h-5" alt="Water Temp">
+                        <div>
+                            <div class="font-semibold text-cyan-400">Water Temp</div>
+                            <div class="text-white text-base">
+                                @php $temp = $featured->latestCondition->water_temperature; @endphp
+                                {{ $temp !== null ? $temp . '°C' : 'N/A' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 📏 Avg Depth -->
+                    <div class="flex items-center space-x-3 bg-slate-700/50 p-3 rounded-xl">
+                        <img src="/icons/pool-depth.svg" class="w-5 h-5" alt="Avg Depth">
+                        <div>
+                            <div class="font-semibold text-cyan-400">Avg Depth</div>
+                            <div class="text-white text-base">
+                                {{ $featured->avg_depth ?? '—' }}m
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <a href="{{ route('dive-sites.index') }}" class="mt-4 inline-block text-cyan-400 hover:underline text-sm">
                     → Explore All Dive Sites
@@ -41,10 +79,10 @@
 
         {{-- Quick Report Button + Form --}}
         <div x-data="reportForm()" class="text-center">
-            <button @click="openReport = !openReport"
-                class="bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-full font-semibold text-white mb-4 transition w-full sm:w-auto">
-                📝 <span x-text="openReport ? 'Close Report Form' : 'Submit a Quick Dive Report'"></span>
-            </button>
+        <button @click="openReport = !openReport"
+            class="bg-cyan-600 hover:bg-cyan-700 px-6 py-3 rounded-xl font-semibold text-white transition w-full sm:w-auto shadow">
+            📝 <span x-text="openReport ? 'Close Report Form' : 'Submit a Quick Dive Report'"></span>
+        </button>
 
             {{-- Show status outside of the form --}}
             <div x-show="status" class="text-sm mb-4 text-center" 
@@ -114,7 +152,7 @@
 @push('scripts')
 <script>
 window.addEventListener('load', function () {
-    mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN') }}';
+    mapboxgl.accessToken = @json(config('services.mapbox.token'));
 
     const map = new mapboxgl.Map({
         container: 'featured-map',
@@ -129,7 +167,7 @@ window.addEventListener('load', function () {
         features: [{
             type: 'Feature',
             properties: {
-                waveHeight: {{ data_get($featured->latestCondition->data, 'hours.0.waveHeight.noaa', 'null') }},
+                waveHeight: {{ $featured->latestCondition->wave_height ?? 'null' }},
             },
             geometry: {
                 type: 'Point',
