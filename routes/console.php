@@ -12,3 +12,7 @@ Artisan::command('inspire', function () {
 Schedule::command(FetchExternalConditions::class)
     ->hourly()
     ->runInBackground();
+
+Schedule::command('vizzbud:fetch-forecast')
+    ->dailyAt('06:01')
+    ->timezone('Australia/Sydney'); // Or your actual timezone

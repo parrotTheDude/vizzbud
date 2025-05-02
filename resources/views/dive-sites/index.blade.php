@@ -1,7 +1,7 @@
 @extends('layouts.vizzbud')
 
 @section('content')
-<div class="relative h-[calc(100vh-64px)] w-full" x-data="diveSiteMap({ sites: @js($sites) })">
+<div class="fixed top-[64px] left-0 right-0 bottom-0 w-full h-[calc(100vh-64px)] overflow-hidden bg-white z-10" x-data="diveSiteMap({ sites: @js($sites) })">
     {{-- Search and Controls --}}
     <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 space-y-2 w-full px-4 sm:left-1 sm:transform-none sm:max-w-[428px] sm:w-auto">
         <div class="flex items-center gap-2">
@@ -75,7 +75,7 @@
     <div 
         x-show="!isMobileView"
         :class="selectedSite && !isMobileView ? 'translate-x-0' : '-translate-x-full'"
-        class="fixed top-[64px] left-0 bottom-0 max-w-[430px] w-full bg-white shadow-xl z-10 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-[4.5rem]">
+        class="absolute top-0 left-0 h-full max-w-[430px] w-full bg-white shadow-xl z-10 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-[4.5rem]">
         @include('dive-sites.partials.info')
     </div>
 
@@ -122,6 +122,52 @@ function diveSiteMap({ sites }) {
             });
 
             this.map.on('load', () => {
+                // Add source for dive sites
+                this.map.addSource('dive-sites', {
+                    type: 'geojson',
+                    data: { type: 'FeatureCollection', features: [] }
+                });
+
+                // Add circle layer for dive sites
+                this.map.addLayer({
+                    id: 'site-layer',
+                    type: 'circle',
+                    source: 'dive-sites',
+                    paint: {
+                        'circle-radius': [
+                            'case',
+                            ['boolean', ['get', 'selected'], false],
+                            14,
+                            8
+                        ],
+                        'circle-color': ['get', 'color'],
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': '#ffffff'
+                    }
+                });
+
+                // Click handler for selecting a site
+                this.map.on('click', 'site-layer', (e) => {
+                    const id = e.features[0].properties.id;
+                    this.selectedSite = this.sites.find(site => site.id == id);
+                    this.showFilters = false;
+
+                    const site = this.selectedSite;
+                    if (site) {
+                        const offset = this.isMobileView ? [0, -window.innerHeight * 0.3] : [0, 0];
+                        this.map.easeTo({ center: [site.lng, site.lat], zoom: 12, offset });
+                    }
+
+                    this.renderSites();
+
+                    const searchRoot = document.querySelector('[x-data^="siteSearch"]');
+                    const searchComponent = Alpine && Alpine.$data(searchRoot);
+                    if (searchComponent) {
+                        searchComponent.setQuery(this.selectedSite.name);
+                    }
+                });
+
+                // Initial render
                 this.renderSites();
             });
 
@@ -142,6 +188,16 @@ function diveSiteMap({ sites }) {
             });
 
             this.$watch('selectedSite', site => {
+                this.renderSites();
+                if (site) {
+                    const offset = this.isMobileView ? [0, -window.innerHeight * 0.3] : [0, 0];
+
+                    this.map.easeTo({
+                        center: [site.lng, site.lat],
+                        zoom: 12,
+                        offset
+                    });
+                }
                 setTimeout(() => {
                     const chartEl = document.getElementById('forecastChart');
                     if (!site || !site.forecast || !site.forecast.length || !chartEl) return;
@@ -217,7 +273,8 @@ function diveSiteMap({ sites }) {
                 },
                 properties: {
                     id: site.id,
-                    color: this.getConditionColor(site.conditions?.waveHeight?.noaa)
+                    color: this.getConditionColor(site.conditions?.waveHeight?.noaa),
+                    selected: this.selectedSite && this.selectedSite.id === site.id
                 }
             }));
 
@@ -240,10 +297,26 @@ function diveSiteMap({ sites }) {
                     type: 'circle',
                     source: 'dive-sites',
                     paint: {
-                        'circle-radius': 8,
+                        'circle-radius': [
+                            'case',
+                            ['boolean', ['get', 'selected'], false],
+                            14,
+                            8
+                        ],
                         'circle-color': ['get', 'color'],
                         'circle-stroke-width': 2,
                         'circle-stroke-color': '#ffffff'
+                    }
+                });
+
+                this.map.addLayer({
+                    id: 'site-symbols',
+                    type: 'symbol',
+                    source: 'dive-sites',
+                    layout: {
+                        'icon-image': 'diving-icon',
+                        'icon-size': 0.05, // Adjust to suit your icon size
+                        'icon-allow-overlap': true
                     }
                 });
 
@@ -255,6 +328,8 @@ function diveSiteMap({ sites }) {
                     if (site) {
                         this.map.flyTo({ center: [site.lng, site.lat], zoom: 12 });
                     }
+
+                    this.renderSites();
 
                     const searchRoot = document.querySelector('[x-data^="siteSearch"]');
                     const searchComponent = Alpine && Alpine.$data(searchRoot);
