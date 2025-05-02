@@ -140,6 +140,65 @@ function diveSiteMap({ sites }) {
             window.addEventListener('resize', () => {
                 this.isMobileView = window.innerWidth < 640;
             });
+
+            this.$watch('selectedSite', site => {
+                setTimeout(() => {
+                    const chartEl = document.getElementById('forecastChart');
+                    if (!site || !site.forecast || !site.forecast.length || !chartEl) return;
+
+                    if (window.forecastChart) {
+                        window.forecastChart.destroy();
+                    }
+
+                    const ctx = chartEl.getContext('2d');
+                    const labels = site.forecast.map(f =>
+                        new Date(f.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    );
+                    const waveData = site.forecast.map(f => f.waveHeight?.noaa ?? null);
+                    const directionData = site.forecast.map(f => f.waveDirection?.noaa ?? null);
+
+                    window.forecastChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Wave Height (m)',
+                                data: waveData,
+                                borderColor: '#0ea5e9',
+                                backgroundColor: 'rgba(14,165,233,0.15)',
+                                borderWidth: 2,
+                                tension: 0.3,
+                                pointRadius: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    title: { display: true, text: 'Time' },
+                                    ticks: { maxTicksLimit: 12 }
+                                },
+                                y: {
+                                    title: { display: true, text: 'Height (m)' },
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        afterBody: function(context) {
+                                            const i = context[0].dataIndex;
+                                            const dir = directionData[i];
+                                            return `Wave Direction: ${dir}°`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }, 50); // Delay to ensure Alpine renders DOM first
+            });
         },
 
         get filteredSites() {

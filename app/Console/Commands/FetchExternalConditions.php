@@ -24,9 +24,15 @@ class FetchExternalConditions extends Command
             if ($data) {
                 ExternalCondition::create([
                     'dive_site_id' => $site->id,
-                    'data' => $data,
-                    'status' => $status,
                     'retrieved_at' => now(),
+                    'status' => $data['status'] ?? null,
+                    'wave_height' => $data['hours'][0]['waveHeight']['noaa'] ?? null,
+                    'wave_period' => $data['hours'][0]['wavePeriod']['noaa'] ?? null,
+                    'wave_direction' => $data['hours'][0]['waveDirection']['noaa'] ?? null,
+                    'water_temperature' => $data['hours'][0]['waterTemperature']['noaa'] ?? null,
+                    'wind_speed' => $data['hours'][0]['windSpeed']['noaa'] ?? null,
+                    'wind_direction' => $data['hours'][0]['windDirection']['noaa'] ?? null,
+                    'air_temperature' => $data['hours'][0]['airTemperature']['noaa'] ?? null,
                 ]);
 
                 $this->info("Stored conditions for {$site->name}");

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DiveSiteController;
 use App\Http\Controllers\ConditionReportController;
 use App\Http\Controllers\UserDiveLogController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Models\DiveSite;
 
 // 🌐 Home Page
@@ -41,5 +42,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/logbook/table', [UserDiveLogController::class, 'table'])->name('logbook.table');
     Route::get('/logbook/{log}', [UserDiveLogController::class, 'show'])->name('logbook.show');
 });
+
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 
 require __DIR__.'/auth.php';

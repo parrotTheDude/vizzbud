@@ -4,18 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\DiveSite;
 use App\Models\ExternalCondition;
+use Carbon\Carbon;
 
 class DiveSiteController extends Controller
 {
     public function index()
     {
-        $sites = DiveSite::with('latestCondition')->get();
+        $sites = DiveSite::with(['latestCondition', 'forecasts' => function ($q) {
+            $q->orderBy('forecast_time')->take(48); // next 12 hours, adjust as needed
+        }])->get();
     
         $formattedSites = $sites->map(function ($site) {
-            $raw = $site->latestCondition?->data;
-            $conditions = is_array($raw['hours'] ?? null) && count($raw['hours']) > 0
-            ? $raw['hours'][0]
-            : null;
+            $c = $site->latestCondition;
         
             return [
                 'id' => $site->id,
@@ -27,12 +27,30 @@ class DiveSiteController extends Controller
                 'avg_depth' => $site->avg_depth,
                 'dive_type' => $site->dive_type,
                 'suitability' => $site->suitability,
-                'retrieved_at' => optional($site->latestCondition)->retrieved_at?->toDateTimeString(),
-                'conditions' => $conditions,
-                'tideTrend' => $conditions['tideTrend'] ?? null,
-                'nextHighTide' => $conditions['nextHighTide'] ?? null,
-                'nextLowTide' => $conditions['nextLowTide'] ?? null,
-                'windSpeed' => $conditions['windSpeed']['noaa'] ?? null,
+                'retrieved_at' => optional($c)->retrieved_at?->toDateTimeString(),
+        
+                'conditions' => $c ? [
+                    'waveHeight'     => ['noaa' => $c->wave_height],
+                    'wavePeriod'     => ['noaa' => $c->wave_period],
+                    'waveDirection'  => ['noaa' => $c->wave_direction],
+                    'waterTemperature' => ['noaa' => $c->water_temperature],
+                    'windSpeed'      => ['noaa' => $c->wind_speed],
+                    'windDirection'  => ['noaa' => $c->wind_direction],
+                    'airTemperature' => ['noaa' => $c->air_temperature],
+                ] : null,
+        
+                'forecast' => $site->forecasts->map(function ($f) {
+                    return [
+                        'time' => Carbon::parse($f->forecast_time)->toDateTimeString(),
+                        'waveHeight'     => ['noaa' => $f->wave_height],
+                        'wavePeriod'     => ['noaa' => $f->wave_period],
+                        'waveDirection'  => ['noaa' => $f->wave_direction],
+                        'waterTemperature' => ['noaa' => $f->water_temperature],
+                        'windSpeed'      => ['noaa' => $f->wind_speed],
+                        'windDirection'  => ['noaa' => $f->wind_direction],
+                        'airTemperature' => ['noaa' => $f->air_temperature],
+                    ];
+                }),
             ];
         });
         

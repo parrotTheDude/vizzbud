@@ -23,4 +23,9 @@ class DiveSite extends Model
         return $this->hasOne(ExternalCondition::class)
                     ->latestOfMany('retrieved_at');
     }
+
+    public function forecasts()
+    {
+        return $this->hasMany(ExternalConditionForecast::class);
+    }
 }

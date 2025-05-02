@@ -27,7 +27,7 @@ class OpenMeteoService
         $weatherParams = [
             'latitude' => $lat,
             'longitude' => $lng,
-            'hourly' => 'wind_speed_10m,wind_direction_10m',
+            'hourly' => 'wind_speed_10m,wind_direction_10m,temperature_2m',
             'timezone' => 'auto'
         ];
 
@@ -47,66 +47,6 @@ class OpenMeteoService
 
         $tide = Http::get('https://marine-api.open-meteo.com/v1/tide', $tideParams);
 
-        $tideHeights = null;
-        $tideTrend = null;
-        $nextHigh = null;
-        $nextLow = null;
-        $currentIndex = null;
-        
-        if ($tide->successful() && isset($tide->json()['hourly']['time'])) {
-            $tideData = $tide->json();
-            $tideTimes = $tideData['hourly']['time'];
-            $tideHeights = $tideData['hourly']['tide_height'];
-        
-            $currentTime = now()->utc()->toIso8601String();
-        
-            foreach ($tideTimes as $i => $time) {
-                if ($time > $currentTime) {
-                    $currentIndex = $i;
-                    break;
-                }
-            }
-
-            if (is_null($currentIndex)) {
-                logger()->warning('No valid tide index found', ['currentTime' => $currentTime, 'times' => $tideTimes]);
-                return null;
-            }
-        
-            if (isset($tideHeights[$currentIndex], $tideHeights[$currentIndex - 1])) {
-                $tideTrend = ($tideHeights[$currentIndex] > $tideHeights[$currentIndex - 1]) ? 'rising' : 'falling';
-            }
-        
-            for ($i = max(1, $currentIndex); $i < count($tideHeights) - 1; $i++) {
-                // Look for local max (high tide)
-                if (
-                    $tideHeights[$i] > $tideHeights[$i - 1] &&
-                    $tideHeights[$i] > $tideHeights[$i + 1] &&
-                    !$nextHigh
-                ) {
-                    $nextHigh = [
-                        'time' => $tideTimes[$i],
-                        'height' => $tideHeights[$i]
-                    ];
-                }
-            
-                // Look for local min (low tide)
-                if (
-                    $tideHeights[$i] < $tideHeights[$i - 1] &&
-                    $tideHeights[$i] < $tideHeights[$i + 1] &&
-                    !$nextLow
-                ) {
-                    $nextLow = [
-                        'time' => $tideTimes[$i],
-                        'height' => $tideHeights[$i]
-                    ];
-                }
-            
-                if ($nextHigh && $nextLow) break;
-            }
-        } else {
-            logger()->warning('Tide data not available', ['lat' => $lat, 'lng' => $lng, 'response' => $tide->body()]);
-        }
-
         // 📊 Core data extraction
         $marineData = $marine->json();
         $weatherData = $weather->json();
@@ -114,6 +54,7 @@ class OpenMeteoService
         $waveHeight = $marineData['hourly']['wave_height'][0] ?? null;
         $windSpeedMps = $weatherData['hourly']['wind_speed_10m'][0] ?? null;
         $windSpeedKnots = $windSpeedMps ? $windSpeedMps * 1.94384 : null;
+        $airTemp = $weatherData['hourly']['temperature_2m'][0] ?? null;
 
         $status = match (true) {
             $waveHeight !== null && $windSpeedKnots !== null && $waveHeight < 1 && $windSpeedKnots < 10 => 'green',
@@ -131,11 +72,62 @@ class OpenMeteoService
                 'waterTemperature' => ['noaa' => $marineData['hourly']['sea_surface_temperature'][0] ?? null],
                 'windSpeed' => ['noaa' => $windSpeedMps],
                 'windDirection' => ['noaa' => $weatherData['hourly']['wind_direction_10m'][0] ?? null],
-                'tideHeight' => ['noaa' => $tideHeights[$currentIndex] ?? null],
-                'tideTrend' => $tideTrend,
-                'nextHighTide' => $nextHigh,
-                'nextLowTide' => $nextLow,
+                'airTemperature' => ['noaa' => $airTemp],
             ]]
+        ];
+    }
+
+    public function fetchForecasts(float $lat, float $lng): array
+    {
+        // 🌊 Marine Forecast Data
+        $marineParams = [
+            'latitude' => $lat,
+            'longitude' => $lng,
+            'hourly' => 'wave_height,wave_period,wave_direction,sea_surface_temperature',
+            'timezone' => 'auto'
+        ];
+    
+        $marine = Http::get('https://marine-api.open-meteo.com/v1/marine', $marineParams);
+        if (!$marine->successful()) {
+            logger()->warning('Marine forecast failed', ['lat' => $lat, 'lng' => $lng]);
+            return [];
+        }
+    
+        // 🌬️ Atmospheric Forecast Data
+        $weatherParams = [
+            'latitude' => $lat,
+            'longitude' => $lng,
+            'hourly' => 'wind_speed_10m,wind_direction_10m,temperature_2m',
+            'timezone' => 'auto'
+        ];
+    
+        $weather = Http::get('https://api.open-meteo.com/v1/forecast', $weatherParams);
+        if (!$weather->successful()) {
+            logger()->warning('Weather forecast failed', ['lat' => $lat, 'lng' => $lng]);
+            return [];
+        }
+    
+        $marineData = $marine->json();
+        $weatherData = $weather->json();
+    
+        $times = $marineData['hourly']['time'] ?? [];
+        $result = [];
+    
+        foreach ($times as $i => $time) {
+            $result[] = [
+                'time'             => $time,
+                'waveHeight'       => $marineData['hourly']['wave_height'][$i] ?? null,
+                'wavePeriod'       => $marineData['hourly']['wave_period'][$i] ?? null,
+                'waveDirection'    => $marineData['hourly']['wave_direction'][$i] ?? null,
+                'waterTemperature' => $marineData['hourly']['sea_surface_temperature'][$i] ?? null,
+                'windSpeed'        => $weatherData['hourly']['wind_speed_10m'][$i] ?? null,
+                'windDirection'    => $weatherData['hourly']['wind_direction_10m'][$i] ?? null,
+                'airTemperature'   => $weatherData['hourly']['temperature_2m'][$i] ?? null,
+            ];
+        }
+    
+        return [
+            'hours' => $result
         ];
     }
 }
