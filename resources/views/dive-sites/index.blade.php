@@ -97,7 +97,7 @@
 
 @push('scripts')
 <script>
-mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN') }}';
+mapboxgl.accessToken = @json(config('services.mapbox.token'));
 
 function diveSiteMap({ sites }) {
     return {
