@@ -5,8 +5,6 @@
     {{-- Search and Controls --}}
     <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 space-y-2 w-full px-4 sm:left-1 sm:transform-none sm:max-w-[428px] sm:w-auto">
         <div class="flex items-center gap-2">
-        {{-- Temporarily output this to test --}}
-        <p>Mapbox token is: {{ env('MAPBOX_TOKEN') }}</p>
             {{-- Search Bar --}}
             <div class="relative z-40 mb-2 w-full sm:w-[364px]" x-data="siteSearch()">
             <input
