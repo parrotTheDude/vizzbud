@@ -28,15 +28,11 @@ class PostmarkResetPassword extends Notification
             'token' => $this->token,
             'email' => $this->email,
         ], false));
-
+    
         return (new MailMessage)
-            ->mailer('postmark') // Uses your custom mailer
-            ->subject('Reset Your Password')
-            ->view('emails.reset-password', [ // Optional: only if not using Postmark template
-                'resetUrl' => $resetUrl,
-            ])
+            ->mailer('postmark') // <- This is key
             ->withSymfonyMessage(function ($message) use ($resetUrl) {
-                $message->getHeaders()->addTextHeader('X-PM-Template', config('services.postmark.reset_password_template_id'));
+                $message->getHeaders()->addTextHeader('X-PM-Template', env('POSTMARK_RESET_TEMPLATE_ID'));
                 $message->getHeaders()->addTextHeader('X-PM-TemplateModel', json_encode([
                     'action_url' => $resetUrl,
                     'support_email' => config('mail.from.address'),
