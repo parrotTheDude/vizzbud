@@ -2,7 +2,9 @@
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
-    <div class="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 space-y-6" x-data="passwordForm()">
+    <div class="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 space-y-6" 
+         x-data="passwordForm('{{ old('email', $request->email) }}', '{{ $request->route('token') }}')">
+        
         <div class="text-center">
             <h2 class="text-2xl font-bold text-gray-800">🔒 Reset Your Password</h2>
             <p class="mt-1 text-sm text-gray-500">Create a strong new password below.</p>
@@ -23,10 +25,10 @@
             <div class="relative">
                 <x-input-label for="password" :value="__('New Password')" />
                 <input :type="showPassword ? 'text' : 'password'" name="password" x-model="password"
-                    id="password" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required autocomplete="new-password" />
+                       id="password" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required autocomplete="new-password" />
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 <button type="button" @click="showPassword = !showPassword"
-                    class="absolute right-2 top-9 text-sm text-gray-500 hover:text-gray-700">
+                        class="absolute right-2 top-9 text-sm text-gray-500 hover:text-gray-700">
                     <span x-text="showPassword ? '🙈' : '👁️'"></span>
                 </button>
             </div>
@@ -49,8 +51,9 @@
             <div class="relative">
                 <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
                 <input :type="showPassword ? 'text' : 'password'" name="password_confirmation" x-model="confirm"
-                    id="password_confirmation" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required autocomplete="new-password" />
-                <p class="text-sm mt-1" :class="confirm ? (confirm === password ? 'text-green-600' : 'text-red-600') : 'text-gray-400'">
+                       id="password_confirmation" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required autocomplete="new-password" />
+                <p class="text-sm mt-1" 
+                   :class="confirm ? (confirm === password ? 'text-green-600' : 'text-red-600') : 'text-gray-400'">
                     <template x-if="confirm">
                         <span x-text="confirm === password ? '✅ Passwords match' : '❌ Passwords do not match'"></span>
                     </template>
@@ -68,13 +71,13 @@
 </div>
 
 <script>
-function passwordForm() {
+function passwordForm(email, token) {
     return {
         password: '',
         confirm: '',
+        email: email,
+        token: token,
         showPassword: false,
-        email: '{{ old("email", $request->email) }}',
-        token: '{{ $request->route("token") }}',
         get rules() {
             return [
                 { text: 'Minimum 8 characters', valid: this.password.length >= 8, tooltip: 'Use at least 8 characters' },
