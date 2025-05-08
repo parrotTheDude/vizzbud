@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Config;
 
 class PostmarkResetPassword extends Notification
 {
@@ -29,15 +30,16 @@ class PostmarkResetPassword extends Notification
         ], false));
 
         return (new MailMessage)
-            ->mailer('postmark')
+            ->mailer('postmark') // Uses your custom mailer
             ->subject('Reset Your Password')
-            ->withSymfonyMessage(function ($message) use ($resetUrl, $notifiable) {
-                $message->getHeaders()->addTextHeader('X-PM-Template', env('POSTMARK_RESET_TEMPLATE_ID'));
+            ->view('emails.reset-password', [ // Optional: only if not using Postmark template
+                'resetUrl' => $resetUrl,
+            ])
+            ->withSymfonyMessage(function ($message) use ($resetUrl) {
+                $message->getHeaders()->addTextHeader('X-PM-Template', config('services.postmark.reset_password_template_id'));
                 $message->getHeaders()->addTextHeader('X-PM-TemplateModel', json_encode([
                     'action_url' => $resetUrl,
                     'support_email' => config('mail.from.address'),
-                    'product_name' => 'VizzBud',
-                    'name' => $notifiable->name ?? 'there',
                     'year' => now()->year,
                 ]));
             });
