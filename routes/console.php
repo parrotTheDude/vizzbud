@@ -15,4 +15,8 @@ Schedule::command(FetchExternalConditions::class)
 
 Schedule::command('vizzbud:fetch-forecast')
     ->dailyAt('06:01')
-    ->timezone('Australia/Sydney'); // Or your actual timezone
+    ->timezone('Australia/Sydney');
+
+Schedule::command('users:cleanup-unverified')
+->dailyAt('00:00')
+->timezone('Australia/Sydney');

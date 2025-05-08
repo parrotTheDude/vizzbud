@@ -2,6 +2,18 @@
 
 @section('content')
 <section class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+    
+    @if(session('verified'))
+        <div 
+            x-data="{ show: true }"
+            x-init="setTimeout(() => show = false, 4000)"
+            x-show="show"
+            x-transition
+            class="bg-green-600 text-white px-4 py-3 rounded-lg shadow mb-6 text-center font-semibold"
+        >
+            ✅ Your email has been successfully verified!
+        </div>
+    @endif
 
     {{-- Dive Log Title + Log Button (side-by-side on desktop) --}}
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">

@@ -10,33 +10,34 @@ use App\Models\DiveSite;
 
 // 🌐 Home Page
 Route::get('/', function () {
-    $featured = DiveSite::whereHas('latestCondition') // Only with condition data
+    $featured = DiveSite::whereHas('latestCondition')
         ->with('latestCondition')
         ->inRandomOrder()
         ->first();
 
     $sites = DiveSite::all();
-
     $siteOptions = DiveSite::select('id', 'name')->orderBy('name')->get();
 
     return view('home', compact('featured', 'sites', 'siteOptions'));
 })->name('home');
 
-// 📍 Dive Sites Map/List
+// 📍 Dive Sites Map
 Route::get('/dive-sites', [DiveSiteController::class, 'index'])->name('dive-sites.index');
 
 // 🌊 Public Condition Reports
+Route::prefix('report')->group(function () {
+    Route::get('/', [ConditionReportController::class, 'create'])->name('report.create');
+    Route::post('/', [ConditionReportController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('report.store');
+});
 Route::get('/reports', [ConditionReportController::class, 'index'])->name('report.index');
-Route::get('/report', [ConditionReportController::class, 'create'])->name('report.create');
-Route::post('/report', [ConditionReportController::class, 'store'])
-    ->middleware('throttle:5,1') // max 5 submissions per minute
-    ->name('report.store');
 
-// 📘 Personal Dive Log (guest-friendly view)
+// 📘 Public Dive Log View
 Route::get('/logbook', [UserDiveLogController::class, 'index'])->name('logbook.index');
 
-// ✍️ Authenticated routes for logging dives
-Route::middleware(['auth'])->group(function () {
+// ✍️ Authenticated + Verified Routes
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/logbook/create', [UserDiveLogController::class, 'create'])->name('logbook.create');
     Route::post('/logbook', [UserDiveLogController::class, 'store'])->name('logbook.store');
     Route::get('/logbook/chart', [UserDiveLogController::class, 'chart'])->name('logbook.chart');
@@ -44,9 +45,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/logbook/{log}', [UserDiveLogController::class, 'show'])->name('logbook.show');
 });
 
+// 🔑 Password Reset
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
 
-Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verification.verify');
+// ✅ Email Verification (Custom)
+Route::get('/verify-email', function () {
+    return view('auth.verify-email');
+})->middleware('auth')->name('verification.notice');
 
+Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verify.email');
+
+// 🔐 Auth Routes (Login/Register/etc.)
 require __DIR__.'/auth.php';

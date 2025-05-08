@@ -53,20 +53,22 @@ class RegisteredUserController extends Controller
         ]);
     
         // Send verification email
-        $verifyUrl = url(route('verification.verify', ['token' => $token], false));
+        $verifyUrl = url(route('verify.email', ['token' => $token], false));
     
         app(\App\Services\PostmarkService::class)->sendEmail(
             39981023,
             $user->email,
             [
+                'name' => $user->name,
                 'action_url' => $verifyUrl,
                 'support_email' => config('mail.from.address'),
                 'year' => now()->year,
             ],
             alias: 'email-verification'
         );
+
+        Auth::login($user);
     
-        // Optional: Show a message instead of logging in immediately
         return redirect()->route('verification.notice');
     }
 }
