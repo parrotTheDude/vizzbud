@@ -16,7 +16,6 @@ return [
 
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
-        'reset_password_template_id' => env('POSTMARK_RESET_TEMPLATE_ID'),
     ],
 
     'ses' => [

@@ -6,7 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Notifications\PostmarkResetPassword;
+use App\Services\PostmarkService;
 
 class User extends Authenticatable
 {
@@ -49,6 +49,19 @@ class User extends Authenticatable
 
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new PostmarkResetPassword($token, $this->email));
+        $resetUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $this->email,
+        ], false));
+    
+        app(PostmarkService::class)->sendTemplate(
+            to: $this->email,
+            templateId: env('POSTMARK_RESET_TEMPLATE_ID'),
+            templateModel: [
+                'action_url' => $resetUrl,
+                'support_email' => config('mail.from.address'),
+                'year' => now()->year,
+            ]
+        );
     }
 }
