@@ -37,9 +37,16 @@
             @error('password')
                 <div class="text-red-400 text-sm mt-1">{{ $message }}</div>
             @enderror
+        </div>
 
-            <!-- Checklist -->
-            <ul class="text-sm mt-2 space-y-1 text-slate-300">
+        <!-- Confirm Password -->
+        <div class="relative mt-4">
+            <label for="password_confirmation" class="block mb-1 text-sm text-slate-300">Confirm Password</label>
+            <input id="password_confirmation" name="password_confirmation" type="password"
+                x-model="confirm" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
+
+                <!-- Checklist -->
+                <ul class="text-sm mt-2 space-y-1 text-slate-300">
                 <template x-for="rule in rules" :key="rule.text">
                     <li class="flex items-center space-x-2 group">
                         <span x-show="rule.valid" class="text-green-400">&#10003;</span>
@@ -51,19 +58,6 @@
                     </li>
                 </template>
             </ul>
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="relative mt-4">
-            <label for="password_confirmation" class="block mb-1 text-sm text-slate-300">Confirm Password</label>
-            <input id="password_confirmation" name="password_confirmation" type="password"
-                x-model="confirm" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
-            <p class="text-sm mt-1"
-            :class="confirm ? (confirm === password ? 'text-green-400' : 'text-red-400') : 'text-slate-400'">
-                <template x-if="confirm">
-                    <span x-text="confirm === password ? '✅ Passwords match' : '❌ Passwords do not match'"></span>
-                </template>
-            </p>
         </div>
 
         <!-- Submit -->
