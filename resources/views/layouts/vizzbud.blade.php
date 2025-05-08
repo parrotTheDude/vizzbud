@@ -46,12 +46,12 @@
             <a href="{{ route('logbook.index') }}" class="text-white hover:text-cyan-400 transition">Dive Log</a>
 
             @auth
-                <form method="POST" action="{{ route('logout') }}" class="inline">
+                <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="ml-4 text-sm text-cyan-400 hover:underline">Logout</button>
+                    <button type="submit" class="text-sm text-cyan-400 hover:underline transition">Logout</button>
                 </form>
             @else
-                <a href="{{ route('login') }}" class="ml-4 text-sm text-cyan-400 hover:underline">Login</a>
+                <a href="{{ route('login') }}" class="text-sm text-cyan-400 hover:underline transition">Login</a>
             @endauth
         </nav>
 
