@@ -1,15 +1,19 @@
 @extends('layouts.vizzbud')
 
 @section('content')
+@if (session('status') === 'verification-link-sent')
+    <div 
+        x-data="{ show: true }"
+        x-init="setTimeout(() => show = false, 5000)"
+        x-show="show"
+        x-transition
+        class="bg-green-600 text-white px-4 py-2 rounded mb-4"
+    >
+        ✅ A new verification link has been sent to your email address.
+    </div>
+@endif
 <section class="max-w-md mx-auto px-6 py-16 text-center">
     <h1 class="text-3xl font-bold text-white mb-6">📨 Verify Your Email</h1>
-
-    @if (session('status') === 'verification-link-sent')
-        <div class="bg-green-600 text-white px-4 py-2 rounded mb-4">
-            ✅ A new verification link has been sent to your email address.
-        </div>
-    @endif
-
     <p class="text-slate-300 text-sm mb-6">
         Thanks for signing up! To activate your account, please verify your email address.
         We’ve sent a verification link to your inbox. Didn’t get it?
