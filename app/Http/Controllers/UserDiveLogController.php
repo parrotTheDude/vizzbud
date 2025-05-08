@@ -255,10 +255,22 @@ class UserDiveLogController extends Controller
 
     public function edit($id)
     {
-        $log = UserDiveLog::where('user_id', auth()->id())->findOrFail($id);
+        $log = UserDiveLog::where('user_id', auth()->id())
+            ->with('site')
+            ->findOrFail($id);
+    
         $sites = DiveSite::orderBy('name')->get();
-
-        return view('logbook.edit', compact('log', 'sites'));
+    
+        $siteOptions = $sites->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'name' => $s->name,
+                'lat' => $s->lat,
+                'lng' => $s->lng,
+            ];
+        });
+    
+        return view('logbook.edit', compact('log', 'siteOptions'));
     }
 
     public function update(Request $request, $id)
