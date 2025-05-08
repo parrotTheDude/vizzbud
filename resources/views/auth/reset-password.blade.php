@@ -71,8 +71,8 @@ function passwordForm(email, token) {
                 { text: 'One lowercase letter', valid: /[a-z]/.test(this.password), tooltip: 'Include a lowercase letter (a-z)' },
                 { text: 'One uppercase letter', valid: /[A-Z]/.test(this.password), tooltip: 'Include an uppercase letter (A-Z)' },
                 { text: 'One number', valid: /[0-9]/.test(this.password), tooltip: 'Include at least one number (0-9)' },
-                { text: 'One special character', valid: /[@$!%*#?&]/.test(this.password), tooltip: 'Include a symbol like @ $ ! % *' },
-                { text: 'Passwords match', valid: this.password && this.password === this.confirm, tooltip: 'Confirmation must match password' },
+                { text: 'One special character', valid: /[@$!%*#?&\-]/.test(this.password), tooltip: 'Include a symbol like @ $ ! % * -' },
+                { text: 'Passwords match', valid: this.confirm === this.password && this.password !== '', tooltip: 'Both password fields must match' },
             ];
         }
     }
