@@ -2,40 +2,31 @@
 
 namespace App\Services;
 
-use GuzzleHttp\Client;
+use Postmark\PostmarkClient;
 
 class PostmarkService
 {
-    protected string $apiKey;
-    protected Client $client;
-    protected string $endpoint = 'https://api.postmarkapp.com/email/withTemplate';
+    protected PostmarkClient $client;
 
     public function __construct()
     {
-        $this->apiKey = config('services.postmark.token');
-        $this->client = new Client([
-            'headers' => [
-                'X-Postmark-Server-Token' => $this->apiKey,
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-            ],
-        ]);
+        $this->client = new PostmarkClient(config('services.postmark.token'));
     }
 
-    public function sendTemplate(string $to, string $templateId, array $templateModel, string $from = null, string $messageStream = 'outbound')
+    public function sendEmail($templateId, $to, $variables = [], $from = null, $alias = null, $stream = null)
     {
-        $from = $from ?? config('mail.from.address');
-
-        $response = $this->client->post($this->endpoint, [
-            'json' => [
-                'From' => $from,
-                'To' => $to,
-                'TemplateId' => $templateId,
-                'TemplateModel' => $templateModel,
-                'MessageStream' => $messageStream,
-            ],
-        ]);
-
-        return json_decode($response->getBody()->getContents(), true);
+        return $this->client->sendEmailWithTemplate(
+            $from ?? config('services.postmark.from_email'),
+            $to,
+            (int) $templateId,
+            $variables,
+            true,                             // Track opens
+            $alias ?? 'Vizzbud',              // Alias
+            true,                             // Inline CSS
+            null, null, null, null, null,
+            'None',
+            null,
+            $stream ?? config('services.postmark.message_stream', 'outbound')
+        );
     }
 }

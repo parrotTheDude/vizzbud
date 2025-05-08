@@ -16,7 +16,9 @@ return [
 
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
+        'from_email' => env('POSTMARK_FROM_EMAIL'),
         'reset_template_id' => env('POSTMARK_RESET_TEMPLATE_ID'),
+        'message_stream' => env('POSTMARK_MESSAGE_STREAM', 'outbound'),
     ],
 
     'ses' => [

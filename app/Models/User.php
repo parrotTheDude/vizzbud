@@ -54,10 +54,10 @@ class User extends Authenticatable
             'email' => $this->email,
         ], false));
     
-        app(PostmarkService::class)->sendTemplate(
-            to: $this->email,
-            templateId: env('POSTMARK_RESET_TEMPLATE_ID'),
-            templateModel: [
+        app(PostmarkService::class)->sendEmail(
+            config('services.postmark.reset_template_id'),
+            $this->email,
+            [
                 'action_url' => $resetUrl,
                 'support_email' => config('mail.from.address'),
                 'year' => now()->year,
