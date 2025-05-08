@@ -1,80 +1,72 @@
 @extends('layouts.vizzbud')
 
 @section('content')
-<div class="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
-    <div class="w-full max-w-md bg-white shadow-xl rounded-2xl p-8 space-y-6" 
-         x-data="passwordForm('{{ old('email', $request->email) }}', '{{ $request->route('token') }}')">
-        
-        <div class="text-center">
-            <h2 class="text-2xl font-bold text-gray-800">🔒 Reset Your Password</h2>
-            <p class="mt-1 text-sm text-gray-500">Create a strong new password below.</p>
+<section class="max-w-md mx-auto px-6 py-16">
+    <h1 class="text-3xl font-bold text-white mb-6 text-center">🔒 Reset Your Password</h1>
+
+    <form method="POST" action="{{ route('password.store') }}" 
+          x-data="passwordForm('{{ old('email', $request->email) }}', '{{ $request->route('token') }}')" 
+          class="bg-slate-800 rounded-xl p-6 space-y-5 shadow">
+        @csrf
+
+        <!-- Hidden Token & Email -->
+        <input type="hidden" name="token" :value="token">
+        <input type="hidden" name="email" x-model="email" />
+
+        <!-- New Password -->
+        <div class="relative">
+            <label for="password" class="block mb-1 text-sm text-slate-300">New Password</label>
+            <input :type="showPassword ? 'text' : 'password'" name="password" x-model="password"
+                   id="password" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
+            <button type="button" @click="showPassword = !showPassword"
+                    class="absolute right-2 top-9 text-sm text-slate-400 hover:text-white">
+                <span x-text="showPassword ? '🙈' : '👁️'"></span>
+            </button>
+            <x-input-error :messages="$errors->get('password')" class="text-red-400 text-sm mt-1" />
         </div>
 
-        <form method="POST" action="{{ route('password.store') }}" class="space-y-5">
-            @csrf
-            <input type="hidden" name="token" :value="token">
+        <!-- Checklist -->
+        <ul class="text-sm mt-2 space-y-1 text-slate-300">
+            <template x-for="rule in rules" :key="rule.text">
+                <li class="flex items-center space-x-2 group">
+                    <span x-show="rule.valid" class="text-green-400">&#10003;</span>
+                    <span x-show="!rule.valid" class="text-slate-500">&#8226;</span>
+                    <span :class="rule.valid ? 'text-green-400' : 'text-slate-400'" 
+                          x-text="rule.text" class="group-hover:underline cursor-default"
+                          :title="rule.tooltip">
+                    </span>
+                </li>
+            </template>
+        </ul>
 
-            <!-- Email -->
-            <div>
-                <x-input-label for="email" :value="__('Email')" />
-                <x-text-input id="email" class="mt-1 block w-full"
-                    type="email"
-                    name="email"
-                    x-model="email"
-                    required
-                    autofocus
-                    autocomplete="username" />
-                <x-input-error :messages="$errors->get('email')" class="mt-2" />
-            </div>
-
-            <!-- Password -->
-            <div class="relative">
-                <x-input-label for="password" :value="__('New Password')" />
-                <input :type="showPassword ? 'text' : 'password'" name="password" x-model="password"
-                       id="password" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required autocomplete="new-password" />
-                <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                <button type="button" @click="showPassword = !showPassword"
-                        class="absolute right-2 top-9 text-sm text-gray-500 hover:text-gray-700">
-                    <span x-text="showPassword ? '🙈' : '👁️'"></span>
-                </button>
-            </div>
-
-            <!-- Checklist -->
-            <ul class="text-sm mt-2 space-y-1">
-                <template x-for="rule in rules" :key="rule.text">
-                    <li class="flex items-center space-x-2 group">
-                        <span x-show="rule.valid" class="text-green-600 transition">&#10003;</span>
-                        <span x-show="!rule.valid" class="text-gray-400 transition">&#8226;</span>
-                        <span :class="rule.valid ? 'text-green-600' : 'text-gray-500'" 
-                              x-text="rule.text" class="group-hover:underline cursor-default"
-                              :title="rule.tooltip">
-                        </span>
-                    </li>
+        <!-- Confirm Password -->
+        <div>
+            <label for="password_confirmation" class="block mb-1 text-sm text-slate-300">Confirm Password</label>
+            <input :type="showPassword ? 'text' : 'password'" name="password_confirmation" x-model="confirm"
+                   id="password_confirmation" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
+            <p class="text-sm mt-1" 
+               :class="confirm ? (confirm === password ? 'text-green-400' : 'text-red-400') : 'text-slate-400'">
+                <template x-if="confirm">
+                    <span x-text="confirm === password ? '✅ Passwords match' : '❌ Passwords do not match'"></span>
                 </template>
-            </ul>
+            </p>
+            <x-input-error :messages="$errors->get('password_confirmation')" class="text-red-400 text-sm mt-1" />
+        </div>
 
-            <!-- Confirm Password -->
-            <div class="relative">
-                <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-                <input :type="showPassword ? 'text' : 'password'" name="password_confirmation" x-model="confirm"
-                       id="password_confirmation" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required autocomplete="new-password" />
-                <p class="text-sm mt-1" 
-                   :class="confirm ? (confirm === password ? 'text-green-600' : 'text-red-600') : 'text-gray-400'">
-                    <template x-if="confirm">
-                        <span x-text="confirm === password ? '✅ Passwords match' : '❌ Passwords do not match'"></span>
-                    </template>
-                </p>
-            </div>
+        <!-- Submit -->
+        <div class="pt-2">
+            <button type="submit"
+                class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded transition w-full">
+                🔄 Reset Password
+            </button>
+        </div>
+    </form>
 
-            <!-- Submit -->
-            <div class="pt-4">
-                <x-primary-button class="w-full justify-center">
-                    {{ __('Reset Password') }}
-                </x-primary-button>
-            </div>
-        </form>
-    </div>
-</div>
+    <p class="text-center text-sm text-slate-400 mt-4">
+        Changed your mind?
+        <a href="{{ route('login') }}" class="text-cyan-400 hover:underline">Back to login</a>
+    </p>
+</section>
 
 <script>
 function passwordForm(email, token) {
