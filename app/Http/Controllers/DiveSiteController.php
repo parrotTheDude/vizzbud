@@ -51,6 +51,10 @@ class DiveSiteController extends Controller
                         'air_temperature'   => $f->air_temperature,
                     ];
                 }),
+                
+                'forecast_updated_at' => optional(
+                    $site->forecasts->max('updated_at')
+                )?->toDateTimeString(),
             ];
         });
         

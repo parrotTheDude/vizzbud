@@ -121,6 +121,10 @@
             <div class="w-full h-64">
                 <canvas id="swellChart"></canvas>
             </div>
+            <div class="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                <img src="/icons/update.svg" class="w-3 h-3" alt="Updated">
+                <span><strong>Updated:</strong> <span x-text="formatDate(selectedSite.forecast_updated_at)"></span></span>
+            </div>
         </div>
 
     </div>

@@ -21,7 +21,7 @@ class ExternalConditionForecast extends Model
         'air_temperature',
     ];
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public function diveSite()
     {

@@ -225,14 +225,17 @@ function diveSiteMap({ sites }) {
                     const forecastSlice = site.forecast.slice(0, 48);
 
                     const labels = forecastSlice.map(f =>
-                        new Date(f.forecast_time).toLocaleTimeString([], { hour: '2-digit' })
+                        new Date(f.forecast_time).toLocaleTimeString('en-AU', {
+                            hour: 'numeric',
+                            hour12: true
+                        }).toUpperCase()
                     );
                     const swellData = forecastSlice.map(f => f.wave_height ?? null);
                     const periodData = forecastSlice.map(f => f.wave_period ?? null);
 
                     const currentTimePlugin = {
                         id: 'currentTimeLine',
-                        afterDraw(chart) {
+                        beforeDatasetsDraw(chart) {
                             const now = new Date();
                             const hour = now.getHours();
 
@@ -252,7 +255,7 @@ function diveSiteMap({ sites }) {
                             ctx.moveTo(x, chart.chartArea.top);
                             ctx.lineTo(x, chart.chartArea.bottom);
                             ctx.lineWidth = 2;
-                            ctx.strokeStyle = '#3b82f6'; // Tailwind blue-500
+                            ctx.strokeStyle = 'rgba(37,99,235,0.4)'; // Tailwind blue-500 faint
                             ctx.stroke();
                             ctx.restore();
                         }
@@ -286,6 +289,49 @@ function diveSiteMap({ sites }) {
                                 ctx.rotate(angle);
                                 ctx.drawImage(arrowImg, -size / 2, -size / 2, size, size);
                                 ctx.restore();
+                            });
+                        }
+                    };
+
+                    const hoverLineAndNightShadePlugin = {
+                        id: 'hoverLineAndNightShade',
+                        beforeDraw(chart) {
+                            const { ctx, chartArea, scales, tooltip } = chart;
+                            const x = tooltip?.caretX;
+
+                            // 🔹 Draw hover line
+                            if (x) {
+                                ctx.save();
+                                ctx.beginPath();
+                                ctx.moveTo(x, chartArea.top);
+                                ctx.lineTo(x, chartArea.bottom);
+                                ctx.lineWidth = 1;
+                                ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                                ctx.stroke();
+                                ctx.restore();
+                            }
+
+                            // 🔹 Shade night hours (7 PM to 6 AM)
+                            const xScale = scales.x;
+                            const labels = chart.data.labels;
+
+                            labels.forEach((label, index) => {
+                                // Parse "2 PM", "5 AM", etc.
+                                const [hourRaw, period] = label.split(' ');
+                                let hour = parseInt(hourRaw);
+
+                                if (period === 'PM' && hour !== 12) hour += 12;
+                                if (period === 'AM' && hour === 12) hour = 0;
+
+                                if (hour >= 19 || hour < 6) {
+                                    const barX = xScale.getPixelForValue(index);
+                                    const barW = xScale.getPixelForValue(index + 1) - barX;
+
+                                    ctx.save();
+                                    ctx.fillStyle = 'rgba(30,41,59,0.1)'; // Tailwind slate-800 w/ opacity
+                                    ctx.fillRect(barX, chartArea.top, barW, chartArea.bottom - chartArea.top);
+                                    ctx.restore();
+                                }
                             });
                         }
                     };
@@ -326,6 +372,35 @@ function diveSiteMap({ sites }) {
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            plugins: {
+                                tooltip: {
+                                    enabled: true,
+                                    backgroundColor: 'rgba(17,24,39,0.9)', // Tailwind gray-900
+                                    borderColor: '#94a3b8', // Tailwind slate-400
+                                    borderWidth: 1,
+                                    titleColor: '#fff',
+                                    bodyColor: '#e2e8f0',
+                                    padding: 12,
+                                    cornerRadius: 6,
+                                    callbacks: {
+                                        title: (tooltipItems) => {
+                                            return `Time: ${tooltipItems[0].label}`;
+                                        },
+                                        label: (tooltipItem) => {
+                                            return `${tooltipItem.dataset.label}: ${tooltipItem.formattedValue}`;
+                                        }
+                                    }
+                                },
+                                legend: {
+                                    labels: {
+                                        color: '#334155' // slate-700
+                                    }
+                                }
+                            },
                             scales: {
                                 y: {
                                     title: { display: true, text: 'Height (m)' },
@@ -341,11 +416,14 @@ function diveSiteMap({ sites }) {
                                     max: 16
                                 },
                                 x: {
-                                    title: { display: true, text: 'Time' }
+                                    title: { display: true, text: 'Time' },
+                                    ticks: {
+                                        color: '#666'
+                                    }
                                 }
                             }
                         },
-                        plugins: [currentTimePlugin, swellDirectionPlugin]
+                        plugins: [currentTimePlugin, swellDirectionPlugin, hoverLineAndNightShadePlugin]
                     });
                 }, 50);
             });
@@ -495,6 +573,7 @@ function siteSearch() {
 
                 if (mapComponent) {
                     mapComponent.selectedSite = site;
+                    mapComponent.showFilters = false;
                     mapComponent.map.flyTo({ center: [site.lng, site.lat], zoom: 12 });
 
                     if (mapComponent.map.getSource('dive-sites')) {
