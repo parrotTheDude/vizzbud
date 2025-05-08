@@ -17,6 +17,8 @@ class FetchForecastConditions extends Command
     {
         $this->info('Fetching forecast conditions...');
 
+        ExternalConditionForecast::where('forecast_time', '<', now())->delete();
+
         DiveSite::all()->each(function ($site) use ($weather) {
             $forecasts = $weather->fetchForecasts($site->lat, $site->lng);
 
@@ -29,7 +31,7 @@ class FetchForecastConditions extends Command
                 ExternalConditionForecast::updateOrCreate(
                     [
                         'dive_site_id' => $site->id,
-                        'forecast_time' => Carbon::parse($entry['time'])->toDateTimeString(),
+                        'forecast_time' => Carbon::parse($entry['time'])->startOfHour()->toDateTimeString(),
                     ],
                     [
                         'wave_height'       => $entry['waveHeight'] ?? null,
