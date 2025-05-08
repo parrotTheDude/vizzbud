@@ -36,6 +36,9 @@ return [
     */
 
     'mailers' => [
+        'postmark' => [
+            'transport' => 'postmark',
+        ],
 
         'smtp' => [
             'transport' => 'smtp',
@@ -111,8 +114,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'support@vizzbud.com'),
+        'name' => env('MAIL_FROM_NAME', 'VizzBud'),
     ],
 
 ];
