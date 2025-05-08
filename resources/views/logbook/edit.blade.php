@@ -73,9 +73,38 @@
 
         {{-- Depth, Duration & Visibility --}}
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <x-edit-field name="depth" label="Depth" unit="m" :value="$log->depth" />
-            <x-edit-field name="duration" label="Duration" unit="min" :value="$log->duration" />
-            <x-edit-field name="visibility" label="Visibility" unit="m" :value="$log->visibility" />
+            {{-- Depth --}}
+            <label class="block relative">
+                <span class="block mb-1 text-sm text-white">Depth</span>
+                <input type="number" step="0.1" name="depth"
+                    class="w-full rounded p-2 pr-10 text-black"
+                    placeholder="e.g. 18"
+                    required
+                    value="{{ old('depth', $log->depth) }}" />
+                <span class="absolute right-3 top-[38px] text-slate-500 pointer-events-none">m</span>
+            </label>
+
+            {{-- Duration --}}
+            <label class="block relative">
+                <span class="block mb-1 text-sm text-white">Duration</span>
+                <input type="number" name="duration"
+                    class="w-full rounded p-2 pr-12 text-black"
+                    placeholder="e.g. 45"
+                    required
+                    value="{{ old('duration', $log->duration) }}" />
+                <span class="absolute right-3 top-[38px] text-slate-500 pointer-events-none">min</span>
+            </label>
+
+            {{-- Visibility --}}
+            <label class="block relative">
+                <span class="block mb-1 text-sm text-white">Visibility</span>
+                <input type="number" step="0.1" name="visibility"
+                    class="w-full rounded p-2 pr-12 text-black"
+                    placeholder="e.g. 10"
+                    required
+                    value="{{ old('visibility', $log->visibility) }}" />
+                <span class="absolute right-3 top-[38px] text-slate-500 pointer-events-none">m</span>
+            </label>
         </div>
 
         {{-- More Dive Details --}}
