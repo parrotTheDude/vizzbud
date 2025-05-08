@@ -74,7 +74,7 @@ function passwordForm() {
         confirm: '',
         showPassword: false,
         email: '{{ old("email", $request->email) }}',
-        token: '{{ $request->route('token') }}',
+        token: '{{ $request->route("token") }}',
         get rules() {
             return [
                 { text: 'Minimum 8 characters', valid: this.password.length >= 8, tooltip: 'Use at least 8 characters' },
