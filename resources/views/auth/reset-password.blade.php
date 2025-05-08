@@ -18,14 +18,17 @@
             <label for="password" class="block mb-1 text-sm text-slate-300">New Password</label>
             <input :type="showPassword ? 'text' : 'password'" name="password" x-model="password"
                    id="password" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
-            <button type="button" @click="showPassword = !showPassword"
-                    class="absolute right-2 top-9 text-sm text-slate-400 hover:text-white">
-                <span x-text="showPassword ? '🙈' : '👁️'"></span>
-            </button>
             <x-input-error :messages="$errors->get('password')" class="text-red-400 text-sm mt-1" />
         </div>
 
-        <!-- Checklist -->
+        <!-- Confirm Password -->
+        <div>
+            <label for="password_confirmation" class="block mb-1 text-sm text-slate-300">Confirm Password</label>
+            <input :type="showPassword ? 'text' : 'password'" name="password_confirmation" x-model="confirm"
+                   id="password_confirmation" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
+            <x-input-error :messages="$errors->get('password_confirmation')" class="text-red-400 text-sm mt-1" />
+        </div>
+
         <ul class="text-sm mt-2 space-y-1 text-slate-300">
             <template x-for="rule in rules" :key="rule.text">
                 <li class="flex items-center space-x-2 group">
@@ -38,20 +41,6 @@
                 </li>
             </template>
         </ul>
-
-        <!-- Confirm Password -->
-        <div>
-            <label for="password_confirmation" class="block mb-1 text-sm text-slate-300">Confirm Password</label>
-            <input :type="showPassword ? 'text' : 'password'" name="password_confirmation" x-model="confirm"
-                   id="password_confirmation" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
-            <p class="text-sm mt-1" 
-               :class="confirm ? (confirm === password ? 'text-green-400' : 'text-red-400') : 'text-slate-400'">
-                <template x-if="confirm">
-                    <span x-text="confirm === password ? '✅ Passwords match' : '❌ Passwords do not match'"></span>
-                </template>
-            </p>
-            <x-input-error :messages="$errors->get('password_confirmation')" class="text-red-400 text-sm mt-1" />
-        </div>
 
         <!-- Submit -->
         <div class="pt-2">
@@ -83,6 +72,7 @@ function passwordForm(email, token) {
                 { text: 'One uppercase letter', valid: /[A-Z]/.test(this.password), tooltip: 'Include an uppercase letter (A-Z)' },
                 { text: 'One number', valid: /[0-9]/.test(this.password), tooltip: 'Include at least one number (0-9)' },
                 { text: 'One special character', valid: /[@$!%*#?&]/.test(this.password), tooltip: 'Include a symbol like @ $ ! % *' },
+                { text: 'Passwords match', valid: this.password && this.password === this.confirm, tooltip: 'Confirmation must match password' },
             ];
         }
     }
