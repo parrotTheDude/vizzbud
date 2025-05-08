@@ -61,7 +61,8 @@ class User extends Authenticatable
                 'action_url' => $resetUrl,
                 'support_email' => config('mail.from.address'),
                 'year' => now()->year,
-            ]
+            ],
+            alias: 'password-reset'
         );
     }
 }
