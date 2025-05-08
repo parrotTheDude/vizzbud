@@ -262,7 +262,7 @@
 
 @push('scripts')
 <script>
-mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN') }}';
+mapboxgl.accessToken = @json(config('services.mapbox.token'));
 
 const sites = {!! json_encode($siteCoords) !!};
 
