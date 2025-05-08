@@ -73,7 +73,7 @@ function passwordForm() {
         password: '',
         confirm: '',
         showPassword: false,
-        email: '{{ old('email', $request->email) }}',
+        email: '{{ old("email", $request->email) }}',
         token: '{{ $request->route('token') }}',
         get rules() {
             return [
