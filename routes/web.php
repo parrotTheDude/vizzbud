@@ -43,6 +43,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/logbook/chart', [UserDiveLogController::class, 'chart'])->name('logbook.chart');
     Route::get('/logbook/table', [UserDiveLogController::class, 'table'])->name('logbook.table');
     Route::get('/logbook/{log}', [UserDiveLogController::class, 'show'])->name('logbook.show');
+    Route::get('/logbook/{log}/edit', [UserDiveLogController::class, 'edit'])->name('logbook.edit');
+    Route::put('/logbook/{log}', [UserDiveLogController::class, 'update'])->name('logbook.update');
 });
 
 // 🔑 Password Reset

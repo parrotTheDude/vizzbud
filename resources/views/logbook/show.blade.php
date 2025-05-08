@@ -3,12 +3,19 @@
 @section('content')
 <section class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
 
-    {{-- Back to Log Button --}}
-    <div class="mb-6">
+    {{-- Back and Edit Buttons --}}
+    <div class="mb-6 flex justify-between items-center">
         <a href="{{ route('logbook.index') }}"
-           class="inline-block bg-slate-700 hover:bg-slate-600 text-cyan-300 font-semibold px-4 py-2 rounded text-sm transition">
+        class="inline-block bg-slate-700 hover:bg-slate-600 text-cyan-300 font-semibold px-4 py-2 rounded text-sm transition">
             ← Back to Dive Log
         </a>
+
+        @auth
+        <a href="{{ route('logbook.edit', $log->id) }}"
+        class="inline-block bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-4 py-2 rounded text-sm transition">
+            ✏️ Edit Dive
+        </a>
+        @endauth
     </div>
 
     {{-- Title --}}
@@ -116,7 +123,7 @@
 
 @push('scripts')
 <script>
-mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN') }}';
+mapboxgl.accessToken = @json(config('services.mapbox.token'));
 
 function initMap(containerId, zoom = 10) {
     const container = document.getElementById(containerId);

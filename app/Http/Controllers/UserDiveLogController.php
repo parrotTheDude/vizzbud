@@ -228,22 +228,22 @@ class UserDiveLogController extends Controller
     }
 
     public function show($id)
-{
-    $log = UserDiveLog::with('site')->where('user_id', auth()->id())->findOrFail($id);
+    {
+        $log = UserDiveLog::with('site')->where('user_id', auth()->id())->findOrFail($id);
 
-    $sortedLogs = UserDiveLog::where('user_id', auth()->id())
-        ->orderByDesc('dive_date')
-        ->pluck('id')
-        ->toArray();
+        $sortedLogs = UserDiveLog::where('user_id', auth()->id())
+            ->orderByDesc('dive_date')
+            ->pluck('id')
+            ->toArray();
 
-    $index = array_search($log->id, $sortedLogs);
-    $diveNumber = $index + 1;
+        $index = array_search($log->id, $sortedLogs);
+        $diveNumber = $index + 1;
 
-    $prevId = $sortedLogs[$index + 1] ?? null;
-    $nextId = $sortedLogs[$index - 1] ?? null;
+        $prevId = $sortedLogs[$index + 1] ?? null;
+        $nextId = $sortedLogs[$index - 1] ?? null;
 
-    return view('logbook.show', compact('log', 'diveNumber', 'prevId', 'nextId'));
-}
+        return view('logbook.show', compact('log', 'diveNumber', 'prevId', 'nextId'));
+    }
 
     protected function getSortedDiveIds(): array
     {
@@ -252,4 +252,41 @@ class UserDiveLogController extends Controller
             ->pluck('id')
             ->toArray();
     }
+
+    public function edit($id)
+    {
+        $log = UserDiveLog::where('user_id', auth()->id())->findOrFail($id);
+        $sites = DiveSite::orderBy('name')->get();
+
+        return view('logbook.edit', compact('log', 'sites'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $log = UserDiveLog::where('user_id', auth()->id())->findOrFail($id);
+
+        $validated = $request->validate([
+            'dive_site_id' => 'nullable|exists:dive_sites,id',
+            'dive_date' => 'required|date',
+            'depth' => 'required|numeric|min:0',
+            'duration' => 'required|integer|min:0',
+            'buddy' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+            'air_start' => 'nullable|numeric|min:0',
+            'air_end' => 'nullable|numeric|min:0',
+            'temperature' => 'nullable|numeric',
+            'suit_type' => 'nullable|string|max:100',
+            'tank_type' => 'nullable|string|max:100',
+            'weight_used' => 'nullable|string|max:100',
+            'visibility' => 'nullable|numeric|min:0',
+            'rating' => 'nullable|integer|min:1|max:5',
+        ]);
+
+        $validated['dive_date'] = Carbon::parse($validated['dive_date'])->setTimeFrom(Carbon::now());
+
+        $log->update($validated);
+
+        return redirect()->route('logbook.show', $log->id)->with('success', 'Dive updated!');
+    }
+    
 }
