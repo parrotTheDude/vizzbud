@@ -5,6 +5,7 @@ use App\Http\Controllers\DiveSiteController;
 use App\Http\Controllers\ConditionReportController;
 use App\Http\Controllers\UserDiveLogController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Models\DiveSite;
 
 // 🌐 Home Page
@@ -45,5 +46,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+
+Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verification.verify');
 
 require __DIR__.'/auth.php';

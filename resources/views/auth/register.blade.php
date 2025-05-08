@@ -29,24 +29,27 @@
             @enderror
         </div>
 
-        <!-- Password -->
-        <div x-data="passwordForm()" class="relative">
-            <label for="password" class="block mb-1 text-sm text-slate-300">Password</label>
-            <input id="password" name="password" type="password" x-model="password"
-                class="w-full p-2 rounded text-black" required autocomplete="new-password" />
-            @error('password')
-                <div class="text-red-400 text-sm mt-1">{{ $message }}</div>
-            @enderror
-        </div>
+        <!-- Password and Confirm Password with Rules -->
+        <div x-data="passwordForm()" class="space-y-4">
+            <!-- Password -->
+            <div class="relative">
+                <label for="password" class="block mb-1 text-sm text-slate-300">Password</label>
+                <input id="password" name="password" type="password" x-model="password"
+                    class="w-full p-2 rounded text-black" required autocomplete="new-password" />
+                @error('password')
+                    <div class="text-red-400 text-sm mt-1">{{ $message }}</div>
+                @enderror
+            </div>
 
-        <!-- Confirm Password -->
-        <div class="relative mt-4">
-            <label for="password_confirmation" class="block mb-1 text-sm text-slate-300">Confirm Password</label>
-            <input id="password_confirmation" name="password_confirmation" type="password"
-                x-model="confirm" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
+            <!-- Confirm Password -->
+            <div class="relative">
+                <label for="password_confirmation" class="block mb-1 text-sm text-slate-300">Confirm Password</label>
+                <input id="password_confirmation" name="password_confirmation" type="password"
+                    x-model="confirm" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
+            </div>
 
-                <!-- Checklist -->
-                <ul class="text-sm mt-2 space-y-1 text-slate-300">
+            <!-- Checklist -->
+            <ul class="text-sm mt-2 space-y-1 text-slate-300">
                 <template x-for="rule in rules" :key="rule.text">
                     <li class="flex items-center space-x-2 group">
                         <span x-show="rule.valid" class="text-green-400">&#10003;</span>
@@ -84,8 +87,8 @@ function passwordForm() {
                 { text: 'One lowercase letter', valid: /[a-z]/.test(this.password), tooltip: 'Include a lowercase letter (a-z)' },
                 { text: 'One uppercase letter', valid: /[A-Z]/.test(this.password), tooltip: 'Include an uppercase letter (A-Z)' },
                 { text: 'One number', valid: /[0-9]/.test(this.password), tooltip: 'Include at least one number (0-9)' },
-                { text: 'One special character', valid: /[^a-zA-Z0-9]/.test(this.password), tooltip: 'Include a symbol like @ $ ! % * -' },
-                { text: 'Passwords match', valid: this.confirm === this.password && this.confirm !== '', tooltip: 'Both password fields must match' },
+                { text: 'One special character', valid: /[!@#$%^&*(),.?":{}|<>_\-]/.test(this.password), tooltip: 'Include a symbol like ! @ # $ etc.' },
+                { text: 'Passwords match', valid: this.confirm === this.password && this.confirm !== '', tooltip: 'Confirm must match password' },
             ];
         }
     }
