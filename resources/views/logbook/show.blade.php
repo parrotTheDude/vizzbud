@@ -12,7 +12,7 @@
 
         @auth
         <a href="{{ route('logbook.edit', $log->id) }}"
-        class="inline-block bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-4 py-2 rounded text-sm transition">
+        class="inline-block bg-cyan-500 hover:bg-cyan-600 text-white font-semibold px-4 py-2 rounded text-sm transition">
             ✏️ Edit Dive
         </a>
         @endauth
@@ -50,7 +50,7 @@
     @endif
 
     {{-- Depth & Duration --}}
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 gap-4 mb-6">
         @if($log->depth)
             <x-log-stat label="Depth" :value="$log->depth . ' m'" />
         @endif
