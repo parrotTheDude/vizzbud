@@ -126,6 +126,10 @@ function diveSiteMap({ sites }) {
                 zoom: 10
             });
 
+            this.map.on('click', (e) => {
+                console.log('Map clicked at:', e.lngLat);
+            });
+
             this.map.on('load', () => {
                 // Add source for dive sites
                 this.map.addSource('dive-sites', {
@@ -274,7 +278,7 @@ function diveSiteMap({ sites }) {
                                 const x = xAxis.getPixelForValue(i);
                                 const y = yAxis.getPixelForValue(value);
 
-                                const angle = (point.waveDirection - 90) * Math.PI / 180;
+                                const angle = ((point.waveDirection + 180) - 90) * Math.PI / 180;
 
                                 const size = 16;
                                 ctx.save();
