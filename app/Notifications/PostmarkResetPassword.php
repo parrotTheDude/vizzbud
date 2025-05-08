@@ -3,7 +3,7 @@
 namespace App\Notifications;
 
 use Illuminate\Notifications\Notification;
-use Illuminate\Notifications\Messages\MailMessage;
+use Postmark\Laravel\PostmarkMessage;
 
 class PostmarkResetPassword extends Notification
 {
@@ -27,17 +27,15 @@ class PostmarkResetPassword extends Notification
             'token' => $this->token,
             'email' => $this->email,
         ], false));
-    
-        return (new \Illuminate\Notifications\Messages\MailMessage)
-            ->mailer('postmark') 
-            ->subject('Reset Your Password')
-            ->withSymfonyMessage(function ($message) use ($resetUrl) {
-                $message->getHeaders()->addTextHeader('X-PM-Template', '39979999');
-                $message->getHeaders()->addTextHeader('X-PM-TemplateModel', json_encode([
-                    'action_url' => $resetUrl,
-                    'support_email' => config('mail.from.address'),
-                    'year' => now()->year,
-                ]));
-            });
+
+        return (new PostmarkMessage)
+            ->templateId(env('POSTMARK_RESET_TEMPLATE_ID', '39979999'))
+            ->templateModel([
+                'product_name' => 'VizzBud',
+                'action_url' => $resetUrl,
+                'support_email' => config('mail.from.address'),
+                'year' => now()->year,
+                'name' => $notifiable->name ?? 'there',
+            ]);
     }
 }
