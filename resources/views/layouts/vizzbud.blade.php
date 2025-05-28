@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>@yield('title', 'Vizzbud | Scuba Dive Sites & Conditions')</title>
+    <link rel="canonical" href="{{ preg_replace('/^www\./', '', url()->current()) }}">
     <meta name="description" content="@yield('meta_description', 'View your personal dive logs, track statistics, and explore new dive sites on Vizzbud.')">
 
     <!-- Mapbox -->

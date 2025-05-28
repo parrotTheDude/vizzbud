@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # Force redirect to the non www. link
+    RewriteCond %{HTTP_HOST} ^www\.vizzbud\.com [NC]
+    RewriteRule ^(.*)$ https://vizzbud.com/$1 [L,R=301]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
