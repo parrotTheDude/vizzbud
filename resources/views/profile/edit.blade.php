@@ -1,3 +1,6 @@
+@section('title', 'Edit Your Profile | Vizzbud')
+@section('meta_description', 'Update your personal information, change your password, or delete your Vizzbud account.')
+
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">

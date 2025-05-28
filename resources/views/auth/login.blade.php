@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Log In to Vizzbud')
+@section('meta_description', 'Access your Vizzbud dive log account to manage your dives, view stats, and explore scuba sites with real-time conditions.')
+
 @section('content')
 <section class="max-w-md mx-auto px-6 py-16">
     <h1 class="text-3xl font-bold text-white mb-6 text-center">🔐 Log in to Vizzbud</h1>

@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Edit Dive #{{ $log->dive_number ?? $log->id }} | {{ $log->site->name ?? "Unknown Site" }} | Vizzbud')
+@section('meta_description', 'Update details for Dive #{{ $log->dive_number ?? $log->id }} at {{ $log->site->name ?? "an unknown location" }}. Edit depth, duration, gear, notes, and more in your dive log.')
+
 @section('content')
 <section class="max-w-2xl mx-auto px-4 sm:px-6 py-12">
     {{-- Back Button --}}

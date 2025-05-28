@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Vizzbud | Real-Time Dive Conditions, Logs & Stats')
+@section('meta_description', 'Explore live scuba dive site conditions and log your underwater adventures with Vizzbud.')
+
 @section('content')
 
 @if (!$featured)

@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Dive Log | Vizzbud')
+@section('meta_description', 'Track your scuba dives by site, depth, and duration. View stats, charts, and search your personal dive history with Vizzbud.')
+
 @section('content')
 <section class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
     

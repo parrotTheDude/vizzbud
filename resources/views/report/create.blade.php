@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Submit a Dive Report | Vizzbud')
+@section('meta_description', 'Help the community by reporting your dive conditions — visibility, comments, and site data. Quick and easy on Vizzbud.')
+
 @section('content')
 <div class="max-w-xl mx-auto py-20 px-6">
     <h1 class="text-3xl font-bold mb-6 text-white">📝 Submit a Dive Report</h1>

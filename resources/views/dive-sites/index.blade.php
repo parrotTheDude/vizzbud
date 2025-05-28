@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Dive Site Map | Vizzbud')
+@section('meta_description', 'Explore live scuba dive site conditions on an interactive map. Filter by dive level, type, and get wave, wind, and tide data for each location.')
+
 @push('head')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 @endpush

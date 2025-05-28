@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Log a New Dive | Vizzbud')
+@section('meta_description', 'Record a new scuba dive including site, depth, duration, gear, and conditions. Keep your dive history organized with Vizzbud.')
+
 @section('content')
 <section class="max-w-2xl mx-auto px-4 sm:px-6 py-12">
 

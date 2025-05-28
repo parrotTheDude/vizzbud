@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Create Your Vizzbud Account')
+@section('meta_description', 'Sign up for a free Vizzbud account to log your scuba dives, track stats, and explore real-time dive site conditions.')
+
 @section('content')
 <section class="max-w-md mx-auto px-6 py-16">
     <h1 class="text-3xl font-bold text-white mb-6 text-center">🧜‍♂️ Create Your Vizzbud Account</h1>

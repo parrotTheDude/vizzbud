@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Verify Your Email | Vizzbud')
+@section('meta_description', 'Please verify your email to activate your Vizzbud account and start logging your scuba dives and viewing live dive site data.')
+
 @section('content')
 @if (session('status') === 'verification-link-sent')
     <div 

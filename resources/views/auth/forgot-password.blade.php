@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Forgot Your Password? | Vizzbud')
+@section('meta_description', 'Request a password reset link for your Vizzbud account. Regain access to your dive log and site data in just a few clicks.')
+
 @section('content')
 <section class="max-w-md mx-auto px-6 py-16">
     <h1 class="text-3xl font-bold text-white mb-6 text-center">🔑 Reset your password</h1>

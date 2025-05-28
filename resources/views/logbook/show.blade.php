@@ -1,5 +1,8 @@
 @extends('layouts.vizzbud')
 
+@section('title', 'Dive #{{ $diveNumber }} @ {{ $log->site->name ?? "Unknown Site" }} | Vizzbud')
+@section('meta_description', 'Details for Dive #{{ $diveNumber }} at {{ $log->site->name ?? "an unknown location" }} — {{ $log->depth ?? "unknown" }}m deep, {{ $log->duration ?? "unknown" }} minutes. View your personal dive stats on Vizzbud.')
+
 @section('content')
 <section class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
 
