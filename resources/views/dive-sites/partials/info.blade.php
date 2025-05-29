@@ -10,8 +10,7 @@
         <div class="pt-3">
             <a
                 :href="`/dive-sites/${selectedSite.slug}`"
-                class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold px-3 py-1 rounded transition"
-                target="_blank"
+                class="block w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold px-4 py-2 rounded-md text-center transition"
             >
                 🔎 View Full Dive Site Page
             </a>
