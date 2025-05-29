@@ -3,6 +3,8 @@
 @section('title', $diveSite->name . ' | Dive Site Info')
 @section('meta_description', Str::limit(strip_tags($diveSite->description), 160))
 
+@php use App\Helpers\CompassHelper; @endphp
+
 @section('content')
 <div class="max-w-5xl mx-auto px-4 py-8 space-y-8 text-slate-800">
 
