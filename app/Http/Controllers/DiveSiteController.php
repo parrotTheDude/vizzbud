@@ -19,6 +19,7 @@ class DiveSiteController extends Controller
         
             return [
                 'id' => $site->id,
+                'slug' => $site->slug,
                 'name' => $site->name,
                 'description' => $site->description,
                 'lat' => (float) $site->lat,
