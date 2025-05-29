@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('dive_sites', function (Blueprint $table) {
-            $table->string('slug')->unique()->after('name');
-        });
+        if (!Schema::hasColumn('dive_sites', 'slug')) {
+            Schema::table('dive_sites', function (Blueprint $table) {
+                $table->string('slug')->after('name')->unique();
+            });
+        }
     }
 
     /**
