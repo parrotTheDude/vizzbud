@@ -156,6 +156,7 @@
 <script>
 window.addEventListener('load', function () {
     mapboxgl.accessToken = @json(config('services.mapbox.token'));
+    mapboxgl.setTelemetryEnabled(false);
 
     const map = new mapboxgl.Map({
         container: 'featured-map',
