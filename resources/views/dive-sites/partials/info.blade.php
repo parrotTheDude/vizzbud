@@ -9,7 +9,11 @@
         <!-- 🔗 View Full Dive Site Page -->
         <div class="pt-3">
             <a
-                :href="`/dive-sites/${selectedSite.slug}`"
+                href="#"
+                @click.prevent="
+                    localStorage.setItem('vizzbud_last_site', selectedSite.slug);
+                    window.location.href = `/dive-sites/${selectedSite.slug}?lat=${map.getCenter().lat.toFixed(5)}&lng=${map.getCenter().lng.toFixed(5)}&zoom=${map.getZoom()}`
+                "
                 class="block w-full bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold px-4 py-2 rounded-md text-center transition"
             >
                 🔎 View Full Dive Site Page

@@ -122,6 +122,26 @@ function diveSiteMap({ sites }) {
         dragging: false,
 
         init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const lat = parseFloat(urlParams.get('lat'));
+            const lng = parseFloat(urlParams.get('lng'));
+            const zoom = parseFloat(urlParams.get('zoom'));
+
+            if (!isNaN(lat) && !isNaN(lng) && !isNaN(zoom)) {
+                this.map.setCenter([lng, lat]);
+                this.map.setZoom(zoom);
+            }
+
+            // 🔁 Restore last selected site (from localStorage)
+            const lastSlug = localStorage.getItem('vizzbud_last_site');
+            if (lastSlug) {
+                const match = this.sites.find(s => s.slug === lastSlug);
+                if (match) {
+                    this.selectedSite = match;
+                    localStorage.removeItem('vizzbud_last_site');
+                }
+            }
+
             this.map = new mapboxgl.Map({
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v11',
