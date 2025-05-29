@@ -4,9 +4,10 @@ namespace App\Helpers;
 
 class CompassHelper
 {
-    public static function degreesToCompass($degrees)
+    public static function fromDegrees($degrees): string
     {
         $directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-        return $directions[round($degrees / 45) % 8];
+        $index = (int) round($degrees / 45) % 8;
+        return $directions[$index];
     }
 }
