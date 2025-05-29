@@ -23,6 +23,7 @@ Route::get('/', function () {
 
 // 📍 Dive Sites Map
 Route::get('/dive-sites', [DiveSiteController::class, 'index'])->name('dive-sites.index');
+Route::get('/dive-sites/{diveSite}', [DiveSiteController::class, 'show'])->name('dive-sites.show');
 
 // 🌊 Public Condition Reports
 Route::prefix('report')->group(function () {

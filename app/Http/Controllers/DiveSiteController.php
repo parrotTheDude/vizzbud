@@ -65,4 +65,10 @@ class DiveSiteController extends Controller
             'siteOptions' => $siteOptions,
         ]);
     }
+
+    public function show(DiveSite $diveSite)
+    {
+        $recentDives = $diveSite->diveLogs()->latest()->take(5)->get(); // if you have a relation
+        return view('dive-sites.show', compact('diveSite', 'recentDives'));
+    }
 }
