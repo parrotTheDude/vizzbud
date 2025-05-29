@@ -1,11 +1,22 @@
 <template x-if="selectedSite">
     <div class="bg-white text-black space-y-8 text-left h-full overflow-y-auto">
 
-        <!-- 🧭 Site Name -->
-        <div>
-            <h2 class="text-3xl pt-2 font-bold text-cyan-600" x-text="selectedSite.name"></h2>
-            <p class="text-sm text-gray-700 mt-1" x-text="selectedSite.description"></p>
+    <!-- 🧭 Site Name -->
+    <div>
+        <h2 class="text-3xl pt-2 font-bold text-cyan-600" x-text="selectedSite.name"></h2>
+        <p class="text-sm text-gray-700 mt-1" x-text="selectedSite.description"></p>
+
+        <!-- 🔗 View Full Dive Site Page -->
+        <div class="pt-3">
+            <a
+                :href="`/dive-sites/${selectedSite.slug}`"
+                class="inline-block bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold px-3 py-1 rounded transition"
+                target="_blank"
+            >
+                🔎 View Full Dive Site Page
+            </a>
         </div>
+    </div>
 
         <!-- 📌 Dive Site Info -->
         <div>
