@@ -11,18 +11,8 @@
     {{-- H1 Title --}}
     <h1 class="text-4xl font-bold text-cyan-700">{{ $diveSite->name }}</h1>
 
-    {{-- Static Map Preview --}}
-    <div class="w-full h-72 rounded-xl overflow-hidden border">
-        <iframe
-            width="100%"
-            height="100%"
-            style="border:0;"
-            loading="lazy"
-            allowfullscreen
-            referrerpolicy="no-referrer-when-downgrade"
-            src="https://www.google.com/maps/embed/v1/place?key={{ config('services.google_maps.key') }}&q={{ $diveSite->lat }},{{ $diveSite->lng }}&zoom=13">
-        </iframe>
-    </div>
+    {{-- Static Mapbox Preview --}}
+    <div id="siteMap" class="w-full h-72 rounded-xl overflow-hidden border"></div>
 
     {{-- Description --}}
     <div class="prose max-w-none">
@@ -52,37 +42,4 @@
     {{-- Current Conditions --}}
     @if($diveSite->latestCondition)
     <div class="mt-8">
-        <h2 class="text-2xl font-semibold mb-4 text-cyan-700">🌊 Current Conditions</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 text-center text-sm">
-            <div class="bg-white p-4 rounded-lg border">
-                <p class="font-semibold text-slate-500">Wave Height</p>
-                <p class="text-lg font-bold text-slate-800">{{ $diveSite->latestCondition->wave_height }} m</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg border">
-                <p class="font-semibold text-slate-500">Wave Period</p>
-                <p class="text-lg font-bold text-slate-800">{{ $diveSite->latestCondition->wave_period }} s</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg border">
-                <p class="font-semibold text-slate-500">Wind</p>
-                <p class="text-lg font-bold text-slate-800">
-                    {{ number_format($diveSite->latestCondition->wind_speed * 1.94384, 1) }} kn<br>
-                    from {{ \App\Helpers\CompassHelper::fromDegrees($diveSite->latestCondition->wind_direction) }}
-                </p>
-            </div>
-            <div class="bg-white p-4 rounded-lg border">
-                <p class="font-semibold text-slate-500">Water Temp</p>
-                <p class="text-lg font-bold text-slate-800">{{ $diveSite->latestCondition->water_temperature }} °C</p>
-            </div>
-            <div class="bg-white p-4 rounded-lg border">
-                <p class="font-semibold text-slate-500">Air Temp</p>
-                <p class="text-lg font-bold text-slate-800">{{ $diveSite->latestCondition->air_temperature }} °C</p>
-            </div>
-        </div>
-        <p class="text-xs text-slate-500 text-right mt-2">
-            Last updated: {{ $diveSite->latestCondition->retrieved_at->diffForHumans() }}
-        </p>
-    </div>
-    @endif
-
-</div>
-@endsection
+        <h2 class="text-2xl font-semibold mb-4 text-cyan-700">
