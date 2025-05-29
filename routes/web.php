@@ -59,5 +59,7 @@ Route::get('/verify-email', function () {
 
 Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verify.email');
 
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index']);
+
 // 🔐 Auth Routes (Login/Register/etc.)
 require __DIR__.'/auth.php';
