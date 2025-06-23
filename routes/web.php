@@ -7,6 +7,7 @@ use App\Http\Controllers\UserDiveLogController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Models\DiveSite;
+use App\Http\Controllers\BlogPostController;
 
 // 🌐 Home Page
 Route::get('/', function () {
@@ -60,6 +61,9 @@ Route::get('/verify-email', function () {
 Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verify.email');
 
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index']);
+
+Route::get('/blog', [BlogPostController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogPostController::class, 'show'])->name('blog.show');
 
 // 🔐 Auth Routes (Login/Register/etc.)
 require __DIR__.'/auth.php';

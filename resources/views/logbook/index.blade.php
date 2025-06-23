@@ -265,36 +265,55 @@
 
 @push('scripts')
 <script>
-mapboxgl.accessToken = @json(config('services.mapbox.token'));
-
-const sites = {!! json_encode($siteCoords) !!};
-
-function createMap(containerId, zoom = 8) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    const map = new mapboxgl.Map({
-        container,
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [151.2153, -33.8568],
-        zoom
-    });
-
-    sites.forEach(site => {
-        new mapboxgl.Marker()
-            .setLngLat([site.lng, site.lat])
-            .setPopup(new mapboxgl.Popup().setText(site.name))
-            .addTo(map);
-    });
-
-    if (sites.length > 0) {
-        const bounds = new mapboxgl.LngLatBounds();
-        sites.forEach(site => bounds.extend([site.lng, site.lat]));
-        map.fitBounds(bounds, { padding: 50 });
+window.addEventListener('load', function () {
+    // Retry logic in case mapboxgl is not defined yet
+    if (typeof mapboxgl === 'undefined') {
+        let retries = 5;
+        const interval = setInterval(() => {
+            if (typeof mapboxgl !== 'undefined') {
+                clearInterval(interval);
+                initializeMaps();
+            } else if (--retries <= 0) {
+                clearInterval(interval);
+                console.error('❌ Mapbox failed to load.');
+            }
+        }, 200);
+    } else {
+        initializeMaps();
     }
-}
 
-createMap('personal-dive-map-mobile', 9);
-createMap('personal-dive-map-desktop', 8);
+    function initializeMaps() {
+        mapboxgl.accessToken = @json(config('services.mapbox.token'));
+        const sites = {!! json_encode($siteCoords) !!};
+
+        function createMap(containerId, zoom = 8) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const map = new mapboxgl.Map({
+                container,
+                style: 'mapbox://styles/mapbox/streets-v11',
+                center: [151.2153, -33.8568],
+                zoom
+            });
+
+            sites.forEach(site => {
+                new mapboxgl.Marker()
+                    .setLngLat([site.lng, site.lat])
+                    .setPopup(new mapboxgl.Popup().setText(site.name))
+                    .addTo(map);
+            });
+
+            if (sites.length > 0) {
+                const bounds = new mapboxgl.LngLatBounds();
+                sites.forEach(site => bounds.extend([site.lng, site.lat]));
+                map.fitBounds(bounds, { padding: 50 });
+            }
+        }
+
+        createMap('personal-dive-map-mobile', 9);
+        createMap('personal-dive-map-desktop', 8);
+    }
+});
 </script>
 @endpush
