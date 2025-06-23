@@ -66,4 +66,9 @@ class User extends Authenticatable implements MustVerifyEmail
             alias: 'password-reset'
         );
     }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
 }

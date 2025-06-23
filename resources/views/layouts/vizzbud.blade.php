@@ -44,7 +44,12 @@
         <nav class="hidden sm:flex space-x-6 text-sm font-medium items-center">
             <a href="{{ route('dive-sites.index') }}" class="text-white hover:text-cyan-400 transition">Site Map</a>
             <a href="{{ route('logbook.index') }}" class="text-white hover:text-cyan-400 transition">Dive Log</a>
-
+            @auth
+                @if (auth()->user()->isAdmin())
+                    <a href="{{ route('blog.index') }}" class="text-white hover:text-cyan-400 transition">Blog</a>
+                    <a href="{{ route('admin.dashboard') }}" class="text-white hover:text-cyan-400 transition">Admin</a>
+                @endif
+            @endauth
             @auth
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
@@ -99,6 +104,11 @@
         <a href="{{ route('logbook.index') }}" class="hover:text-cyan-400 transition">Dive Log</a>
 
         @auth
+            @if (auth()->user()->isAdmin())
+                <a href="{{ route('blog.index') }}" class="hover:text-cyan-400 transition">Blog</a>
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-cyan-400 transition">Admin</a>
+            @endif
+
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="text-cyan-400 hover:underline">Logout</button>

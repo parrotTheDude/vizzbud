@@ -22,4 +22,10 @@ class BlogPostController extends Controller
 
         return view('blog.show', compact('post'));
     }
+
+    public function adminIndex()
+    {
+        $posts = \App\Models\BlogPost::latest()->paginate(10);
+        return view('admin.blog.index', compact('posts'));
+    }
 }
