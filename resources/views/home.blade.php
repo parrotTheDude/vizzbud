@@ -18,12 +18,12 @@
             Track live dive conditions, explore dive sites, and record your underwater adventures with <span class="text-cyan-400 font-semibold">Vizzbud</span>.
         </p>
         <a href="{{ route('dive-sites.index') }}"
-        class="inline-flex items-center gap-3 px-5 py-3 rounded-xl text-white text-base font-semibold shadow-lg transition backdrop-blur-md"
-        style="background-color: rgba(5, 62, 155, 0.6);">
-        
-        @include('components.icon', ['name' => 'map'])
+            class="inline-flex items-center gap-3 px-5 py-3 rounded-xl text-white text-base font-semibold shadow-lg transition backdrop-blur-md"
+            style="background-color: rgba(15, 23, 42, 0.6);">
+            
+            @include('components.icon', ['name' => 'map'])
 
-        <span>Explore Dive Map</span>
+            <span>Explore Dive Map</span>
         </a>
     </div>
 </section>
