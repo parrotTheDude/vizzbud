@@ -9,8 +9,9 @@
     {{-- Back Button --}}
     <div class="mb-6">
         <a href="{{ route('logbook.index') }}"
-           class="inline-block bg-slate-700 hover:bg-slate-600 text-cyan-300 font-semibold px-4 py-2 rounded text-sm transition">
-            ← Back to Dive Log
+        class="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-semibold text-sm sm:text-base transition">
+            @include('components.icon', ['name' => 'back'])
+            <span>Back to Dive Log</span>
         </a>
     </div>
 
@@ -70,6 +71,19 @@
         </label>
 
         <p x-show="diveSiteError" class="text-sm text-red-500 mt-1">Please select a dive site.</p>
+
+        {{-- Dive Title --}}
+        <label class="block" x-data="{ autoTitle: true }">
+            <span class="block mb-1 text-sm text-white">Dive Title</span>
+            <input
+                type="text"
+                name="title"
+                x-model="autoTitle ? $parent.query : null"
+                @input="autoTitle = false"
+                placeholder="e.g. Bare Island Fun Dive"
+                class="w-full rounded p-2 text-black"
+            >
+        </label>
 
         {{-- Dive Date --}}
         <label class="block">
@@ -181,7 +195,12 @@ function diveSiteSelect({ sites }) {
                 this.query = site.name;
                 this.selectedId = site.id;
 
-                // Focus the dive date field after selection
+                // Set the dive title if the title field hasn't been changed manually
+                const titleInput = document.querySelector('input[name="title"]');
+                if (titleInput && titleInput.closest('[x-data]')?.__x.$data.autoTitle) {
+                    titleInput.value = site.name;
+                }
+
                 setTimeout(() => {
                     this.open = false;
                     const nextInput = document.querySelector('input[name="dive_date"]');

@@ -131,6 +131,7 @@ class UserDiveLogController extends Controller
     $validated = $request->validate([
         'dive_site_id' => 'nullable|exists:dive_sites,id',
         'dive_date' => 'required|date',
+        'title' => 'nullable|string|max:255',
         'depth' => 'required|numeric|min:0',
         'duration' => 'required|integer|min:0',
         'buddy' => 'nullable|string|max:255',
@@ -280,6 +281,7 @@ class UserDiveLogController extends Controller
         $validated = $request->validate([
             'dive_site_id' => 'nullable|exists:dive_sites,id',
             'dive_date' => 'required|date',
+            'title' => 'nullable|string|max:255',
             'depth' => 'required|numeric|min:0',
             'duration' => 'required|integer|min:0',
             'buddy' => 'nullable|string|max:255',

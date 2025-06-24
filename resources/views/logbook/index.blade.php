@@ -21,80 +21,33 @@
     {{-- Dive Log Title + Log Button (side-by-side on desktop) --}}
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         {{-- Dive Log Title (always visible) --}}
-        <h1 class="text-3xl font-bold text-white text-center sm:text-left">
-            📘 Dive Log
+        <h1 class="text-3xl font-bold text-white text-center sm:text-left inline-flex items-center gap-2">
+            @include('components.icon', ['name' => 'notebook'])
+            <span>Dive Log</span>
         </h1>
 
-        {{-- Desktop: Button inline with title --}}
         @auth
         <a href="{{ route('logbook.create') }}"
-        class="hidden sm:inline-block bg-cyan-500 hover:bg-cyan-600 text-white font-semibold px-6 py-3 rounded transition">
-            ➕ Log a Dive
+            class="inline-flex items-center gap-2 
+                bg-gradient-to-r from-cyan-500 to-teal-400 
+                hover:from-cyan-600 hover:to-teal-500 
+                text-white text-lg font-semibold px-6 py-3 
+                rounded-xl backdrop-blur-md shadow-lg 
+                transition-all duration-200 w-full sm:w-auto 
+                text-center justify-center">
+            
+            @include('components.icon', ['name' => 'plus']) {{-- or ➕ --}}
+            <span>Log a Dive</span>
         </a>
         @endauth
     </div>
 
-    {{-- Dive Site Map --}}
-    @auth
-    <div class="mb-6">
-        {{-- Mobile Map --}}
-        <div class="sm:hidden w-full h-[200px] relative rounded-md overflow-hidden mb-4">
-            <div id="personal-dive-map-mobile" class="absolute inset-0 z-0"></div>
-        </div>
-
-        {{-- Desktop Map --}}
-        <div class="hidden sm:block bg-slate-800 rounded-xl p-6 shadow">
-            <h2 class="text-white font-semibold text-lg mb-4">🗺️ Your Dive Sites</h2>
-            <div id="personal-dive-map-desktop" class="h-80 w-full rounded-md"></div>
-        </div>
-    </div>
-    @endauth
-
-    {{-- Log a Dive Button --}}
-    @auth
-    <div class="sm:hidden mb-6">
-        <a href="{{ route('logbook.create') }}"
-        class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold px-6 py-3 rounded transition w-full block text-center">
-            ➕ Log a Dive
-        </a>
-    </div>
-    @endauth
-
-    {{-- Last 3 Dives --}}
-    @auth
-    @if ($recentDives->isNotEmpty())
-        <h2 class="text-lg font-semibold text-white mb-3">Recent Dives</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-            @foreach ($recentDives as $dive)
-                <a href="{{ route('logbook.show', $dive->id) }}" class="block bg-slate-800 p-6 rounded-xl shadow space-y-2 hover:bg-slate-700 transition">
-                    <div class="text-xl font-semibold text-cyan-400">
-                        {{ $dive->site->name ?? 'Unknown Site' }}
-                    </div>
-                    <div class="text-slate-300 text-sm">
-                        Depth: <strong>{{ $dive->depth ?? '—' }}m</strong><br>
-                        Duration: <strong>{{ $dive->duration ?? '—' }} min</strong><br>
-                        Date: {{ \Carbon\Carbon::parse($dive->dive_date)->format('M j, Y') }}
-                    </div>
-                </a>
-            @endforeach
-        </div>
-    @endif
-    @endauth
-
     {{-- Stats Grid --}}
     @auth
-    <div x-data="{ showStats: false }" class="mb-12">
-
-        {{-- Toggle Button for Mobile --}}
-        <div class="sm:hidden mb-1">
-            <button @click="showStats = !showStats"
-                class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded text-sm font-semibold transition w-full">
-                <span x-text="showStats ? 'Hide Stats' : 'Show More Stats'"></span>
-            </button>
-        </div>
+    <div class="mb-12">
 
         {{-- Mobile Stats (Toggleable) --}}
-        <div x-show="showStats" x-transition x-cloak class="grid grid-cols-1 sm:hidden gap-4">
+        <div class="grid grid-cols-2 gap-4 sm:hidden">
             <x-log-stat label="Total Dives" :value="$totalDives" />
             <x-log-stat label="Total Dive Time" :value="$totalHours . 'h ' . $remainingMinutes . 'm'" />
             <x-log-stat label="Deepest Dive" :value="$deepestDive . ' m'" />
@@ -106,7 +59,7 @@
         </div>
 
         {{-- Desktop Stats (Always Visible) --}}
-        <div class="hidden sm:grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="hidden sm:grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
             <x-log-stat label="Total Dives" :value="$totalDives" />
             <x-log-stat label="Total Dive Time" :value="$totalHours . 'h ' . $remainingMinutes . 'm'" />
             <x-log-stat label="Deepest Dive" :value="$deepestDive . ' m'" />
@@ -120,6 +73,31 @@
     </div>
     @endauth
 
+@auth
+<div class="mb-12">
+    {{-- Mobile Map --}}
+    <div class="sm:hidden w-full h-[240px] relative rounded-2xl overflow-hidden shadow-lg mb-6 border border-slate-700 backdrop-blur-md bg-slate-800/60">
+        <div class="absolute inset-0 z-0" id="personal-dive-map-mobile"></div>
+        <div class="absolute top-3 left-4 bg-slate-900/70 text-white text-sm font-semibold px-3 py-1 rounded-full shadow inline-flex items-center gap-2">
+            @include('components.icon', ['name' => 'map'])
+            <span>Your Dive Sites</span>
+        </div>
+    </div>
+
+    {{-- Desktop Map --}}
+    <div class="hidden sm:block rounded-2xl overflow-hidden shadow-lg border border-slate-700 backdrop-blur-md bg-slate-800/60">
+        <div class="flex justify-between items-center px-6 pt-3 pb-3">
+            <h2 class="text-white font-semibold text-lg inline-flex items-center gap-2">
+                @include('components.icon', ['name' => 'map'])
+                <span>Your Dive Sites</span>
+            </h2>
+            <span class="text-sm text-slate-400">{{ count($siteCoords) }} visited</span>
+        </div>
+        <div id="personal-dive-map-desktop" class="h-[360px] w-full"></div>
+    </div>
+</div>
+@endauth
+
     {{-- Dive Activity Chart --}}
     @auth
 <div 
@@ -128,7 +106,10 @@
     x-init="$watch('selectedYear', value => fetchChart(value))"
 >
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
-        <h2 class="font-semibold text-lg sm:text-xl">📅 Dive Activity</h2>
+        <h2 class="font-semibold text-lg sm:text-xl inline-flex items-center gap-2">
+            @include('components.icon', ['name' => 'calendar'])
+            <span>Dive Activity</span>
+        </h2>
         <select 
             x-model="selectedYear" 
             class="bg-slate-900 text-white border border-slate-600 px-3 py-2 rounded text-sm w-full sm:w-auto"
@@ -168,11 +149,13 @@
         get filteredLogs() {
             return this.logs.filter(log => {
                 const site = log.site?.name?.toLowerCase() || '';
+                const title = log.title?.toLowerCase() || '';
                 const notes = log.notes?.toLowerCase() || '';
                 const depth = log.depth?.toString() || '';
                 const duration = log.duration?.toString() || '';
                 const query = this.search.toLowerCase();
                 return site.includes(query)
+                    || title.includes(query)
                     || notes.includes(query)
                     || depth.includes(query)
                     || duration.includes(query);
@@ -182,7 +165,10 @@
     class="mt-12"
 >
     <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h2 class="text-xl font-semibold text-white">🗂️ All Dives</h2>
+        <h2 class="text-xl font-semibold text-white inline-flex items-center gap-2">
+            @include('components.icon', ['name' => 'diving'])
+            <span>Your Dives</span>
+        </h2>
         <input type="text" x-model="search" placeholder="Search dives..." class="bg-slate-900 text-white border border-slate-700 px-3 py-2 rounded text-sm w-full sm:w-64" />
     </div>
 
@@ -194,6 +180,7 @@
                     <thead class="bg-slate-900 text-slate-400">
                         <tr>
                             <th class="px-4 py-3">#</th>
+                            <th class="px-4 py-3">Title</th>
                             <th class="px-4 py-3">Site</th>
                             <th class="px-4 py-3">Depth</th>
                             <th class="px-4 py-3">Duration</th>
@@ -207,6 +194,7 @@
                                 @click="window.location.href = `/logbook/${log.id}`"
                             >
                                 <td class="px-4 py-3" x-text="log.dive_number"></td>
+                                <td class="px-4 py-3 font-semibold text-white" x-text="log.title || '—'"></td>
                                 <td class="px-4 py-3 font-medium flex items-center justify-between">
                                     <span x-text="log.site?.name || '—'"></span>
                                     <span class="opacity-0 group-hover:opacity-100 text-cyan-400 transition-opacity">&rarr;</span>
@@ -228,11 +216,12 @@
                         class="bg-slate-800 rounded-xl p-4 shadow hover:bg-slate-700/50 transition cursor-pointer"
                     >
                         <div class="flex justify-between items-center mb-1">
-                            <h3 class="text-cyan-400 font-semibold text-lg" x-text="log.site?.name || '—'"></h3>
+                            <h3 class="text-cyan-400 font-semibold text-lg" x-text="log.title || '—'"></h3>
                             <span class="text-slate-400 text-sm" x-text="new Date(log.dive_date).toLocaleDateString()"></span>
                         </div>
                         <div class="text-slate-300 text-sm space-y-1">
                             <div><strong>#</strong> <span x-text="log.dive_number"></span></div>
+                            <div><strong>Title:</strong> <span x-text="log.site?.name || '—'"></span></div>
                             <div><strong>Depth:</strong> <span x-text="log.depth ? `${log.depth} m` : '—'"></span></div>
                             <div><strong>Duration:</strong> <span x-text="log.duration ? `${log.duration} min` : '—'"></span></div>
                         </div>
