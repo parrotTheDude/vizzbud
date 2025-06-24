@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', 'Vizzbud | Scuba Dive Sites & Conditions')</title>
     <link rel="canonical" href="{{ preg_replace('/^www\./', '', url()->current()) }}">
@@ -48,6 +49,7 @@
                 @if (auth()->user()->isAdmin())
                     <a href="{{ route('blog.index') }}" class="text-white hover:text-cyan-400 transition">Blog</a>
                     <a href="{{ route('admin.dashboard') }}" class="text-white hover:text-cyan-400 transition">Admin</a>
+                    <a href="{{ route('admin.blog.index') }}" class="text-white hover:text-cyan-400 transition">Manage Blog</a>
                 @endif
             @endauth
             @auth
@@ -107,6 +109,7 @@
             @if (auth()->user()->isAdmin())
                 <a href="{{ route('blog.index') }}" class="hover:text-cyan-400 transition">Blog</a>
                 <a href="{{ route('admin.dashboard') }}" class="hover:text-cyan-400 transition">Admin</a>
+                <a href="{{ route('admin.blog.index') }}" class="hover:text-cyan-400 transition">Manage Blog</a>
             @endif
 
             <form method="POST" action="{{ route('logout') }}">

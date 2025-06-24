@@ -96,6 +96,7 @@ Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(
     Route::get('/admin/blog/{post}/edit', [BlogPostController::class, 'edit'])->name('admin.blog.edit');
     Route::put('/admin/blog/{post}', [BlogPostController::class, 'update'])->name('admin.blog.update');
     Route::delete('/admin/blog/{post}', [BlogPostController::class, 'destroy'])->name('admin.blog.destroy');
+    Route::post('/admin/blog/upload-image', [BlogPostController::class, 'uploadImage'])->name('admin.blog.upload');
 });
 
 require __DIR__.'/auth.php';

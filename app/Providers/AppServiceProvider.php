@@ -4,6 +4,11 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use League\CommonMark\Environment\Environment;
+use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
+use League\CommonMark\MarkdownConverter;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -12,7 +17,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(MarkdownConverter::class, function () {
+            $environment = new Environment();
+            $environment->addExtension(new CommonMarkCoreExtension());
+
+            return new MarkdownConverter($environment);
+        });
+
+        $this->app->singleton(ImageManager::class, function () {
+            return new ImageManager(new GdDriver()); 
+        });
+
+        $this->app->alias(ImageManager::class, 'image'); // optional
     }
 
     /**
