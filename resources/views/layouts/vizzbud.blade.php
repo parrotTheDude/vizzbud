@@ -31,7 +31,10 @@
 <body class="bg-slate-900 text-white font-sans">
 
 <!-- Navbar -->
-<header class="fixed top-0 left-0 right-0 z-50 bg-[#0f172a]/60 backdrop-blur-md border-b border-slate-800 shadow-md transition-colors duration-300">
+<div x-data="{ open: false }">
+    <header 
+        class="fixed top-0 left-0 right-0 z-50 bg-[#0f172a]/60 backdrop-blur-md border-b border-slate-800 shadow-md transition-colors duration-300"
+    >
     <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <!-- Logo -->
         <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
@@ -74,6 +77,7 @@
             </button>
         </div>
     </div>
+</header>
 
 <!-- Full-Screen Mobile Menu -->
 <div
@@ -99,7 +103,7 @@
     </div>
 
     <!-- Centered Logo + Nav -->
-    <div class="flex-1 flex flex-col justify-center items-center space-y-6 text-lg">
+    <div class="flex-grow flex flex-col justify-center items-center space-y-6 text-lg">
         <div class="text-3xl font-bold text-cyan-400">Vizzbud</div>
 
         <a href="{{ route('dive-sites.index') }}" class="hover:text-cyan-400 transition">Site Map</a>
@@ -121,10 +125,9 @@
         @endauth
     </div>
 </div>
-</header>
 
     <!-- Main Content -->
-    <main class="pt-[64px] min-h-screen">
+    <main class="relative z-40 pt-[64px] min-h-screen">
         @yield('content')
     </main> 
 
