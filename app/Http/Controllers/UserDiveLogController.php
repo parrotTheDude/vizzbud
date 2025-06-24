@@ -132,7 +132,7 @@ class UserDiveLogController extends Controller
         'dive_site_id' => 'nullable|exists:dive_sites,id',
         'dive_date' => 'required|date',
         'depth' => 'required|numeric|min:0',
-        'duration' => 'required|date_format:H:i',
+        'duration' => 'required|integer|min:0',
         'buddy' => 'nullable|string|max:255',
         'notes' => 'nullable|string',
         'air_start' => 'nullable|numeric|min:0',
@@ -148,9 +148,6 @@ class UserDiveLogController extends Controller
     // Force time to now even if user only picked date
     $date = Carbon::parse($validated['dive_date'])->setTimeFrom(Carbon::now());
     $validated['dive_date'] = $date;
-
-    [$hours, $minutes] = explode(':', $validated['duration']);
-    $validated['duration'] = ((int) $hours * 60) + (int) $minutes;
 
     $validated['user_id'] = auth()->id();
 
@@ -284,7 +281,7 @@ class UserDiveLogController extends Controller
             'dive_site_id' => 'nullable|exists:dive_sites,id',
             'dive_date' => 'required|date',
             'depth' => 'required|numeric|min:0',
-            'duration' => 'required|date_format:H:i',
+            'duration' => 'required|integer|min:0',
             'buddy' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'air_start' => 'nullable|numeric|min:0',
@@ -298,9 +295,6 @@ class UserDiveLogController extends Controller
         ]);
 
         $validated['dive_date'] = Carbon::parse($validated['dive_date'])->setTimeFrom(Carbon::now());
-
-        [$hours, $minutes] = explode(':', $validated['duration']);
-        $validated['duration'] = ((int) $hours * 60) + (int) $minutes;
 
         $log->update($validated);
 

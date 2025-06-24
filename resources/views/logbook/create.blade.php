@@ -98,12 +98,14 @@
             </label>
 
             {{-- Duration --}}
-            <label class="block">
+            <label class="block relative">
                 <span class="block mb-1 text-sm text-white">Duration</span>
-                <input type="time" name="duration" step="60"
-                    class="w-full rounded p-2 text-black"
-                    placeholder="Duration"
+                <input type="number" name="duration"
+                    min="1"
+                    class="w-full rounded p-2 pr-12 text-black"
+                    placeholder="e.g. 45"
                     required />
+                <span class="absolute right-3 top-[38px] text-slate-500 pointer-events-none">min</span>
             </label>
 
             {{-- Visibility --}}
