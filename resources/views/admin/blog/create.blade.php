@@ -30,10 +30,30 @@
         </form>
     </div>
 </section>
+
 @push('scripts')
 <script src="https://cdn.tiny.cloud/1/{{ config('services.tinymce.key') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Auto-generate slug from title
+    const titleInput = document.querySelector('#title');
+    const slugInput = document.querySelector('#slug');
+    const slugDisplay = document.querySelector('#slugDisplay');
+
+    if (titleInput && slugInput && slugDisplay) {
+        titleInput.addEventListener('input', function () {
+            const slug = this.value
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, '-')  // replace non-alphanumerics with dashes
+                .replace(/^-+|-+$/g, '');     // trim dashes
+
+            slugInput.value = slug;
+            slugDisplay.textContent = slug;
+        });
+    }
+
+    // TinyMCE setup
     tinymce.init({
         selector: '#content',
         plugins: 'image code',
@@ -52,7 +72,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: formData
             })
             .then(res => res.json())
-            .then(data => success(data.location))
+            .then(data => {
+                if (data.location) {
+                    success(data.location);
+                } else {
+                    failure('Invalid response structure');
+                }
+            })
             .catch(() => failure('Image upload failed'));
         }
     });

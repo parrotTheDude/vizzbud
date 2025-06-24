@@ -46,7 +46,6 @@ class BlogPostController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:blog_posts',
             'excerpt' => 'required|string|max:300',
             'content' => 'required|string',
             'published_at' => 'nullable|date',
@@ -54,6 +53,18 @@ class BlogPostController extends Controller
             'featured_image_alt' => 'required|string|max:255',
         ]);
 
+        // Auto-generate unique slug from title
+        $originalSlug = \Str::slug($validated['title']);
+        $slug = $originalSlug;
+        $counter = 1;
+
+        while (BlogPost::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $counter++;
+        }
+
+        $validated['slug'] = $slug;
+
+        // Handle image upload + resize
         if ($request->hasFile('featured_image')) {
             $resized = $image->read($request->file('featured_image')->getPathname())
                 ->scale(width: 1200)
@@ -80,13 +91,27 @@ class BlogPostController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:blog_posts,slug,' . $post->id,
             'excerpt' => 'required|string|max:300',
             'content' => 'required|string',
             'published_at' => 'nullable|date',
             'featured_image' => 'nullable|image|max:2048',
             'featured_image_alt' => 'required|string|max:255',
         ]);
+
+        // If title has changed, regenerate slug
+        if ($validated['title'] !== $post->title) {
+            $originalSlug = \Str::slug($validated['title']);
+            $slug = $originalSlug;
+            $counter = 1;
+
+            while (BlogPost::where('slug', $slug)->where('id', '!=', $post->id)->exists()) {
+                $slug = $originalSlug . '-' . $counter++;
+            }
+
+            $validated['slug'] = $slug;
+        } else {
+            $validated['slug'] = $post->slug;
+        }
 
         if ($request->hasFile('featured_image')) {
             $resized = $image->read($request->file('featured_image')->getPathname())
@@ -137,5 +162,14 @@ class BlogPostController extends Controller
 
             return response()->json(['error' => 'Upload failed.'], 500);
         }
+    }
+
+    public function togglePublish(BlogPost $post)
+    {
+        $post->published = !$post->published;
+        $post->published_at = $post->published ? now() : null;
+        $post->save();
+
+        return back()->with('success', 'Post status updated.');
     }
 }

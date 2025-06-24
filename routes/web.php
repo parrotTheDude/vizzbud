@@ -97,6 +97,8 @@ Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(
     Route::put('/admin/blog/{post}', [BlogPostController::class, 'update'])->name('admin.blog.update');
     Route::delete('/admin/blog/{post}', [BlogPostController::class, 'destroy'])->name('admin.blog.destroy');
     Route::post('/admin/blog/upload-image', [BlogPostController::class, 'uploadImage'])->name('admin.blog.upload');
+
+    Route::patch('/admin/blog/{post}/toggle-publish', [BlogPostController::class, 'togglePublish'])->name('admin.blog.togglePublish');
 });
 
 require __DIR__.'/auth.php';

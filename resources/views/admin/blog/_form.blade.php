@@ -2,27 +2,25 @@
 
 <div>
     <label class="block text-slate-300 mb-1">Title</label>
-    <input name="title" value="{{ old('title', $post->title ?? '') }}" class="w-full p-2 rounded bg-slate-700 text-white" required />
+    <input id="title" name="title" value="{{ old('title', $post->title ?? '') }}" class="w-full p-2 rounded bg-slate-700 text-white" required />
+
+    {{-- Auto-generated slug display --}}
+    <p class="text-sm text-slate-400 mt-1">
+        Slug: <span id="slugDisplay" class="font-mono">{{ old('slug', $post->slug ?? '') }}</span>
+    </p>
+
+    {{-- Hidden input to store slug for submission --}}
+    <input type="hidden" id="slug" name="slug" value="{{ old('slug', $post->slug ?? '') }}" />
 </div>
 
 <div>
-    <label class="block text-slate-300 mb-1">Slug</label>
-    <input name="slug" value="{{ old('slug', $post->slug ?? '') }}" class="w-full p-2 rounded bg-slate-700 text-white" required />
-</div>
-
-<div>
-    <label class="block text-slate-300 mb-1">Excerpt</label>
+    <label class="block text-slate-300 mb-1">Description</label>
     <textarea name="excerpt" rows="2" class="w-full p-2 rounded bg-slate-700 text-white" required>{{ old('excerpt', $post->excerpt ?? '') }}</textarea>
 </div>
 
 <div>
-    <label class="block text-slate-300 mb-1">Body</label>
-    <textarea id="content" name="content" class="w-full p-2 rounded bg-white text-black" rows="12" required>{{ old('content', $post->content ?? '') }}</textarea>
-</div>
-
-<div>
-    <label class="block text-slate-300 mb-1">Published At (optional)</label>
-    <input type="datetime-local" name="published_at" value="{{ old('published_at', isset($post) && $post->published_at ? $post->published_at->format('Y-m-d\TH:i') : '') }}" class="w-full p-2 rounded bg-slate-700 text-white" />
+    <label class="block text-slate-300 mb-1">Content</label>
+    <textarea id="content" name="content" class="w-full p-2 rounded bg-white text-black" rows="12">{{ old('content', $post->content ?? '') }}</textarea>
 </div>
 
 <div class="mt-4">
