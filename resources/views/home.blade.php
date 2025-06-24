@@ -5,6 +5,29 @@
 
 @section('content')
 
+{{-- 🌊 HERO SECTION --}}
+<section class="relative min-h-screen bg-cover bg-center flex items-center justify-center" style="background-image: url('/turtle.webp');">
+    {{-- Dark overlay layer for contrast --}}
+    <div class="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/60 to-slate-900/80 backdrop-blur-sm"></div>
+
+    <div class="relative z-10 text-center px-6 py-24 sm:py-32 max-w-4xl">
+        <h1 class="text-6xl sm:text-7xl font-extrabold text-white leading-tight drop-shadow mb-6">
+            Plan. Dive. Log. Explore.
+        </h1>
+        <p class="text-xl sm:text-2xl text-slate-200 max-w-2xl mx-auto mb-8">
+            Track live dive conditions, explore dive sites, and record your underwater adventures with <span class="text-cyan-400 font-semibold">Vizzbud</span>.
+        </p>
+        <a href="{{ route('dive-sites.index') }}"
+        class="inline-flex items-center gap-3 px-5 py-3 rounded-xl text-white text-base font-semibold shadow-lg transition backdrop-blur-md"
+        style="background-color: rgba(5, 62, 155, 0.6);">
+        
+        @include('components.icon', ['name' => 'map'])
+
+        <span>Explore Dive Map</span>
+        </a>
+    </div>
+</section>
+
 @if (!$featured)
     <div class="p-6 text-center text-red-500 font-bold">
         No featured site available. Please check if dive sites have conditions.
