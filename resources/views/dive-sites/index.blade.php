@@ -9,93 +9,156 @@
 
 @section('content')
 <img id="arrow-icon" src="/icons/right-arrow.svg" style="display:none;" />
-<div class="fixed top-[64px] left-0 right-0 bottom-0 w-full h-[calc(100vh-64px)] overflow-hidden bg-white z-10" x-data="diveSiteMap({ sites: @js($sites) })">
+<div
+  class="relative w-full bg-white"
+  style="height: calc(100vh - 64px);"
+  x-data="diveSiteMap({ sites: @js($sites) })"
+>
     {{-- Search and Controls --}}
-    <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 space-y-2 w-full px-4 sm:left-1 sm:transform-none sm:max-w-[428px] sm:w-auto">
+   <div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 space-y-2 w-full px-4 sm:left-1 sm:translate-x-0 sm:max-w-[428px] sm:w-auto">
         <div class="flex items-center gap-2">
             {{-- Search Bar --}}
             <div class="relative z-40 mb-2 w-full sm:w-[364px]" x-data="siteSearch()">
-            <input
-                type="text"
-                x-model="query"
-                @focus="open = true"
-                @click.away="open = false"
-                @keydown.arrow-down.prevent="move(1)"
-                @keydown.arrow-up.prevent="move(-1)"
-                @keydown.enter.prevent="select(focusedIndex)"
-                placeholder="Search dive sites..."
-                class="w-full rounded-full px-5 py-3 pr-12 text-black bg-slate-100 z-30 relative"
-            />
+              <input
+                  type="text"
+                  x-model="query"
+                  @focus="open = true"
+                  @click.away="open = false"
+                  @keydown.arrow-down.prevent="move(1)"
+                  @keydown.arrow-up.prevent="move(-1)"
+                  @keydown.enter.prevent="select(focusedIndex)"
+                  placeholder="Search dive sites..."
+                  class="w-full rounded-full px-5 py-3 pr-12 
+                          text-black placeholder-slate-600 
+                          bg-white/30 backdrop-blur-md
+                          hover:ring-2 hover:ring-cyan-400
+                          border border-white/30 shadow-lg
+                          focus:outline-none focus:ring-2 focus:ring-cyan-400
+                          transition"
+              />
 
-                <button x-show="query.length" type="button" @click="query=''; selectedId=null; open=false; const m=Alpine.$data(document.querySelector('[x-data^=diveSiteMap]')); if(m) m.selectedSite=null;" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black text-2xl z-40">×</button>
+              {{-- Clear button --}}
+              <button 
+                  x-show="query.length" 
+                  type="button" 
+                  @click="query=''; selectedId=null; open=false; const m=Alpine.$data(document.querySelector('[x-data^=diveSiteMap]')); if(m) m.selectedSite=null;" 
+                  class="absolute right-3 top-1/2 -translate-y-1/2 
+                          text-slate-500 hover:text-black 
+                          text-2xl z-40 transition">
+                  ×
+              </button>
 
-                <input type="hidden" name="dive_site_id" :value="selectedId">
+              <input type="hidden" name="dive_site_id" :value="selectedId">
 
-                <ul x-show="open && filtered.length"
-                    class="absolute z-30 bg-white text-black rounded shadow w-full mt-1 max-h-60 overflow-y-auto border border-gray-300"
-                    x-transition>
-                    <template x-for="(site, index) in filtered" :key="site.id">
-                        <li :class="{
-                                'bg-cyan-100': index === focusedIndex,
-                                'px-4 py-2 cursor-pointer': true
-                            }"
-                            @click="select(index)"
-                            @mouseover="focusedIndex = index"
-                            x-text="site.name"
-                        ></li>
-                    </template>
-                </ul>
+              {{-- Dropdown --}}
+              <ul 
+                  x-show="open && filtered.length"
+                  class="absolute z-30 
+                        bg-white/30 backdrop-blur-md 
+                        text-black rounded-2xl shadow-lg w-full mt-2 
+                        max-h-60 overflow-y-auto border border-white/30
+                        animate-fade-in"
+                  x-transition
+              >
+                  <template x-for="(site, index) in filtered" :key="site.id">
+                      <li 
+                          :class="{
+                              'bg-white/50 backdrop-blur-sm text-black': index === focusedIndex,
+                              'px-4 py-2 cursor-pointer transition-colors': true
+                          }"
+                          @click="select(index)"
+                          @mouseover="focusedIndex = index"
+                          x-text="site.name"
+                      ></li>
+                  </template>
+              </ul>
             </div>
 
             <button
                 @click="showFilters = !showFilters"
-                class="bg-cyan-500 hover:bg-cyan-600 text-white rounded-full w-10 h-10 shadow-sm flex items-center justify-center relative -top-1 z-40"
+                class="bg-white/30 backdrop-blur-md border border-white/30 
+                      hover:ring-2 hover:ring-cyan-400
+                      text-slate-800 rounded-full w-10 h-10 
+                      shadow-md flex items-center justify-center 
+                      transition relative -top-1 z-40"
             >
-                <img src="/icons/filter.svg" alt="Filter" class="w-6 h-6 invert">
+                <img src="/icons/filter.svg" alt="Filter" class="w-6 h-6">
             </button>
         </div>
 
-        <div x-show="showFilters" x-transition>
-            {{-- Filters --}}
-            <div class="bg-white rounded p-2 shadow space-y-2 text-sm relative z-30 w-full sm:w-[395px]">
-                <select x-model="filterLevel" @change="$dispatch('filter-changed')" class="w-full border border-slate-500 rounded p-2 bg-white text-slate-800 font-semibold shadow-sm">
-                    <option value="">All Levels</option>
-                    <option value="Open Water">Open Water</option>
-                    <option value="Advanced">Advanced</option>
-                    <option value="Deep">Deep</option>
-                </select>
+       <div x-show="showFilters" x-transition>
+        {{-- Filters --}}
+        <div class="bg-white/30 backdrop-blur-md border border-white/30
+                    rounded-xl p-3 shadow-lg space-y-3 text-sm relative z-30
+                    w-full sm:w-[395px]">
 
-                <select x-model="filterType" @change="$dispatch('filter-changed')" class="w-full border border-slate-500 rounded p-2 bg-white text-slate-800 font-semibold shadow-sm">
-                    <option value="">All Types</option>
-                    <option value="shore">Shore</option>
-                    <option value="boat">Boat</option>
-                </select>
+          <select
+            x-model="filterLevel"
+            @change="$dispatch('filter-changed')"
+            class="w-full rounded-lg px-3 py-2
+                  bg-white/40 backdrop-blur-sm border border-white/30
+                  text-slate-800 font-semibold shadow-sm
+                  focus:ring-2 focus:ring-cyan-400 focus:outline-none">
+            <option value="">All Levels</option>
+            <option value="Open Water">Open Water</option>
+            <option value="Advanced">Advanced</option>
+            <option value="Deep">Deep</option>
+          </select>
 
-                <button @click="centerMap" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white rounded px-2 py-1">🎯 Center Map</button>
-            </div>
+          <select
+            x-model="filterType"
+            @change="$dispatch('filter-changed')"
+            class="w-full rounded-lg px-3 py-2
+                  bg-white/40 backdrop-blur-sm border border-white/30
+                  text-slate-800 font-semibold shadow-sm
+                  focus:ring-2 focus:ring-cyan-400 focus:outline-none">
+            <option value="">All Types</option>
+            <option value="shore">Shore</option>
+            <option value="boat">Boat</option>
+          </select>
+
+          {{-- Actions: full-width when no filters, split 2 columns when any filter is set --}}
+          <div :class="hasActiveFilters ? 'grid grid-cols-2 gap-2' : ''">
+            <button
+              @click="centerMap"
+              class="w-full rounded-full px-4 py-2 font-semibold
+                    bg-cyan-500/90 hover:bg-cyan-500 text-white shadow-md transition">
+              Center Map
+            </button>
+
+            <template x-if="hasActiveFilters">
+              <button
+                @click="resetFilters"
+                class="w-full rounded-full px-4 py-2 font-semibold
+                      bg-white/40 hover:bg-white/50 text-slate-900
+                      border border-white/40 backdrop-blur-sm shadow transition">
+                Reset
+              </button>
+            </template>
+          </div>
         </div>
+      </div>
     </div>
 
     {{-- Map --}}
-    <div id="map" class="w-full h-full"></div>
+    <div id="map" class="w-full" style="height: calc(100vh - 64px);"></div>
 
     {{-- Info Sidebar for Desktop --}}
-    <div 
+    <div
         x-show="!isMobileView"
         :class="selectedSite && !isMobileView ? 'translate-x-0' : '-translate-x-full'"
         class="absolute top-0 left-0 h-full max-w-[430px] w-full bg-white shadow-xl z-10 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-[4.5rem]">
         @include('dive-sites.partials.info')
     </div>
 
-    {{-- Info Bottom Sheet for Mobile --}}
-    <div 
-        x-show="isMobileView"
-        id="mobileInfoPanel"
-        :class="selectedSite && isMobileView ? 'translate-y-0' : 'translate-y-full'"
-        class="fixed bottom-0 left-0 right-0 h-[60vh] bg-white shadow-xl z-20 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-6 rounded-t-2xl"
-    >
-        @include('dive-sites.partials.info')
-    </div>
+  {{-- Info Bottom Sheet for Mobile --}}
+  <div
+    x-show="isMobileView"
+    id="mobileInfoPanel"
+    :class="selectedSite && isMobileView ? 'translate-y-0' : 'translate-y-full'"
+    class="absolute bottom-0 left-0 right-0 h-[60vh] bg-white shadow-xl z-20 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-6 rounded-t-2xl">
+    @include('dive-sites.partials.info')
+  </div>
 </div>
 @endsection
 
@@ -145,8 +208,8 @@ function diveSiteMap({ sites }) {
             this.map = new mapboxgl.Map({
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v11',
-                center: [151.2153, -33.8568],
-                zoom: 10
+                center: [151.2653, -33.8568],
+                zoom:11
             });
 
             this.map.on('click', (e) => {
@@ -450,6 +513,25 @@ function diveSiteMap({ sites }) {
                     });
                 }, 50);
             });
+        },
+
+        get hasActiveFilters() {
+          return !!(this.filterLevel || this.filterType);
+        },
+
+        resetFilters() {
+          this.filterLevel = '';
+          this.filterType  = '';
+          this.selectedSite = null;     // optional: clear selection
+          this.renderSites();
+
+          // optional: clear the search input component
+          const searchRoot = document.querySelector('[x-data^="siteSearch"]');
+          const searchComponent = window.Alpine && Alpine.$data(searchRoot);
+          if (searchComponent) {
+            searchComponent.query = '';
+            searchComponent.selectedId = null;
+          }
         },
 
         get filteredSites() {
