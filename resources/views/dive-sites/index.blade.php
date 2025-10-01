@@ -50,28 +50,33 @@
 
               <input type="hidden" name="dive_site_id" :value="selectedId">
 
-              {{-- Dropdown --}}
-              <ul 
-                  x-show="open && filtered.length"
-                  class="absolute z-30 
-                        bg-white/30 backdrop-blur-md 
-                        text-black rounded-2xl shadow-lg w-full mt-2 
-                        max-h-60 overflow-y-auto border border-white/30
-                        animate-fade-in"
-                  x-transition
+              <ul
+                x-show="open && filtered.length"
+                data-search-list
+                class="absolute z-30 bg-white/30 backdrop-blur-md text-black rounded-2xl shadow-lg w-full mt-2 max-h-60 overflow-y-auto border border-white/30"
+                x-transition
               >
-                  <template x-for="(site, index) in filtered" :key="site.id">
-                      <li 
-                          :class="{
-                              'bg-white/50 backdrop-blur-sm text-black': index === focusedIndex,
-                              'px-4 py-2 cursor-pointer transition-colors': true
-                          }"
-                          @click="select(index)"
-                          @mouseover="focusedIndex = index"
-                          x-text="site.name"
-                      ></li>
-                  </template>
+                <template x-for="(site, index) in filtered" :key="site.id">
+                  <li
+                    :data-item="index"
+                    :class="{
+                      'bg-white/50 backdrop-blur-sm': index === focusedIndex,
+                      'px-4 py-2 cursor-pointer transition-colors': true
+                    }"
+                    @click="select(index)"
+                    @mouseover="focusedIndex = index"
+                    x-html="highlight(site.name, debouncedQuery)"
+                  ></li>
+                </template>
               </ul>
+
+              <!-- Optional “no results” block -->
+              <div
+                x-show="open && !filtered.length && debouncedQuery"
+                class="mt-2 rounded-xl bg-white/30 backdrop-blur-md border border-white/30 p-3 text-sm text-slate-700"
+              >
+                No results for “<span x-text="query"></span>”.
+              </div>
             </div>
 
             <button
@@ -218,6 +223,17 @@ function diveSiteMap({ sites }) {
         dragging: false,
 
         init() {
+
+            this.map = new mapboxgl.Map({
+              container: 'map',
+              style: 'mapbox://styles/mapbox/streets-v11',
+              center: [151.2653, -33.8568],
+              zoom: 11
+            });
+
+            this.map.setPadding({ left: 430, right: 0, top: 0, bottom: 0 });
+            this.map.resize();
+
             const urlParams = new URLSearchParams(window.location.search);
             const lat = parseFloat(urlParams.get('lat'));
             const lng = parseFloat(urlParams.get('lng'));
@@ -238,13 +254,6 @@ function diveSiteMap({ sites }) {
                 }
             }
 
-            this.map = new mapboxgl.Map({
-                container: 'map',
-                style: 'mapbox://styles/mapbox/streets-v11',
-                center: [151.2653, -33.8568],
-                zoom:11
-            });
-
             this.map.on('click', (e) => {
                 console.log('Map clicked at:', e.lngLat);
             });
@@ -256,22 +265,28 @@ function diveSiteMap({ sites }) {
                     data: { type: 'FeatureCollection', features: [] }
                 });
 
-                // Add circle layer for dive sites
                 this.map.addLayer({
-                    id: 'site-layer',
-                    type: 'circle',
-                    source: 'dive-sites',
-                    paint: {
-                        'circle-radius': [
-                            'case',
-                            ['boolean', ['get', 'selected'], false],
-                            14,
-                            8
-                        ],
-                        'circle-color': ['get', 'color'],
-                        'circle-stroke-width': 2,
-                        'circle-stroke-color': '#ffffff'
-                    }
+                  id: 'site-layer',
+                  type: 'circle',
+                  source: 'dive-sites',
+                  paint: {
+                    // solid inner dot (match your nav color)
+                    'circle-color': '#0e7490', // Tailwind cyan-700
+
+                    // status ring from feature property "color"
+                    'circle-stroke-color': ['get', 'color'],
+                    'circle-stroke-width': [
+                      'case', ['boolean', ['get', 'selected'], false],
+                      4, // thicker if selected
+                      3
+                    ],
+
+                    'circle-radius': [
+                      'case', ['boolean', ['get', 'selected'], false],
+                      10,
+                      7
+                    ]
+                  }
                 });
 
                 // Click handler for selecting a site
@@ -575,85 +590,34 @@ function diveSiteMap({ sites }) {
         },
 
         renderSites() {
-            const features = this.filteredSites.map(site => ({
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [site.lng, site.lat]
-                },
-                properties: {
-                    id: site.id,
-                    color: this.getConditionColor(site.conditions?.waveHeight?.noaa),
-                    selected: this.selectedSite && this.selectedSite.id === site.id
-                }
-            }));
-
-            if (this.map.getSource('dive-sites')) {
-                this.map.getSource('dive-sites').setData({
-                    type: 'FeatureCollection',
-                    features: features
-                });
-            } else {
-                this.map.addSource('dive-sites', {
-                    type: 'geojson',
-                    data: {
-                        type: 'FeatureCollection',
-                        features: features
-                    }
-                });
-
-                this.map.addLayer({
-                    id: 'site-layer',
-                    type: 'circle',
-                    source: 'dive-sites',
-                    paint: {
-                        'circle-radius': [
-                            'case',
-                            ['boolean', ['get', 'selected'], false],
-                            14,
-                            8
-                        ],
-                        'circle-color': ['get', 'color'],
-                        'circle-stroke-width': 2,
-                        'circle-stroke-color': '#ffffff'
-                    }
-                });
-
-                this.map.addLayer({
-                    id: 'site-symbols',
-                    type: 'symbol',
-                    source: 'dive-sites',
-                    layout: {
-                        'icon-image': 'diving-icon',
-                        'icon-size': 0.05, // Adjust to suit your icon size
-                        'icon-allow-overlap': true
-                    }
-                });
-
-                this.map.on('click', 'site-layer', (e) => {
-                    const id = e.features[0].properties.id;
-                    this.selectedSite = this.sites.find(site => site.id == id);
-                    this.showFilters = false;
-                    const site = this.selectedSite;
-                    if (site) {
-                        this.map.flyTo({ center: [site.lng, site.lat], zoom: 12 });
-                    }
-
-                    this.renderSites();
-
-                    const searchRoot = document.querySelector('[x-data^="siteSearch"]');
-                    const searchComponent = Alpine && Alpine.$data(searchRoot);
-                    if (searchComponent) {
-                        searchComponent.setQuery(this.selectedSite.name);
-                    }
-                });
+          const features = this.filteredSites.map(site => ({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [site.lng, site.lat] },
+            properties: {
+              id: site.id,
+              color: this.getStatusColor(site.status || site.latestCondition?.status),
+              selected: this.selectedSite && this.selectedSite.id === site.id
             }
+          }));
+
+          const coll = { type: 'FeatureCollection', features };
+
+          if (this.map.getSource('dive-sites')) {
+            this.map.getSource('dive-sites').setData(coll);
+          }
         },
 
-        getConditionColor(waveHeight) {
-            if (waveHeight < 1) return '#00ff88';
-            if (waveHeight < 2) return '#ffcc00';
-            return '#ff4444';
+        getStatusColor(status) {
+          switch ((status || '').toLowerCase()) {
+            case 'green':
+              return 'rgba(0, 255, 55, 1)';   // cyan-400, bright / neon teal
+            case 'yellow':
+              return 'rgba(251, 255, 0, 1)';   // yellow-300, glowing yellow
+            case 'red':
+              return 'rgba(255, 0, 0, 1)';    // red-500, bold electric red
+            default:
+              return 'rgba(156, 163, 175, 0.9)'; // slate-500, neutral but strong
+          }
         },
 
         centerMap() {
@@ -682,49 +646,148 @@ function diveSiteMap({ sites }) {
 }
 
 function siteSearch() {
-    return {
-        sites: @json($sites),
-        query: '',
-        open: false,
-        selectedId: null,
-        focusedIndex: 0,
+  return {
+    sites: @json($sites),
+    query: '',
+    debouncedQuery: '',
+    open: false,
+    selectedId: null,
+    focusedIndex: 0,
+    _t: null, // debounce timer
 
-        get filtered() {
-            const q = this.query.toLowerCase();
-            return this.sites.filter(site => site.name.toLowerCase().includes(q));
-        },
+    init() {
+      // Debounce the query so filtering isn’t done on every keypress
+      this.$watch('query', () => {
+        clearTimeout(this._t);
+        this._t = setTimeout(() => {
+          this.debouncedQuery = (this.query || '').trim();
+          this.focusedIndex = 0;
+        }, 120);
+      });
 
-        move(direction) {
-            if (!this.filtered.length) return;
-            this.focusedIndex = (this.focusedIndex + direction + this.filtered.length) % this.filtered.length;
-        },
-
-        select(index) {
-            const site = this.filtered[index];
-            if (site) {
-                this.query = site.name;
-                this.selectedId = site.id;
-                this.open = false;
-
-                const root = document.querySelector('[x-data^="diveSiteMap"]');
-                const mapComponent = Alpine && Alpine.$data(root);
-
-                if (mapComponent) {
-                    mapComponent.selectedSite = site;
-                    mapComponent.showFilters = false;
-                    mapComponent.map.flyTo({ center: [site.lng, site.lat], zoom: 12 });
-
-                    if (mapComponent.map.getSource('dive-sites')) {
-                        mapComponent.renderSites();
-                    }
-                }
-            }
-        },
-
-        setQuery(name) {
-            this.query = name;
+      // Close on Escape, clear if already closed
+      this.$el.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (this.open && this.debouncedQuery) this.query = '';
+          this.open = false;
         }
-    };
+      });
+    },
+
+    // --- Filtering / ranking ---
+    get filtered() {
+      const q = this.normalize(this.debouncedQuery);
+      const max = 20;
+
+      // Show nothing if empty query
+      if (!q) return [];
+
+      // Try to boost by closeness to user if available
+      const mapRoot = document.querySelector('[x-data^="diveSiteMap"]');
+      const mapComponent = window.Alpine && Alpine.$data(mapRoot);
+      const hasUser = !!(mapComponent && mapComponent.userLat && mapComponent.userLng);
+
+      const results = this.sites
+        .map(site => {
+          const name = site.name || '';
+          const score = this.score(name, q)
+            + (hasUser ? this.distanceBoost(site, mapComponent.userLat, mapComponent.userLng) : 0);
+          return { site, score };
+        })
+        .filter(r => r.score > 0) // keep only meaningful matches
+        .sort((a, b) => b.score - a.score)
+        .slice(0, max)
+        .map(r => r.site);
+
+      return results;
+    },
+
+    score(name, q) {
+      const n = this.normalize(name);
+      if (!n) return 0;
+      if (n === q) return 100;                 // exact
+      if (n.startsWith(q)) return 80;          // prefix
+      if (n.split(' ').some(w => w.startsWith(q))) return 60; // word-prefix
+      if (n.includes(q)) return 40;            // substring
+      // lightweight fuzzy: all chars in order
+      let i = 0, hits = 0;
+      for (const c of n) { if (c === q[i]) { hits++; i++; if (i >= q.length) break; } }
+      return hits >= Math.max(2, Math.ceil(q.length * 0.6)) ? 25 : 0;
+    },
+
+    distanceBoost(site, userLat, userLng) {
+      if (!site.lat || !site.lng) return 0;
+      // very rough distance scaling to give a small bump to closer sites
+      const d = Math.hypot(site.lat - userLat, site.lng - userLng);
+      // closer → bigger boost, cap it
+      return Math.max(0, 12 - d * 50); // tune as you like
+    },
+
+    normalize(s) {
+      return (s || '')
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // strip accents
+        .trim();
+    },
+
+    // --- UI helpers ---
+    move(direction) {
+      if (!this.filtered.length) return;
+      this.focusedIndex = (this.focusedIndex + direction + this.filtered.length) % this.filtered.length;
+      // keep focused item in view
+      this.$nextTick(() => {
+        const list = this.$el.querySelector('[data-search-list]');
+        const item = list?.querySelector(`[data-item="${this.focusedIndex}"]`);
+        if (item && list) {
+          const top = item.offsetTop, bottom = top + item.offsetHeight;
+          if (top < list.scrollTop) list.scrollTop = top;
+          else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+        }
+      });
+    },
+
+    select(index) {
+      const site = this.filtered[index];
+      if (!site) return;
+
+      this.query = site.name;
+      this.selectedId = site.id;
+      this.open = false;
+
+      const root = document.querySelector('[x-data^="diveSiteMap"]');
+      const mapComponent = window.Alpine && Alpine.$data(root);
+
+      if (mapComponent) {
+        mapComponent.selectedSite = site;
+        mapComponent.showFilters = false;
+        mapComponent.map.flyTo({ center: [site.lng, site.lat], zoom: 12 });
+
+        if (mapComponent.map.getSource('dive-sites')) {
+          mapComponent.renderSites();
+        }
+      }
+    },
+
+    setQuery(name) {
+      this.query = name;
+    },
+
+    highlight(label, q) {
+      if (!q) return label;
+      const safe = (s) => s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+      const nLabel = this.normalize(label);
+      const nq = this.normalize(q);
+      const i = nLabel.indexOf(nq);
+      if (i === -1) return safe(label);
+      return safe(label.slice(0, i)) +
+             '<mark class="bg-cyan-300/40 text-inherit rounded px-0.5">' +
+             safe(label.slice(i, i + q.length)) +
+             '</mark>' +
+             safe(label.slice(i + q.length));
+    },
+  };
 }
 </script>
 @endpush

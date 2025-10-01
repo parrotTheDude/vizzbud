@@ -29,6 +29,7 @@ class DiveSiteController extends Controller
                 'dive_type' => $site->dive_type,
                 'suitability' => $site->suitability,
                 'retrieved_at' => optional($c)->retrieved_at?->toDateTimeString(),
+                'status'      => $c?->status,
         
                 'conditions' => $c ? [
                     'waveHeight'     => ['noaa' => $c->wave_height],
