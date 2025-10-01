@@ -137,12 +137,12 @@
       </div>
     </div>
 
-    <!-- 📈 Swell Height Forecast Chart (glassy container) -->
+    <!-- 📈 Swell Height Forecast Chart -->
+    @php($chartId = $chartId ?? 'swellChart')
     <div class="px-1 sm:px-2" x-show="selectedSite.forecast && selectedSite.forecast.length">
-      <h3 class="px-2 text-base sm:text-lg font-semibold text-slate-800 mb-3">📈 Swell Height (Next 48 Hours)</h3>
-      <div class="w-full h-64 rounded-xl overflow-hidden
-                  bg-white/20 backdrop-blur-md border border-white/20 shadow-sm p-3">
-        <canvas id="swellChart"></canvas>
+      <h3 class="px-2 text-base sm:text-lg font-semibold text-slate-800 mb-3">Swell Forecast (Next 24h)</h3>
+      <div class="w-full h-64 rounded-xl overflow-hidden bg-white/20 backdrop-blur-md border border-white/20 shadow-sm p-3">
+        <canvas id="{{ $chartId }}"></canvas>
       </div>
       <div class="mt-2 text-[11px] text-slate-600 flex items-center gap-1 px-2">
         <img src="/icons/update.svg" class="w-3 h-3" alt="Updated">
