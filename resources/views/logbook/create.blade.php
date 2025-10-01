@@ -4,174 +4,286 @@
 @section('meta_description', 'Record a new scuba dive including site, depth, duration, gear, and conditions. Keep your dive history organized with Vizzbud.')
 
 @section('content')
-<section class="max-w-2xl mx-auto px-4 sm:px-6 py-12">
+@php $returnTo = request('return', route('logbook.index')); @endphp
+<section class="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
 
-    {{-- Back Button --}}
-    <div class="mb-6">
-        <a href="{{ route('logbook.index') }}"
-            class="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-semibold text-sm sm:text-base transition">
-            @include('components.icon', ['name' => 'back'])
-            <span>Back to Dive Log</span>
-        </a>
+  {{-- Back --}}
+  <div class="mb-6">
+    <a href="{{ $returnTo }}"
+       class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold
+              text-white bg-white/10 border border-white/10 ring-1 ring-white/10 backdrop-blur-md
+              hover:bg-white/15 transition">
+      <span>Back to Dive Log</span>
+    </a>
+  </div>
+
+  {{-- Header + Stepper --}}
+  <header class="mb-5 flex items-center justify-between">
+    <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">Log a New Dive</h1>
+    <div class="hidden sm:flex items-center gap-2 text-xs">
+      <span x-show="step===1" class="rounded-full px-2.5 py-1 bg-cyan-500/15 text-cyan-200 ring-1 ring-cyan-400/30 border border-white/10">Step 1</span>
+      <span x-show="step===2" class="rounded-full px-2.5 py-1 bg-cyan-500/15 text-cyan-200 ring-1 ring-cyan-400/30 border border-white/10">Step 2</span>
+    </div>
+  </header>
+
+  <form method="POST" action="{{ route('logbook.store') }}"
+        class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-5 sm:p-6 space-y-6"
+        x-data="createDive({ sites: @js($siteOptions) })"
+        x-init="initDate()"
+        @submit.prevent="step === 1 ? (canGoStep2() ? (step=2, focusStep2()) : (siteError = !selectedId)) : $el.submit()">
+
+    @csrf
+    <input type="hidden" name="_return" value="{{ $returnTo }}"/>
+
+    {{-- STEP 1 --}}
+    <div x-show="step === 1" x-transition>
+      {{-- Dive Site (combobox) --}}
+      <label class="block">
+        <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">
+            Dive Site <span class="text-rose-300">*</span>
+        </span>
+
+        <!-- add isolate + relative + z-[1] to make a local stacking context -->
+        <div class="relative isolate z-[1]" @keydown.escape="open=false" @click.outside="open=false">
+            <input
+            x-ref="search"
+            type="text"
+            x-model="query"
+            @focus="open=true"
+            @input="debounceFilter"
+            @keydown.arrow-down.prevent="move(1)"
+            @keydown.arrow-up.prevent="move(-1)"
+            @keydown.enter.prevent="select(focusedIndex)"
+            placeholder="Search dive sites…"
+            :class="['w-full rounded-xl px-4 py-2.5 text-white placeholder-white/50',
+                    'bg-white/10 backdrop-blur-md border ring-1',
+                    siteError ? 'border-rose-400/50 ring-rose-400/30' : 'border-white/10 ring-white/10']"
+            aria-autocomplete="list" :aria-expanded="open" aria-haspopup="listbox"
+            />
+
+            <input type="hidden" name="dive_site_id" :value="selectedId" />
+
+            <!-- bump z-index to guarantee it sits on top -->
+            <ul
+            x-show="open && filtered.length"
+            x-transition
+            role="listbox"
+            class="absolute z-50 mt-2 w-full max-h-60 overflow-y-auto rounded-xl
+                    bg-slate-900/85 backdrop-blur-md border border-white/10 ring-1 ring-white/10 shadow-xl"
+            >
+            <template x-for="(site, i) in filtered" :key="site.id">
+                <li
+                :class="['px-4 py-2 cursor-pointer text-sm',
+                        i===focusedIndex ? 'bg-white/10' : 'hover:bg-white/5']"
+                @click="select(i)"
+                @mouseover="focusedIndex=i"
+                x-html="highlight(site.name, query)"
+                ></li>
+            </template>
+            </ul>
+        </div>
+        </label>
+
+      {{-- Title --}}
+      <label class="block">
+        <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Dive Title</span>
+        <input type="text" name="title" x-model="title" @input="autoTitle=false"
+               placeholder="e.g. Bare Island Fun Dive"
+               class="w-full rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"/>
+      </label>
+
+      {{-- Date & Time --}}
+      <label class="block">
+        <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Dive Date &amp; Time</span>
+        <input type="datetime-local" name="dive_date" x-model="diveDate" required
+               class="w-full rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"/>
+      </label>
+
+      {{-- Depth / Duration / Visibility --}}
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <label class="block relative">
+          <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Depth</span>
+          <input type="number" step="0.1" name="depth" x-model="depth" required
+                 class="w-full rounded-xl px-4 py-2.5 pr-10 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+                 placeholder="e.g. 18"/>
+          <span class="pointer-events-none absolute right-3 top-[38px] text-sm text-slate-300">m</span>
+        </label>
+
+        <label class="block relative">
+          <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Duration</span>
+          <input type="number" name="duration" x-model="duration" required
+                 class="w-full rounded-xl px-4 py-2.5 pr-12 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+                 placeholder="e.g. 45"/>
+          <span class="pointer-events-none absolute right-3 top-[38px] text-sm text-slate-300">min</span>
+        </label>
+
+        <label class="block relative">
+          <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Visibility</span>
+          <input type="number" step="0.1" name="visibility" x-model="visibility" required
+                 class="w-full rounded-xl px-4 py-2.5 pr-10 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+                 placeholder="e.g. 10"/>
+          <span class="pointer-events-none absolute right-3 top-[38px] text-sm text-slate-300">m</span>
+        </label>
+      </div>
+
+      {{-- Next --}}
+      <div class="mt-6 flex items-center justify-between">
+        <span class="text-xs text-white/60">Step 1 of 2</span>
+        <button type="button"
+                @click="siteError = !selectedId; if (canGoStep2()) step = 2"
+                :disabled="!canGoStep2()"
+                class="group inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-white
+                       bg-gradient-to-r from-cyan-500/90 to-teal-400/90
+                       hover:from-cyan-400/90 hover:to-teal-300/90
+                       disabled:opacity-50 disabled:cursor-not-allowed
+                       border border-white/10 ring-1 ring-white/10 backdrop-blur-md
+                       shadow-lg shadow-cyan-500/20 hover:-translate-y-0.5 transition">
+          <span>Next</span> →
+        </button>
+      </div>
     </div>
 
-    <form method="POST" action="{{ route('logbook.store') }}"
-        class="bg-slate-800 p-6 rounded-xl shadow space-y-6"
-        x-data="{
-            step: 1,
-            autoTitle: true,
-            query: '',
-            selectedId: '',
-            diveSiteError: false,
-            open: false,
-            focusedIndex: 0,
-            sites: @js($siteOptions),
+    {{-- STEP 2 --}}
+    <div x-show="step === 2" x-transition>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <input name="buddy" x-ref="buddy" placeholder="Dive Buddy"
+               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
 
-            get filteredSites() {
-                return this.sites.filter(site => site.name.toLowerCase().includes(this.query.toLowerCase()));
-            },
+        <input name="air_start" type="number" step="0.1" placeholder="Air Start (bar)"
+               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
 
-            move(direction) {
-                if (!this.filteredSites.length) return;
-                this.focusedIndex = (this.focusedIndex + direction + this.filteredSites.length) % this.filteredSites.length;
-            },
+        <input name="air_end" type="number" step="0.1" placeholder="Air End (bar)"
+               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
 
-            select(index) {
-                const site = this.filteredSites[index];
-                if (site) {
-                    this.query = site.name;
-                    this.selectedId = site.id;
-                    if (this.autoTitle) this.$refs.title.value = site.name;
-                    this.open = false;
-                    setTimeout(() => this.$refs.diveDate?.focus(), 100);
-                }
-            },
+        <input name="temperature" type="number" step="0.1" placeholder="Water Temp (°C)"
+               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
 
-            validateDiveSite(show = false) {
-                const valid = this.selectedId !== '';
-                if (show) this.diveSiteError = !valid;
-                return valid;
-            },
+        <input name="suit_type" placeholder="Wetsuit / Drysuit"
+               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
 
-            canProceedToStep2() {
-                return this.validateDiveSite()
-                    && this.$refs.title.value.trim() !== ''
-                    && this.$refs.diveDate.value !== ''
-                    && this.$refs.depth.value !== ''
-                    && this.$refs.duration.value !== ''
-                    && this.$refs.visibility.value !== '';
-            }
-        }"
-        x-init="
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            $refs.diveDate.value = now.toISOString().slice(0, 16);
-        "
-        @submit.prevent="step === 1 ? (canProceedToStep2() ? step = 2 : null) : $el.submit()"
-    >
-        @csrf
+        <input name="tank_type" placeholder="Tank Type"
+               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
 
-        {{-- Step 1 --}}
-        <div x-show="step === 1" x-transition>
-            {{-- Dive Site --}}
-            <label class="block relative">
-                <span class="block mb-1 text-sm text-white">Dive Site <span class="text-red-500">*</span></span>
-                <input type="text" x-model="query" @focus="open = true" @click.away="open = false"
-                    @keydown.arrow-down.prevent="move(1)" @keydown.arrow-up.prevent="move(-1)"
-                    @keydown.enter.prevent="select(focusedIndex)"
-                    class="w-full rounded p-2 text-black" placeholder="Search dive sites...">
-                <input type="hidden" name="dive_site_id" x-model="selectedId" x-ref="diveSiteId">
-                <ul x-show="open && filteredSites.length"
-                    class="absolute z-10 bg-white text-black rounded shadow w-full mt-1 max-h-60 overflow-y-auto border border-gray-300"
-                    x-transition>
-                    <template x-for="(site, index) in filteredSites" :key="site.id">
-                        <li :class="{ 'bg-cyan-100': index === focusedIndex, 'px-4 py-2 cursor-pointer': true }"
-                            @click="select(index)" @mouseover="focusedIndex = index"
-                            x-text="site.name">
-                        </li>
-                    </template>
-                </ul>
-            </label>
-            <p x-show="diveSiteError && step === 1" class="text-sm text-red-500 mt-1">Please select a dive site.</p>
+        <input name="weight_used" placeholder="Weight Used (kg)"
+               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
 
-            {{-- Title --}}
-            <label class="block">
-                <span class="block mb-1 text-sm text-white">Dive Title</span>
-                <input type="text" name="title" x-ref="title" @input="autoTitle = false"
-                    class="w-full rounded p-2 text-black" placeholder="e.g. Bare Island Fun Dive">
-            </label>
+        <label class="sm:col-span-2">
+          <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Rating</span>
+          <select name="rating"
+                  class="w-full rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
+            <option value="">—</option>
+            @for ($i=1; $i<=5; $i++)
+              <option value="{{ $i }}">{{ $i }} star{{ $i>1?'s':'' }}</option>
+            @endfor
+          </select>
+        </label>
 
-            {{-- Date & Time --}}
-            <label class="block">
-                <span class="block mb-1 text-sm text-white">Dive Date & Time</span>
-                <input type="datetime-local" name="dive_date" x-ref="diveDate" required
-                    class="w-full rounded p-2 text-black">
-            </label>
+        <textarea name="notes" rows="4" placeholder="Notes"
+                  class="sm:col-span-2 rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"></textarea>
+      </div>
 
-            {{-- Depth / Duration / Vis --}}
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <label class="block relative">
-                    <span class="block mb-1 text-sm text-white">Depth</span>
-                    <input type="number" step="0.1" name="depth" x-ref="depth" required
-                        class="w-full rounded p-2 pr-10 text-black" placeholder="e.g. 18">
-                    <span class="absolute right-3 top-[38px] text-slate-500 pointer-events-none">m</span>
-                </label>
-                <label class="block relative">
-                    <span class="block mb-1 text-sm text-white">Duration</span>
-                    <input type="number" name="duration" x-ref="duration" required
-                        class="w-full rounded p-2 pr-12 text-black" placeholder="e.g. 45">
-                    <span class="absolute right-3 top-[38px] text-slate-500 pointer-events-none">min</span>
-                </label>
-                <label class="block relative">
-                    <span class="block mb-1 text-sm text-white">Visibility</span>
-                    <input type="number" step="0.1" name="visibility" x-ref="visibility" required
-                        class="w-full rounded p-2 pr-12 text-black" placeholder="e.g. 10">
-                    <span class="absolute right-3 top-[38px] text-slate-500 pointer-events-none">m</span>
-                </label>
-            </div>
+      <div class="mt-6 flex items-center justify-between">
+        <button type="button"
+                @click="step = 1"
+                class="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold
+                       text-white/90 bg-white/10 hover:bg-white/15 border border-white/10 ring-1 ring-white/10 backdrop-blur-md transition">
+          ← Back
+        </button>
 
-            <button type="button"
-                @click="if (validateDiveSite(true) && canProceedToStep2()) step = 2"
-                :disabled="!canProceedToStep2()"
-                class="mt-6 bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded font-semibold text-white w-full sm:w-auto">
-                Next
-            </button>
-        </div>
+        <button type="submit"
+                class="group inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-white
+                       bg-gradient-to-r from-emerald-500/90 to-lime-400/90
+                       hover:from-emerald-400/90 hover:to-lime-300/90
+                       border border-white/10 ring-1 ring-white/10 backdrop-blur-md
+                       shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition">
+          <span>Add Dive</span>
+        </button>
+      </div>
 
-        {{-- Step 2 --}}
-        <div x-show="step === 2" x-transition>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input name="buddy" placeholder="Dive Buddy" class="rounded p-2 text-black">
-                <input name="air_start" type="number" step="0.1" placeholder="Air Start (bar)" class="rounded p-2 text-black">
-                <input name="air_end" type="number" step="0.1" placeholder="Air End (bar)" class="rounded p-2 text-black">
-                <input name="temperature" type="number" step="0.1" placeholder="Water Temp °C" class="rounded p-2 text-black">
-                <input name="suit_type" placeholder="Wetsuit/Drysuit Type" class="rounded p-2 text-black">
-                <input name="tank_type" placeholder="Tank Type" class="rounded p-2 text-black">
-                <input name="weight_used" placeholder="Weight Used (kg)" class="rounded p-2 text-black">
-                <textarea name="notes" rows="3" placeholder="Notes" class="rounded p-2 text-black sm:col-span-2"></textarea>
-
-                <label class="block text-sm text-white sm:col-span-2">
-                    Rating
-                    <select name="rating" class="mt-1 w-full rounded p-2 text-black">
-                        <option value="">—</option>
-                        @for ($i = 1; $i <= 5; $i++)
-                            <option value="{{ $i }}">{{ $i }} star{{ $i > 1 ? 's' : '' }}</option>
-                        @endfor
-                    </select>
-                </label>
-            </div>
-
-            <div class="mt-6 flex justify-between">
-                <button type="button" @click="step = 1"
-                    class="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded font-semibold text-white">
-                    ← Back
-                </button>
-                <button type="submit"
-                    class="bg-green-500 hover:bg-green-600 px-6 py-2 rounded font-semibold text-white">
-                    ✅ Add Dive
-                </button>
-            </div>
-        </div>
-    </form>
+      <p class="mt-2 text-xs text-white/60 text-right">Step 2 of 2</p>
+    </div>
+  </form>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+function createDive({ sites }) {
+  return {
+    step: 1,
+
+    // combobox
+    raw: sites || [],
+    query: '',
+    selectedId: '',
+    open: false,
+    focusedIndex: 0,
+    siteError: false,
+    _t: null,
+
+    // fields
+    title: '',
+    autoTitle: true,
+    diveDate: '',
+    depth: '',
+    duration: '',
+    visibility: '',
+
+    get filtered() {
+      const q = (this.query || '').trim().toLowerCase();
+      if (!q) return this.raw.slice(0, 20);
+      return this.raw
+        .map(s => ({ s, score: this.score(s.name, q) }))
+        .filter(r => r.score > 0)
+        .sort((a,b) => b.score - a.score)
+        .slice(0, 20)
+        .map(r => r.s);
+    },
+
+    initDate() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      this.diveDate = now.toISOString().slice(0, 16);
+    },
+
+    debounceFilter() { clearTimeout(this._t); this._t = setTimeout(() => { this.focusedIndex = 0; }, 100); },
+    move(d) { if (!this.filtered.length) return; this.focusedIndex = (this.focusedIndex + d + this.filtered.length) % this.filtered.length; },
+    select(i) {
+        const site = this.filtered[i];
+        if (!site) return;
+        this.query = site.name;
+        this.selectedId = site.id;
+        this.open = false;              // hard close
+        this.siteError = false;
+        if (this.autoTitle && !this.title) this.title = site.name;
+        this.$nextTick(() => this.$refs.search?.blur());  // prevent “stuck under” look
+        },
+    canGoStep2() {
+      return !!this.selectedId && (this.title||'').trim() !== '' &&
+             !!this.diveDate && this.depth !== '' && this.duration !== '' && this.visibility !== '';
+    },
+    focusStep2() { this.$nextTick(() => this.$refs?.buddy?.focus?.()); },
+
+    // fuzzy-ish scoring + highlight
+    score(name, q) {
+      const n = (name||'').toLowerCase();
+      if (n === q) return 100;
+      if (n.startsWith(q)) return 80;
+      if (n.includes(q)) return 50;
+      let i=0,h=0; for (const c of n){ if (c===q[i]){ h++; i++; if(i>=q.length) break; } }
+      return h >= Math.max(2, Math.ceil(q.length*0.6)) ? 25 : 0;
+    },
+    highlight(label, q) {
+      if (!q) return this.escape(label);
+      const L = (label||'').toString(), i = L.toLowerCase().indexOf(q.toLowerCase());
+      if (i === -1) return this.escape(L);
+      return this.escape(L.slice(0,i)) +
+             '<mark class="bg-cyan-300/40 text-inherit rounded px-0.5">' +
+             this.escape(L.slice(i, i+q.length)) + '</mark>' +
+             this.escape(L.slice(i+q.length));
+    },
+    escape(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  };
+}
+</script>
+@endpush

@@ -112,7 +112,7 @@
         <nav class="hidden sm:flex items-center gap-6 text-sm font-medium">
           @php
             $links = [
-              ['label' => 'Site Map', 'route' => 'dive-sites.index'],
+              ['label' => 'Dive Sites', 'route' => 'dive-sites.index'],
               ['label' => 'Dive Log', 'route' => 'logbook.index'],
             ];
           @endphp

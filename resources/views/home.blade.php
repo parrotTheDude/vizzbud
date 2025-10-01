@@ -57,7 +57,7 @@
               {{-- Status block --}}
               <div class="flex items-center gap-2 sm:gap-3">
                 <span class="text-xs sm:text-sm font-medium text-white/70">
-                  Current Diveability:
+                  Current Dive Status:
                 </span>
                 <span class="rounded-full px-2.5 py-1 text-xs sm:text-sm font-semibold tabular-nums ring-1 {{ $chip }}">
                   {{ strtoupper($status ?? 'N/A') }}
@@ -85,32 +85,41 @@
                   </p>
                 </div>
 
-                {{-- Key metrics (slightly smaller to prevent wrapping) --}}
-<div class="mt-5 grid grid-cols-3 gap-3">
-  <div class="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
-    <div class="text-[0.65rem] uppercase tracking-wide text-white/60">Swell</div>
-    <div class="mt-1 text-xl font-bold tabular-nums">
-      {{ $c?->wave_height ? number_format($c->wave_height,1) : '–' }}
-      <span class="text-xs font-medium align-top">m</span>
-    </div>
-  </div>
+                {{-- Conditions pills (compact, glassy) --}}
+                <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {{-- Swell --}}
+                  <span class="flex items-center justify-center gap-1.5
+                              rounded-full px-3 py-1.5 text-[11px] font-medium
+                              bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
+                    <img src="/icons/wave.svg" class="w-3.5 h-3.5 invert" alt="Swell">
+                    <span class="uppercase tracking-wide text-white/70">Swell</span>
+                    <span class="tabular-nums">
+                      {{ $c?->wave_height ? number_format($c->wave_height,1) : '–' }}<span class="ml-0.5">m</span>
+                    </span>
+                  </span>
 
-  <div class="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
-    <div class="text-[0.65rem] uppercase tracking-wide text-white/60">Wind</div>
-    <div class="mt-1 text-xl font-bold tabular-nums">
-      {{ $c?->wind_speed ? number_format($c->wind_speed,0) : '–' }}
-      <span class="text-xs font-medium align-top">kt</span>
-    </div>
-  </div>
+                  {{-- Wind --}}
+                  <span class="flex items-center justify-center gap-1.5
+                              rounded-full px-3 py-1.5 text-[11px] font-medium
+                              bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
+                    <img src="/icons/wind.svg" class="w-3.5 h-3.5 invert" alt="Wind">
+                    <span class="uppercase tracking-wide text-white/70">Wind</span>
+                    <span class="tabular-nums">
+                      {{ $c?->wind_speed ? number_format($c->wind_speed * 1.94384, 0) : '–' }}<span class="ml-0.5">kt</span>
+                    </span>
+                  </span>
 
-  <div class="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
-    <div class="text-[0.65rem] uppercase tracking-wide text-white/60">Water</div>
-    <div class="mt-1 text-xl font-bold tabular-nums">
-      {{ $c?->water_temperature ? number_format($c->water_temperature,1) : '–' }}
-      <span class="text-xs font-medium align-top">°C</span>
-    </div>
-  </div>
-</div>
+                  {{-- Water Temp --}}
+                  <span class="flex items-center justify-center gap-1.5
+                              rounded-full px-3 py-1.5 text-[11px] font-medium
+                              bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
+                    <img src="/icons/temperature.svg" class="w-3.5 h-3.5 invert" alt="Water Temp">
+                    <span class="uppercase tracking-wide text-white/70">Water</span>
+                    <span class="tabular-nums">
+                      {{ $c?->water_temperature ? number_format($c->water_temperature,1) : '–' }}<span class="ml-0.5">°C</span>
+                    </span>
+                  </span>
+                </div>
 
                 {{-- inline cue --}}
                 <span class="mt-5 inline-block text-cyan-400 relative
@@ -142,12 +151,12 @@
 
         <!-- Compact bottom overlay -->
         <div class="absolute inset-x-0 bottom-0 bg-slate-900/85 backdrop-blur-sm px-4 py-3 sm:px-5 sm:py-4">
-          <h3 class="text-lg sm:text-xl font-semibold text-white">Dive Map</h3>
+          <h3 class="text-lg sm:text-xl font-semibold text-white">Dive Sites</h3>
           <p class="mt-1 text-xs sm:text-sm text-slate-300">Browse sites and latest conditions.</p>
           <span class="mt-2 inline-block text-cyan-400 relative text-sm
                       after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
                       after:bg-cyan-400 after:transition-all after:duration-300 group-hover:after:w-full">
-            Open map
+            See Dive Sites
           </span>
         </div>
       </a>

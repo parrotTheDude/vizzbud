@@ -31,7 +31,7 @@
       </div>
 
       <div class="flex items-center justify-center sm:justify-end gap-2">
-        <span class="text-xs text-white/60">Diveability</span>
+        <span class="text-xs text-white/60">Dive Status:</span>
         <span class="rounded-full px-3 py-1 text-xs font-semibold tabular-nums ring-1 {{ $chipClasses }}">
           {{ strtoupper($diveSite->latestCondition->status ?? 'N/A') }}
         </span>
