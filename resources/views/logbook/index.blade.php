@@ -221,7 +221,7 @@
                         </div>
                         <div class="text-slate-300 text-sm space-y-1">
                             <div><strong>#</strong> <span x-text="log.dive_number"></span></div>
-                            <div><strong>Title:</strong> <span x-text="log.site?.name || '—'"></span></div>
+                            <div><strong>Site:</strong> <span x-text="log.site?.name || '—'"></span></div>
                             <div><strong>Depth:</strong> <span x-text="log.depth ? `${log.depth} m` : '—'"></span></div>
                             <div><strong>Duration:</strong> <span x-text="log.duration ? `${log.duration} min` : '—'"></span></div>
                         </div>
@@ -287,9 +287,19 @@ window.addEventListener('load', function () {
             });
 
             sites.forEach(site => {
-                new mapboxgl.Marker()
+                const popup = new mapboxgl.Popup({
+                    offset: 25,
+                    closeButton: false,
+                    closeOnClick: true
+                }).setHTML(`
+                    <div class="text-sm font-semibold text-slate-800">
+                        ${site.name}
+                    </div>
+                `);
+
+                new mapboxgl.Marker({ color: '#22d3ee' })
                     .setLngLat([site.lng, site.lat])
-                    .setPopup(new mapboxgl.Popup().setText(site.name))
+                    .setPopup(popup)
                     .addTo(map);
             });
 
