@@ -4,40 +4,66 @@
 @section('meta_description', 'Please verify your email to activate your Vizzbud account and start logging your scuba dives and viewing live dive site data.')
 
 @section('content')
-@if (session('status') === 'verification-link-sent')
-    <div 
-        x-data="{ show: true }"
-        x-init="setTimeout(() => show = false, 5000)"
-        x-show="show"
-        x-transition
-        class="bg-green-600 text-white px-4 py-2 rounded mb-4"
-    >
-        ✅ A new verification link has been sent to your email address.
+<section class="relative max-w-md mx-auto px-6 py-16">
+
+  {{-- ambient glow --}}
+  <div class="pointer-events-none absolute inset-0 -z-10">
+    <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[26rem] h-[26rem] rounded-full
+                bg-cyan-500/10 blur-3xl"></div>
+  </div>
+
+  {{-- success toast --}}
+  @if (session('status') === 'verification-link-sent')
+    <div x-data="{ show: true }"
+         x-init="setTimeout(() => show = false, 5000)"
+         x-show="show" x-transition
+         class="mb-6 rounded-xl px-4 py-3 text-sm font-medium
+                bg-emerald-500/15 text-emerald-200 border border-white/10 ring-1 ring-emerald-400/30">
+      ✅ A new verification link has been sent to your email address.
     </div>
-@endif
-<section class="max-w-md mx-auto px-6 py-16 text-center">
-    <h1 class="text-3xl font-bold text-white mb-6">📨 Verify Your Email</h1>
-    <p class="text-slate-300 text-sm mb-6">
-        Thanks for signing up! To activate your account, please verify your email address.
-        We’ve sent a verification link to your inbox. Didn’t get it?
+  @endif
+
+  {{-- card --}}
+  <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 text-center">
+    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Verify your email</h1>
+    <p class="mt-2 text-white/70 text-sm">
+      Thanks for signing up! To activate your account, please verify your email address.
+      We’ve sent a verification link to your inbox. Didn’t get it?
     </p>
 
-    <form method="POST" action="{{ route('verification.send') }}">
-        @csrf
-        <button type="submit" class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded transition">
-            🔁 Resend Verification Email
-        </button>
+    {{-- resend --}}
+    <form method="POST" action="{{ route('verification.send') }}" class="mt-6">
+      @csrf
+      <button type="submit"
+              class="group inline-flex w-full items-center justify-center gap-2
+                     rounded-xl px-4 py-3 font-semibold text-white
+                     bg-gradient-to-r from-cyan-500/90 to-teal-400/90
+                     hover:from-cyan-400/90 hover:to-teal-300/90
+                     border border-white/10 ring-1 ring-white/10
+                     backdrop-blur-md shadow-lg shadow-cyan-500/20
+                     transition-all duration-300 hover:-translate-y-0.5">
+        <span>Resend verification email</span>
+        <svg class="h-4 w-4 opacity-80 group-hover:translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </form>
 
-    <p class="mt-6 text-sm text-slate-400">
-        Want to log in later?
-        <a href="{{ route('logout') }}"
-           onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-           class="text-cyan-400 hover:underline">Log out</a>
-    </p>
+    {{-- divider --}}
+    <div class="mt-6 flex items-center gap-3 text-xs text-white/50">
+      <div class="h-px flex-1 bg-white/10"></div>
+      <span>or</span>
+      <div class="h-px flex-1 bg-white/10"></div>
+    </div>
 
-    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
-        @csrf
+    {{-- logout (secondary action) --}}
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="mt-4">
+      @csrf
+      <button type="submit" class="text-cyan-300 hover:text-cyan-200 text-sm font-medium">
+        Log out and verify later
+      </button>
     </form>
+  </div>
+
 </section>
 @endsection
