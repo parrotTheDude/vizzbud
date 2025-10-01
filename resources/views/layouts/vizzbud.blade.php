@@ -297,7 +297,7 @@
   </div>
 
   <!-- Main -->
-  <main id="main" class="relative z-0 pt-16 min-h-screen">
+  <main id="main" class="relative z-0 pt-16">
     @yield('content')
   </main>
 
