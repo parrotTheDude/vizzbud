@@ -38,29 +38,37 @@
       </div>
     </div>
 
-    {{-- Compact pill stats under the chip --}}
-    <div class="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-      <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium
-                   bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
-        <img src="/icons/{{ $diveSite->dive_type === 'boat' ? 'boat' : 'beach' }}.svg" class="w-3.5 h-3.5 invert" alt="Type">
-        {{ ucfirst($diveSite->dive_type) }}
-      </span>
-      <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium
-                   bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
-        <img src="/icons/diver.svg" class="w-3.5 h-3.5 invert" alt="Level">
-        {{ $diveSite->suitability }}
-      </span>
-      <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium
-                   bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
-        <img src="/icons/pool-depth.svg" class="w-3.5 h-3.5 invert" alt="Avg Depth">
-        Avg {{ number_format($diveSite->avg_depth, 0) }} m
-      </span>
-      <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium
-                   bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
-        <img src="/icons/under-water.svg" class="w-3.5 h-3.5 invert" alt="Max Depth">
-        Max {{ number_format($diveSite->max_depth, 0) }} m
-      </span>
-    </div>
+{{-- Compact pill stats under the chip --}}
+<div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-sm sm:max-w-none mx-auto sm:mx-0">
+  <span class="flex items-center justify-center gap-1.5 
+               rounded-full px-3 py-1 text-[11px] font-medium
+               bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
+    <img src="/icons/{{ $diveSite->dive_type === 'boat' ? 'boat' : 'beach' }}.svg" 
+         class="w-3.5 h-3.5 invert" alt="Type">
+    {{ ucfirst($diveSite->dive_type) }}
+  </span>
+
+  <span class="flex items-center justify-center gap-1.5 
+               rounded-full px-3 py-1 text-[11px] font-medium
+               bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
+    <img src="/icons/diver.svg" class="w-3.5 h-3.5 invert" alt="Level">
+    {{ $diveSite->suitability }}
+  </span>
+
+  <span class="flex items-center justify-center gap-1.5 
+               rounded-full px-3 py-1 text-[11px] font-medium
+               bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
+    <img src="/icons/pool-depth.svg" class="w-3.5 h-3.5 invert" alt="Avg Depth">
+    Avg {{ number_format($diveSite->avg_depth, 0) }} m
+  </span>
+
+  <span class="flex items-center justify-center gap-1.5 
+               rounded-full px-3 py-1 text-[11px] font-medium
+               bg-white/10 backdrop-blur-md ring-1 ring-white/15 border border-white/10 text-slate-200">
+    <img src="/icons/under-water.svg" class="w-3.5 h-3.5 invert" alt="Max Depth">
+    Max {{ number_format($diveSite->max_depth, 0) }} m
+  </span>
+</div>
   </header>
 
 {{-- Hero Map Card --}}
