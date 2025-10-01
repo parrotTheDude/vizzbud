@@ -143,20 +143,53 @@
     {{-- Map --}}
     <div id="map" class="w-full" style="height: calc(100vh - 64px);"></div>
 
-    {{-- Info Sidebar for Desktop --}}
-    <div
-        x-show="!isMobileView"
-        :class="selectedSite && !isMobileView ? 'translate-x-0' : '-translate-x-full'"
-        class="absolute top-0 left-0 h-full max-w-[430px] w-full bg-white shadow-xl z-10 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-[4.5rem]">
-        @include('dive-sites.partials.info')
-    </div>
-
-  {{-- Info Bottom Sheet for Mobile --}}
+  {{-- Info Sidebar for Desktop (glassy, capped to screen height) --}}
   <div
-    x-show="isMobileView"
-    id="mobileInfoPanel"
-    :class="selectedSite && isMobileView ? 'translate-y-0' : 'translate-y-full'"
-    class="absolute bottom-0 left-0 right-0 h-[60vh] bg-white shadow-xl z-20 overflow-y-auto px-6 text-slate-800 transition-transform transform pt-6 rounded-t-2xl">
+    x-show="!isMobileView"
+    :class="selectedSite && !isMobileView ? 'translate-x-0' : '-translate-x-full'"
+    class="absolute top-0 left-0 h-screen max-w-[430px] w-full
+          bg-white/40 backdrop-blur-2xl
+          border border-white/30 ring-1 ring-white/20 shadow-2xl
+          z-10 text-slate-900
+          transition-transform transform flex flex-col">
+
+    <!-- glow accent -->
+    <div class="pointer-events-none absolute inset-x-6 top-4 h-10 rounded-full bg-white/60 blur-2xl"></div>
+
+    <!-- scrollable content, but only if taller than viewport -->
+    <div class="px-6 pt-[4.5rem] pb-6 overflow-y-auto max-h-screen">
+      <div class="mb-4 h-px bg-white/50"></div>
+      @include('dive-sites.partials.info')
+    </div>
+  </div>
+
+{{-- Backdrop --}}
+<div
+  x-show="isMobileView && selectedSite"
+  x-transition.opacity
+  class="fixed inset-0 z-20 bg-slate-900/40 backdrop-blur-sm"
+  @click="selectedSite = null"
+></div>
+
+{{-- Info Bottom Sheet for Mobile --}}
+<div
+  x-show="isMobileView"
+  id="mobileInfoPanel"
+  :class="selectedSite && isMobileView ? 'translate-y-0' : 'translate-y-full'"
+  class="fixed bottom-0 left-0 right-0 z-30
+         w-full max-h-[80vh]
+         bg-white/30 backdrop-blur-xl border-t border-white/30
+         ring-1 ring-white/20 shadow-2xl
+         text-slate-900 rounded-t-2xl
+         transition-transform duration-300 ease-out overflow-hidden"
+>
+  <!-- drag handle -->
+  <div class="flex justify-center pt-3">
+    <div class="h-1.5 w-12 rounded-full bg-white/60"></div>
+  </div>
+
+  <!-- scrollable content -->
+  <div class="px-5 pt-4 pb-[max(env(safe-area-inset-bottom),1rem)] overflow-y-auto max-h-[calc(80vh-3rem)]">
     @include('dive-sites.partials.info')
   </div>
 </div>

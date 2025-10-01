@@ -26,146 +26,148 @@
     </header>
 
     {{-- Three modules: Featured (primary), Map, Log --}}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-  {{-- Featured Dive Site — title/status → image → details (mobile), side-by-side on desktop --}}
-  @if($featured)
-    @php
-      $c = $featured->latestCondition;
-      $status = $c->status ?? null;
-      $chip = match($status) {
-        'green'  => 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30',
-        'yellow' => 'bg-amber-500/15 text-amber-300 ring-amber-500/30',
-        default  => 'bg-rose-500/15 text-rose-300 ring-rose-500/30',
-      };
-    @endphp
+      {{-- Featured Dive Site — title/status → image → details (mobile), side-by-side on desktop --}}
+      @if($featured)
+        @php
+          $c = $featured->latestCondition;
+          $status = $c->status ?? null;
+          $chip = match($status) {
+            'green'  => 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30',
+            'yellow' => 'bg-amber-500/15 text-amber-300 ring-amber-500/30',
+            default  => 'bg-rose-500/15 text-rose-300 ring-rose-500/30',
+          };
+        @endphp
 
-    <a href="{{ route('dive-sites.show', $featured) }}"
-       aria-label="View {{ $featured->name }}"
-       class="lg:col-span-2 group relative block overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition">
+        <a href="{{ route('dive-sites.show', $featured) }}"
+          aria-label="View {{ $featured->name }}"
+          class="lg:col-span-2 group relative block overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition">
 
-      {{-- subtle glow --}}
-      <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.10),transparent_60%)]"></div>
+          {{-- subtle glow --}}
+          <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.10),transparent_60%)]"></div>
 
-      <div class="relative p-6 sm:p-8">
-        {{-- Header (stacks on mobile, row on ≥sm) --}}
-        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <h2 class="text-xl sm:text-2xl font-semibold leading-tight">
-            Featured Dive Site
-          </h2>
+          <div class="relative p-6 sm:p-8">
+            {{-- Header (stacks on mobile, row on ≥sm) --}}
+            <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <h2 class="text-xl sm:text-2xl font-semibold leading-tight">
+                Featured Dive Site
+              </h2>
 
-          {{-- Status block --}}
-          <div class="flex items-center gap-2 sm:gap-3">
-            <span class="text-xs sm:text-sm font-medium text-white/70">
-              Current Diveability:
-            </span>
-            <span class="rounded-full px-2.5 py-1 text-xs sm:text-sm font-semibold tabular-nums ring-1 {{ $chip }}">
-              {{ strtoupper($status ?? 'N/A') }}
-            </span>
-          </div>
-        </div>
-
-        {{-- Body: stack on mobile, side-by-side on md+ --}}
-        <div class="grid gap-6 md:grid-cols-2 items-stretch">
-          {{-- Image block: guaranteed height on mobile --}}
-          <div class="relative overflow-hidden rounded-xl border border-white/10 md:order-1">
-            <div class="h-48 sm:h-56 md:h-full bg-cover bg-center transition group-hover:scale-[1.02]"
-                 style="background-image:url('{{ asset('images/main/turtle.webp') }}')"></div>
-            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 to-transparent p-3">
-              <div class="text-xs text-white/80">Representative image</div>
-            </div>
-          </div>
-
-          {{-- Details block --}}
-          <div class="md:order-2 flex flex-col md:min-h-[14rem]">
-            <div>
-              <h3 class="text-lg font-semibold text-cyan-300">{{ $featured->name }}</h3>
-              <p class="mt-2 text-sm text-white/80 leading-relaxed">
-                {{ $featured->description ?: 'No description available.' }}
-              </p>
-            </div>
-
-            {{-- Key metrics (bigger, scannable) --}}
-            <div class="mt-5 grid grid-cols-3 gap-3">
-              <div class="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
-                <div class="text-[0.7rem] uppercase tracking-wide text-white/60">Swell</div>
-                <div class="mt-1 text-2xl font-bold tabular-nums">
-                  {{ $c?->wave_height ? number_format($c->wave_height,1) : '–' }}
-                  <span class="text-sm font-medium align-top">m</span>
-                </div>
-              </div>
-              <div class="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
-                <div class="text-[0.7rem] uppercase tracking-wide text-white/60">Wind</div>
-                <div class="mt-1 text-2xl font-bold tabular-nums">
-                  {{ $c?->wind_speed ? number_format($c->wind_speed,0) : '–' }}
-                  <span class="text-sm font-medium align-top">kt</span>
-                </div>
-              </div>
-              <div class="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
-                <div class="text-[0.7rem] uppercase tracking-wide text-white/60">Water</div>
-                <div class="mt-1 text-2xl font-bold tabular-nums">
-                  {{ $c?->water_temperature ? number_format($c->water_temperature,1) : '–' }}
-                  <span class="text-sm font-medium align-top">°C</span>
-                </div>
+              {{-- Status block --}}
+              <div class="flex items-center gap-2 sm:gap-3">
+                <span class="text-xs sm:text-sm font-medium text-white/70">
+                  Current Diveability:
+                </span>
+                <span class="rounded-full px-2.5 py-1 text-xs sm:text-sm font-semibold tabular-nums ring-1 {{ $chip }}">
+                  {{ strtoupper($status ?? 'N/A') }}
+                </span>
               </div>
             </div>
 
-            {{-- inline cue --}}
-            <span class="mt-5 inline-block text-cyan-400 relative
-                        after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
-                        after:bg-cyan-400 after:transition-all after:duration-300 group-hover:after:w-1/2">
-              View site
-            </span>
-          </div>
-        </div>
-      </div>
-    </a>
-  @else
-    <div class="lg:col-span-2 relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl">
-      <div class="relative p-6 sm:p-8">
-        <h2 class="text-xl sm:text-2xl font-semibold">Featured Dive Site</h2>
-        <p class="mt-4 text-white/70">No featured site yet. Add a site or run the conditions fetch.</p>
-      </div>
+            {{-- Body: stack on mobile, side-by-side on md+ --}}
+            <div class="grid gap-6 md:grid-cols-2 items-stretch">
+              {{-- Image block: guaranteed height on mobile --}}
+              <div class="relative overflow-hidden rounded-xl border border-white/10 md:order-1">
+                <div class="h-48 sm:h-56 md:h-full bg-cover bg-center transition group-hover:scale-[1.02]"
+                    style="background-image:url('{{ asset('images/main/turtle.webp') }}')"></div>
+                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 to-transparent p-3">
+                  <div class="text-xs text-white/80">Representative image</div>
+                </div>
+              </div>
+
+              {{-- Details block --}}
+              <div class="md:order-2 flex flex-col md:min-h-[14rem]">
+                <div>
+                  <h3 class="text-lg font-semibold text-cyan-300">{{ $featured->name }}</h3>
+                  <p class="mt-2 text-sm text-white/80 leading-relaxed">
+                    {{ $featured->description ?: 'No description available.' }}
+                  </p>
+                </div>
+
+                {{-- Key metrics (slightly smaller to prevent wrapping) --}}
+<div class="mt-5 grid grid-cols-3 gap-3">
+  <div class="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
+    <div class="text-[0.65rem] uppercase tracking-wide text-white/60">Swell</div>
+    <div class="mt-1 text-xl font-bold tabular-nums">
+      {{ $c?->wave_height ? number_format($c->wave_height,1) : '–' }}
+      <span class="text-xs font-medium align-top">m</span>
     </div>
-  @endif
+  </div>
 
-  {{-- Quick Action: Dive Map (compact bottom overlay). Always visible, stacks on mobile --}}
-  <a href="{{ route('dive-sites.index') }}"
-    class="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition
-            min-h-[220px] sm:min-h-[260px]"> 
-
-
-    <div class="absolute inset-0 bg-cover bg-center transition group-hover:scale-105"
-        style="background-image:url('{{ asset('images/main/divemap.webp') }}')"></div>
-
-    <!-- Compact bottom overlay -->
-    <div class="absolute inset-x-0 bottom-0 bg-slate-900/85 backdrop-blur-sm px-4 py-3 sm:px-5 sm:py-4">
-      <h3 class="text-lg sm:text-xl font-semibold text-white">Dive Map</h3>
-      <p class="mt-1 text-xs sm:text-sm text-slate-300">Browse sites and latest conditions.</p>
-      <span class="mt-2 inline-block text-cyan-400 relative text-sm
-                  after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
-                  after:bg-cyan-400 after:transition-all after:duration-300 group-hover:after:w-full">
-        Open map
-      </span>
+  <div class="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
+    <div class="text-[0.65rem] uppercase tracking-wide text-white/60">Wind</div>
+    <div class="mt-1 text-xl font-bold tabular-nums">
+      {{ $c?->wind_speed ? number_format($c->wind_speed,0) : '–' }}
+      <span class="text-xs font-medium align-top">kt</span>
     </div>
-  </a>
+  </div>
 
-  {{-- Quick Action: Dive Log --}}
-  <a href="{{ route('logbook.index') }}"
-     class="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition">
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.10),transparent_60%)]"></div>
-    <div class="relative p-6 sm:p-8">
-      <h3 class="mt-2 text-2xl font-semibold">Dive Log</h3>
-      <p class="mt-2 text-sm text-white/70">View stats and past dives in your logbook.</p>
-      <span class="mt-6 inline-block text-cyan-400 relative
-                   after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
-                   after:bg-cyan-400 after:transition-all after:duration-300 group-hover:after:w-full">
-        Open logbook
-      </span>
+  <div class="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
+    <div class="text-[0.65rem] uppercase tracking-wide text-white/60">Water</div>
+    <div class="mt-1 text-xl font-bold tabular-nums">
+      {{ $c?->water_temperature ? number_format($c->water_temperature,1) : '–' }}
+      <span class="text-xs font-medium align-top">°C</span>
     </div>
-  </a>
-
+  </div>
 </div>
+
+                {{-- inline cue --}}
+                <span class="mt-5 inline-block text-cyan-400 relative
+                            after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
+                            after:bg-cyan-400 after:transition-all after:duration-300 group-hover:after:w-1/2">
+                  View site
+                </span>
+              </div>
+            </div>
+          </div>
+        </a>
+      @else
+        <div class="lg:col-span-2 relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl">
+          <div class="relative p-6 sm:p-8">
+            <h2 class="text-xl sm:text-2xl font-semibold">Featured Dive Site</h2>
+            <p class="mt-4 text-white/70">No featured site yet. Add a site or run the conditions fetch.</p>
+          </div>
+        </div>
+      @endif
+
+      {{-- Quick Action: Dive Map (compact bottom overlay). Always visible, stacks on mobile --}}
+      <a href="{{ route('dive-sites.index') }}"
+        class="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition
+                min-h-[220px] sm:min-h-[260px]"> 
+
+
+        <div class="absolute inset-0 bg-cover bg-center transition group-hover:scale-105"
+            style="background-image:url('{{ asset('images/main/divemap.webp') }}')"></div>
+
+        <!-- Compact bottom overlay -->
+        <div class="absolute inset-x-0 bottom-0 bg-slate-900/85 backdrop-blur-sm px-4 py-3 sm:px-5 sm:py-4">
+          <h3 class="text-lg sm:text-xl font-semibold text-white">Dive Map</h3>
+          <p class="mt-1 text-xs sm:text-sm text-slate-300">Browse sites and latest conditions.</p>
+          <span class="mt-2 inline-block text-cyan-400 relative text-sm
+                      after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
+                      after:bg-cyan-400 after:transition-all after:duration-300 group-hover:after:w-full">
+            Open map
+          </span>
+        </div>
+      </a>
+
+      {{-- Quick Action: Dive Log --}}
+      <a href="{{ route('logbook.index') }}"
+        class="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.10),transparent_60%)]"></div>
+        <div class="relative p-6 sm:p-8">
+          <h3 class="mt-2 text-2xl font-semibold">Dive Log</h3>
+          <p class="mt-2 text-sm text-white/70">View stats and past dives in your logbook.</p>
+          <span class="mt-6 inline-block text-cyan-400 relative
+                      after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
+                      after:bg-cyan-400 after:transition-all after:duration-300 group-hover:after:w-full">
+            Open logbook
+          </span>
+        </div>
+      </a>
+
+    </div>
   </div>
 </section>
 
