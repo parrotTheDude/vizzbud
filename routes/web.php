@@ -8,9 +8,10 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\BlogPostController;
 use App\Http\Controllers\SitemapController;
-use App\Models\DiveSite;
 use App\Http\Controllers\AdminController;
 use App\Http\Middleware\AdminMiddleware;
+use App\Models\DiveSite;
+use Spatie\Sitemap\SitemapGenerator;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,49 +19,58 @@ use App\Http\Middleware\AdminMiddleware;
 |--------------------------------------------------------------------------
 */
 
-// 🌐 Home
+// Home
 Route::get('/', function () {
     $featured = DiveSite::whereHas('latestCondition')
         ->with('latestCondition')
         ->inRandomOrder()
         ->first();
 
-    $sites = DiveSite::all();
-    $siteOptions = DiveSite::select('id', 'name')->orderBy('name')->get();
-
-    return view('home', compact('featured', 'sites', 'siteOptions'));
+    return view('home', [
+        'featured'     => $featured,
+        'sites'        => DiveSite::all(),
+        'siteOptions'  => DiveSite::select('id','name')->orderBy('name')->get(),
+    ]);
 })->name('home');
 
-// 📍 Dive Sites
-Route::get('/dive-sites', [DiveSiteController::class, 'index'])->name('dive-sites.index');
-Route::get('/dive-sites/{diveSite}', [DiveSiteController::class, 'show'])->name('dive-sites.show');
+// Dive Sites
+Route::prefix('dive-sites')->name('dive-sites.')->group(function () {
+    Route::get('/', [DiveSiteController::class, 'index'])->name('index');
+    Route::get('/{diveSite}', [DiveSiteController::class, 'show'])->name('show');
+});
 
-// 🌊 Condition Reports
-Route::prefix('report')->group(function () {
-    Route::get('/', [ConditionReportController::class, 'create'])->name('report.create');
+// Condition Reports
+Route::prefix('report')->name('report.')->group(function () {
+    Route::get('/', [ConditionReportController::class, 'create'])->name('create');
     Route::post('/', [ConditionReportController::class, 'store'])
         ->middleware('throttle:5,1')
-        ->name('report.store');
+        ->name('store');
 });
 Route::get('/reports', [ConditionReportController::class, 'index'])->name('report.index');
 
-// 📘 Dive Log (Public View)
+// Dive Log (public view only)
 Route::get('/logbook', [UserDiveLogController::class, 'index'])->name('logbook.index');
 
-// 📚 Blog
-Route::get('/blog', [BlogPostController::class, 'index'])->name('blog.index');
-Route::get('/blog/{slug}', [BlogPostController::class, 'show'])->name('blog.show');
+// Blog
+Route::prefix('blog')->name('blog.')->group(function () {
+    Route::get('/', [BlogPostController::class, 'index'])->name('index');
+    Route::get('/{slug}', [BlogPostController::class, 'show'])->name('show');
+});
 
-// 🗺️ Sitemap
+// Sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 
 // 🔑 Password Reset
-Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
-Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::prefix('forgot-password')->name('password.')->group(function () {
+    Route::get('/', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('request');
+    Route::post('/', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('email');
+});
 
-// ✅ Email Verification
-Route::get('/verify-email', fn () => view('auth.verify-email'))->middleware('auth')->name('verification.notice');
-Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verify.email');
+// Email Verification
+Route::middleware('auth')->group(function () {
+    Route::view('/verify-email', 'auth.verify-email')->name('verification.notice');
+    Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verify.email');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -68,15 +78,14 @@ Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->n
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Dive Log (Private)
-    Route::get('/logbook/create', [UserDiveLogController::class, 'create'])->name('logbook.create');
-    Route::post('/logbook', [UserDiveLogController::class, 'store'])->name('logbook.store');
-    Route::get('/logbook/chart', [UserDiveLogController::class, 'chart'])->name('logbook.chart');
-    Route::get('/logbook/table', [UserDiveLogController::class, 'table'])->name('logbook.table');
-    Route::get('/logbook/{log}', [UserDiveLogController::class, 'show'])->name('logbook.show');
-    Route::get('/logbook/{log}/edit', [UserDiveLogController::class, 'edit'])->name('logbook.edit');
-    Route::put('/logbook/{log}', [UserDiveLogController::class, 'update'])->name('logbook.update');
+Route::middleware(['auth', 'verified'])->prefix('logbook')->name('logbook.')->group(function () {
+    Route::get('/create', [UserDiveLogController::class, 'create'])->name('create');
+    Route::post('/', [UserDiveLogController::class, 'store'])->name('store');
+    Route::get('/chart', [UserDiveLogController::class, 'chart'])->name('chart');
+    Route::get('/table', [UserDiveLogController::class, 'table'])->name('table');
+    Route::get('/{log}', [UserDiveLogController::class, 'show'])->name('show');
+    Route::get('/{log}/edit', [UserDiveLogController::class, 'edit'])->name('edit');
+    Route::put('/{log}', [UserDiveLogController::class, 'update'])->name('update');
 });
 
 /*
@@ -85,20 +94,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-// Blog - Admin Only
-Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
-    Route::get('/admin', [App\Http\Controllers\AdminController::class, 'index'])->name('admin.dashboard');
+Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminController::class, 'index'])->name('dashboard');
 
-    // Add these if you want blog management:
-    Route::get('/admin/blog', [BlogPostController::class, 'adminIndex'])->name('admin.blog.index');
-    Route::get('/admin/blog/create', [BlogPostController::class, 'create'])->name('admin.blog.create');
-    Route::post('/admin/blog', [BlogPostController::class, 'store'])->name('admin.blog.store');
-    Route::get('/admin/blog/{post}/edit', [BlogPostController::class, 'edit'])->name('admin.blog.edit');
-    Route::put('/admin/blog/{post}', [BlogPostController::class, 'update'])->name('admin.blog.update');
-    Route::delete('/admin/blog/{post}', [BlogPostController::class, 'destroy'])->name('admin.blog.destroy');
-    Route::post('/admin/blog/upload-image', [BlogPostController::class, 'uploadImage'])->name('admin.blog.upload');
+    // Blog management
+    Route::prefix('blog')->name('blog.')->group(function () {
+        Route::get('/', [BlogPostController::class, 'adminIndex'])->name('index');
+        Route::get('/create', [BlogPostController::class, 'create'])->name('create');
+        Route::post('/', [BlogPostController::class, 'store'])->name('store');
+        Route::get('/{post}/edit', [BlogPostController::class, 'edit'])->name('edit');
+        Route::put('/{post}', [BlogPostController::class, 'update'])->name('update');
+        Route::delete('/{post}', [BlogPostController::class, 'destroy'])->name('destroy');
+        Route::post('/upload-image', [BlogPostController::class, 'uploadImage'])->name('upload');
+        Route::patch('/{post}/toggle-publish', [BlogPostController::class, 'togglePublish'])->name('togglePublish');
+    });
+});
 
-    Route::patch('/admin/blog/{post}/toggle-publish', [BlogPostController::class, 'togglePublish'])->name('admin.blog.togglePublish');
+Route::get('/sitemap.xml', function () {
+    $path = public_path('sitemap.xml');
+
+    SitemapGenerator::create(config('app.url'))
+        ->writeToFile($path);
+
+    return response()->file($path, [
+        'Content-Type' => 'application/xml',
+    ]);
 });
 
 require __DIR__.'/auth.php';
