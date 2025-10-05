@@ -4,81 +4,138 @@
 @section('meta_description', 'Enter a new password to regain access to your Vizzbud account and continue logging your scuba dives.')
 
 @section('content')
-<section class="max-w-md mx-auto px-6 py-16">
-    <h1 class="text-3xl font-bold text-white mb-6 text-center">🔒 Reset Your Password</h1>
+<section class="relative max-w-md mx-auto px-6 py-16">
 
-    <form method="POST" action="{{ route('password.store') }}" 
-          x-data="passwordForm('{{ old('email', $request->email) }}', '{{ $request->route('token') }}')" 
-          class="bg-slate-800 rounded-xl p-6 space-y-5 shadow">
-        @csrf
+  {{-- ambient glow --}}
+  <div class="pointer-events-none absolute inset-0 -z-10">
+    <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[28rem] h-[28rem] rounded-full
+                bg-cyan-500/10 blur-3xl"></div>
+  </div>
 
-        <!-- Hidden Token & Email -->
-        <input type="hidden" name="token" :value="token">
-        <input type="hidden" name="email" x-model="email" />
+  {{-- header --}}
+  <header class="mb-8 text-center">
+    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Reset your password</h1>
+    <p class="mt-2 text-white/70 text-sm">Choose a strong new password and you’re back in.</p>
+  </header>
 
-        <!-- New Password -->
-        <div class="relative">
-            <label for="password" class="block mb-1 text-sm text-slate-300">New Password</label>
-            <input :type="showPassword ? 'text' : 'password'" name="password" x-model="password"
-                   id="password" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="text-red-400 text-sm mt-1" />
-        </div>
+  {{-- form card --}}
+  <form method="POST" action="{{ route('password.store') }}"
+        x-data="passwordForm('{{ old('email', $request->email) }}', '{{ $request->route('token') }}')"
+        class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 space-y-5"
+        @submit.prevent="if (isValid) $el.submit()">
+    @csrf
 
-        <!-- Confirm Password -->
-        <div>
-            <label for="password_confirmation" class="block mb-1 text-sm text-slate-300">Confirm Password</label>
-            <input :type="showPassword ? 'text' : 'password'" name="password_confirmation" x-model="confirm"
-                   id="password_confirmation" class="w-full p-2 rounded text-black" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password_confirmation')" class="text-red-400 text-sm mt-1" />
-        </div>
+    {{-- hidden token & email --}}
+    <input type="hidden" name="token" :value="token">
+    <input type="hidden" name="email" x-model="email" />
 
-        <ul class="text-sm mt-2 space-y-1 text-slate-300">
-            <template x-for="rule in rules" :key="rule.text">
-                <li class="flex items-center space-x-2 group">
-                    <span x-show="rule.valid" class="text-green-400">&#10003;</span>
-                    <span x-show="!rule.valid" class="text-slate-500">&#8226;</span>
-                    <span :class="rule.valid ? 'text-green-400' : 'text-slate-400'" 
-                          x-text="rule.text" class="group-hover:underline cursor-default"
-                          :title="rule.tooltip">
-                    </span>
-                </li>
-            </template>
-        </ul>
+    {{-- new password --}}
+    <div>
+      <label for="password" class="block mb-1 text-[0.8rem] tracking-wide text-white/80">New password</label>
+      <input :type="showPw ? 'text' : 'password'" id="password" name="password" x-model="password"
+             class="w-full rounded-xl bg-white/10 border border-white/10 ring-1 ring-white/10
+                    px-4 py-2.5 pr-24 text-white placeholder-white/40 outline-none
+                    focus:border-cyan-400/40 focus:ring-cyan-400/30"
+             placeholder="••••••••" required autocomplete="new-password" />
+    </div>
 
-        <!-- Submit -->
-        <div class="pt-2">
-            <button type="submit"
-                class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded transition w-full">
-                🔄 Reset Password
-            </button>
-        </div>
-    </form>
+    {{-- confirm password --}}
+    <div>
+      <label for="password_confirmation" class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Confirm password</label>
+      <input :type="showConfirm ? 'text' : 'password'" id="password_confirmation" name="password_confirmation" x-model="confirm"
+             class="w-full rounded-xl bg-white/10 border border-white/10 ring-1 ring-white/10
+                    px-4 py-2.5 pr-24 text-white placeholder-white/40 outline-none
+                    focus:border-cyan-400/40 focus:ring-cyan-400/30"
+             placeholder="••••••••" required autocomplete="new-password" />
+    </div>
 
-    <p class="text-center text-sm text-slate-400 mt-4">
-        Changed your mind?
-        <a href="{{ route('login') }}" class="text-cyan-400 hover:underline">Back to login</a>
-    </p>
+    {{-- strength meter --}}
+    <div class="mt-4 space-y-2" aria-live="polite">
+      <div class="flex gap-1.5">
+        <template x-for="i in 4" :key="i">
+          <div class="h-2 flex-1 rounded-full border border-white/10 ring-1 ring-white/10 transition-all duration-300"
+               :class="segmentClass(i)"></div>
+        </template>
+      </div>
+      <div class="flex items-center justify-between text-xs">
+        <span class="text-white/60">Password strength</span>
+        <span :class="strength.textClass" x-text="strength.label"></span>
+      </div>
+    </div>
+
+    {{-- checklist --}}
+    <ul class="mt-2 space-y-1.5 text-sm">
+      <template x-for="rule in rules" :key="rule.text">
+        <li class="flex items-center gap-2">
+          <span class="inline-block h-2.5 w-2.5 rounded-full"
+                :class="rule.valid ? 'bg-emerald-400' : 'bg-white/30'"></span>
+          <span :class="rule.valid ? 'text-emerald-300' : 'text-white/70'" x-text="rule.text"></span>
+        </li>
+      </template>
+    </ul>
+
+    {{-- submit --}}
+    <button type="submit"
+            :disabled="!isValid"
+            class="group inline-flex w-full items-center justify-center gap-2
+                   rounded-xl px-4 py-2.5 font-semibold text-white
+                   bg-gradient-to-r from-cyan-500/90 to-teal-400/90
+                   hover:from-cyan-400/90 hover:to-teal-300/90
+                   border border-white/10 ring-1 ring-white/10
+                   backdrop-blur-md shadow-lg shadow-cyan-500/20
+                   transition-all duration-300 hover:-translate-y-0.5
+                   disabled:opacity-50 disabled:cursor-not-allowed">
+      <span>Reset password</span>
+    </button>
+  </form>
 </section>
 
 <script>
 function passwordForm(email, token) {
-    return {
-        password: '',
-        confirm: '',
-        email: email,
-        token: token,
-        showPassword: false,
-        get rules() {
-            return [
-                { text: 'Minimum 8 characters', valid: this.password.length >= 8, tooltip: 'Use at least 8 characters' },
-                { text: 'One lowercase letter', valid: /[a-z]/.test(this.password), tooltip: 'Include a lowercase letter (a-z)' },
-                { text: 'One uppercase letter', valid: /[A-Z]/.test(this.password), tooltip: 'Include an uppercase letter (A-Z)' },
-                { text: 'One number', valid: /[0-9]/.test(this.password), tooltip: 'Include at least one number (0-9)' },
-                { text: 'One special character', valid: /[@$!%*#?&\-]/.test(this.password), tooltip: 'Include a symbol like @ $ ! % * -' },
-                { text: 'Passwords match', valid: this.confirm === this.password && this.password !== '', tooltip: 'Both password fields must match' },
-            ];
-        }
+  return {
+    email, token,
+    password: '',
+    confirm: '',
+    showPw: false,
+    showConfirm: false,
+
+    get rules() {
+      return [
+        { text: 'Minimum 8 characters',   valid: this.password.length >= 8 },
+        { text: 'One lowercase letter',   valid: /[a-z]/.test(this.password) },
+        { text: 'One uppercase letter',   valid: /[A-Z]/.test(this.password) },
+        { text: 'One number',             valid: /[0-9]/.test(this.password) },
+        { text: 'One special character',  valid: /[@$!%*#?&\\-_.]/.test(this.password) },
+        { text: 'Passwords match',        valid: this.confirm === this.password && this.password !== '' },
+      ];
+    },
+
+    // strength score based on first 5 rules
+    get strengthScore() {
+      return this.rules.slice(0, 5).filter(r => r.valid).length; // 0..5
+    },
+
+    // map 0–5 score → 4 levels
+    get strength() {
+      const s = this.strengthScore;
+      if (s <= 1) return { label: 'Weak', textClass: 'text-rose-300' };
+      if (s === 2) return { label: 'Average', textClass: 'text-amber-300' };
+      if (s === 3 || s === 4) return { label: 'Strong', textClass: 'text-lime-300' };
+      if (s === 5) return { label: 'Very Strong', textClass: 'text-emerald-300' };
+      return { label: 'Poor', textClass: 'text-rose-300' };
+    },
+
+    // segment coloring (4 bars)
+    segmentClass(i) {
+      const s = this.strengthScore;
+      const colors = ['bg-rose-400','bg-amber-400','bg-lime-400','bg-emerald-500'];
+      return i <= Math.min(4, Math.ceil(s / 1.25)) ? colors[i-1] : 'bg-white/10';
+    },
+
+    get isValid() {
+      return this.rules.every(r => r.valid);
     }
+  }
 }
 </script>
 @endsection
