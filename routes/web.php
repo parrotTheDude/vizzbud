@@ -72,6 +72,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verify.email');
 });
 
+Route::view('/how-it-works', 'pages.how-vizzbud-works')->name('how_it_works');
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated + Verified Routes
