@@ -180,117 +180,127 @@
   <div
     id="mobile-menu"
     x-show="open"
+    x-transition.opacity.duration.150ms
     class="fixed inset-0 z-50 sm:hidden"
     @click.self="open = false"
     @keydown.escape.window="open = false"
-    x-transition.opacity.duration.150ms
     style="display:none;"
+    aria-modal="true" role="dialog"
   >
+
     <!-- Backdrop -->
     <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
 
-    <!-- Drawer -->
+    <!-- Sliding Panel -->
     <nav
+      class="absolute right-0 top-0 z-20 h-full w-[85%] max-w-sm
+            bg-white/10 backdrop-blur-2xl border-l border-white/10
+            ring-1 ring-white/10 shadow-2xl rounded-l-2xl overflow-y-auto
+            transition-transform duration-300 ease-out will-change-transform"
+      :class="open ? 'translate-x-0' : 'translate-x-full'"
       x-init="$watch('open', v => v && $nextTick(() => $refs.firstLink?.focus()))"
-      class="absolute right-0 top-0 z-10 h-full w-4/5 max-w-md bg-slate-900 border-l border-white/10 shadow-xl"
-      x-bind:style="'transform: translateX(' + (open ? '0' : '100%') + '); transition: transform 300ms ease; will-change: transform;'"
     >
-      <!-- Close button -->
-      <button
-        type="button"
-        @click="open = false"
-        aria-label="Close menu"
-        class="absolute top-4 right-4 text-gray-400 hover:text-white focus:outline-none"
-      >
-        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
 
-      <div class="flex h-full flex-col">
-        <!-- Top spacing -->
-        <div class="px-6 pt-10 pb-3"></div>
+      <!-- Header -->
+      <div class="relative flex items-center gap-3 px-6 pt-[env(safe-area-inset-top)] h-16
+                  bg-gradient-to-r from-cyan-500/15 to-teal-400/10">
+        <img src="{{ asset('vizzbudLogo.png') }}" alt="" class="w-7 h-7 rounded-md" />
+        <div class="flex-1">
+          <div class="text-white font-semibold leading-tight">Vizzbud</div>
+          <div class="text-xs text-white/60">Dive smarter</div>
+        </div>
+        <button
+          type="button"
+          @click="open = false"
+          aria-label="Close menu"
+          class="shrink-0 rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10
+                border border-white/10"
+        >
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
-        <!-- Menu items with generous spacing -->
-        <ul class="px-6 space-y-5 text-lg">
+      <!-- Body -->
+      <div class="flex h-[calc(100%-4rem)] flex-col">
+        <!-- Glow accent -->
+        <div class="pointer-events-none h-8 mx-6 mt-3 rounded-full bg-white/20 blur-2xl"></div>
+
+        <!-- Main links -->
+        <ul class="px-4 pt-2 pb-3 space-y-1.5">
           @foreach ($links as $link)
             <li>
               <a
                 href="{{ route($link['route']) }}"
                 @click="open = false"
                 x-ref="firstLink"
-                class="relative block transition-colors duration-200
-                      text-white hover:text-cyan-300
-                      after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
-                      after:bg-cyan-400 after:transition-all after:duration-300
-                      hover:after:w-full"
+                class="group flex items-center gap-3 rounded-xl px-4 py-3
+                      bg-white/5 hover:bg-white/10
+                      border border-white/10
+                      text-white transition"
               >
-                {{ $link['label'] }}
+                <span class="flex-1">{{ $link['label'] }}</span>
+                <svg class="h-4 w-4 text-white/50 group-hover:text-cyan-300 transition"
+                    viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707A1 1 0 118.707 5.293l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clip-rule="evenodd"/>
+                </svg>
               </a>
             </li>
           @endforeach
+        </ul>
 
+        <!-- Divider -->
+        <div class="mx-6 my-2 h-px bg-white/10"></div>
+
+        <!-- Account / Admin -->
+        <div class="px-4 pb-[max(env(safe-area-inset-bottom),1rem)] space-y-1.5">
           @auth
             @if (auth()->user()->isAdmin())
-              <li>
-                <a href="{{ route('blog.index') }}" @click="open=false"
-                  class="relative block transition-colors duration-200
-                          text-white hover:text-cyan-300
-                          after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
-                          after:bg-cyan-400 after:transition-all after:duration-300
-                          hover:after:w-full">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="{{ route('admin.dashboard') }}" @click="open=false"
-                  class="relative block transition-colors duration-200
-                          text-white hover:text-cyan-300
-                          after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
-                          after:bg-cyan-400 after:transition-all after:duration-300
-                          hover:after:w-full">
-                  Admin
-                </a>
-              </li>
-              <li>
-                <a href="{{ route('admin.blog.index') }}" @click="open=false"
-                  class="relative block transition-colors duration-200
-                          text-white hover:text-cyan-300
-                          after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
-                          after:bg-cyan-400 after:transition-all after:duration-300
-                          hover:after:w-full">
-                  Manage Blog
-                </a>
-              </li>
+              <a href="{{ route('blog.index') }}" @click="open=false"
+                class="group flex items-center gap-3 rounded-xl px-4 py-3
+                        bg-white/5 hover:bg-white/10 border border-white/10 text-white transition">
+                <span class="flex-1">Blog</span>
+                <span class="text-white/40 group-hover:text-cyan-300">↗</span>
+              </a>
+              <a href="{{ route('admin.dashboard') }}" @click="open=false"
+                class="group flex items-center gap-3 rounded-xl px-4 py-3
+                        bg-white/5 hover:bg-white/10 border border-white/10 text-white transition">
+                <span class="flex-1">Admin</span>
+                <span class="text-white/40 group-hover:text-cyan-300">↗</span>
+              </a>
+              <a href="{{ route('admin.blog.index') }}" @click="open=false"
+                class="group flex items-center gap-3 rounded-xl px-4 py-3
+                        bg-white/5 hover:bg-white/10 border border-white/10 text-white transition">
+                <span class="flex-1">Manage Blog</span>
+                <span class="text-white/40 group-hover:text-cyan-300">↗</span>
+              </a>
             @endif
 
-            <li class="pt-5 border-t border-white/10">
-              <form method="POST" action="{{ route('logout') }}" class="relative">
-                @csrf
-                <button type="submit"
-                  @click="open = false"
-                  class="relative transition-colors duration-200 text-white hover:text-cyan-300
-                        after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
-                        after:bg-cyan-400 after:transition-all after:duration-300
-                        hover:after:w-full">
-                  Logout
-                </button>
-              </form>
-            </li>
+            <form method="POST" action="{{ route('logout') }}" class="pt-2">
+              @csrf
+              <button type="submit"
+                      @click="open = false"
+                      class="w-full rounded-xl px-4 py-3 font-semibold
+                            bg-gradient-to-r from-cyan-500/90 to-teal-400/90
+                            hover:from-cyan-400/90 hover:to-teal-300/90
+                            border border-white/10 ring-1 ring-white/10
+                            text-white shadow-lg shadow-cyan-500/20 transition">
+                Logout
+              </button>
+            </form>
           @else
-            <li class="pt-5 border-t border-white/10">
-              <a href="{{ route('login') }}" @click="open = false"
-                class="relative block transition-colors duration-200
-                        text-white hover:text-cyan-300
-                        after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
-                        after:bg-cyan-400 after:transition-all after:duration-300
-                        hover:after:w-full">
-                Login
-              </a>
-            </li>
+            <a href="{{ route('login') }}" @click="open=false"
+              class="w-full inline-flex items-center justify-center rounded-xl px-4 py-3 font-semibold
+                      bg-white/10 hover:bg-white/20 border border-white/10 ring-1 ring-white/10
+                      text-white transition">
+              Login
+            </a>
           @endauth
-        </ul>
+        </div>
       </div>
     </nav>
   </div>
