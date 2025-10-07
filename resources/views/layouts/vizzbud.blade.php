@@ -177,133 +177,159 @@
   </header>
 
   <!-- Mobile Drawer -->
-  <div
-    id="mobile-menu"
-    x-show="open"
-    x-transition.opacity.duration.150ms
-    class="fixed inset-0 z-50 sm:hidden"
-    @click.self="open = false"
-    @keydown.escape.window="open = false"
-    style="display:none;"
-    aria-modal="true" role="dialog"
+<div
+  id="mobile-menu"
+  x-show="open"
+  class="fixed inset-0 z-50 sm:hidden"
+  @click.self="open = false"
+  @keydown.escape.window="open = false"
+  x-transition.opacity.duration.200ms
+  style="display:none;"
+>
+  <!-- Backdrop -->
+  <div class="absolute inset-0 z-10 bg-slate-900/70 backdrop-blur-sm"></div>
+
+  <!-- Drawer -->
+  <nav
+    class="absolute right-0 top-0 z-20 h-full w-[86%] max-w-sm
+           bg-white/10 backdrop-blur-2xl border-l border-white/10
+           ring-1 ring-white/10 shadow-2xl rounded-l-2xl overflow-y-auto
+           will-change-transform"
+    :class="open ? 'translate-x-0' : 'translate-x-full'"
+    x-init="$watch('open', v => v && $nextTick(() => $refs.firstLink?.focus()))"
+    x-transition:enter="transform transition ease-out duration-300"
+    x-transition:enter-start="translate-x-full opacity-0"
+    x-transition:enter-end="translate-x-0 opacity-100"
+    x-transition:leave="transform transition ease-in duration-250"
+    x-transition:leave-start="translate-x-0 opacity-100"
+    x-transition:leave-end="translate-x-full opacity-0"
   >
-
-    <!-- Backdrop -->
-    <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
-
-    <!-- Sliding Panel -->
-    <nav
-      class="absolute right-0 top-0 z-20 h-full w-[85%] max-w-sm
-            bg-white/10 backdrop-blur-2xl border-l border-white/10
-            ring-1 ring-white/10 shadow-2xl rounded-l-2xl overflow-y-auto
-            transition-transform duration-300 ease-out will-change-transform"
-      :class="open ? 'translate-x-0' : 'translate-x-full'"
-      x-init="$watch('open', v => v && $nextTick(() => $refs.firstLink?.focus()))"
-    >
-
-      <!-- Header -->
-      <div class="relative flex items-center gap-3 px-6 pt-[env(safe-area-inset-top)] h-16
-                  bg-gradient-to-r from-cyan-500/15 to-teal-400/10">
-        <img src="{{ asset('vizzbudLogo.png') }}" alt="" class="w-7 h-7 rounded-md" />
-        <div class="flex-1">
-          <div class="text-white font-semibold leading-tight">Vizzbud</div>
-          <div class="text-xs text-white/60">Dive smarter</div>
-        </div>
-        <button
-          type="button"
-          @click="open = false"
-          aria-label="Close menu"
-          class="shrink-0 rounded-lg p-2 text-white/70 hover:text-white hover:bg-white/10
-                border border-white/10"
-        >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+    <!-- Drawer header -->
+    <div class="relative flex items-center justify-between px-5 pt-5 pb-3">
+      <div class="flex items-center gap-2">
+        <img src="{{ asset('vizzbudLogo.png') }}" alt="Vizzbud" class="w-7 h-7 rounded-md">
+        <span class="text-lg font-semibold">Vizzbud</span>
       </div>
+      <button
+        type="button"
+        @click="open = false"
+        aria-label="Close menu"
+        class="inline-flex items-center justify-center rounded-xl p-2
+               text-slate-300 hover:text-white hover:bg-white/10
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
 
-      <!-- Body -->
-      <div class="flex h-[calc(100%-4rem)] flex-col">
-        <!-- Glow accent -->
-        <div class="pointer-events-none h-8 mx-6 mt-3 rounded-full bg-white/20 blur-2xl"></div>
+    <!-- Accent strip -->
+    <div class="mx-5 mb-3 h-px bg-gradient-to-r from-cyan-400/50 via-teal-300/40 to-transparent"></div>
 
-        <!-- Main links -->
-        <ul class="px-4 pt-2 pb-3 space-y-1.5">
-          @foreach ($links as $link)
-            <li>
-              <a
-                href="{{ route($link['route']) }}"
-                @click="open = false"
-                x-ref="firstLink"
-                class="group flex items-center gap-3 rounded-xl px-4 py-3
-                      bg-white/5 hover:bg-white/10
-                      border border-white/10
-                      text-white transition"
-              >
-                <span class="flex-1">{{ $link['label'] }}</span>
-                <svg class="h-4 w-4 text-white/50 group-hover:text-cyan-300 transition"
-                    viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fill-rule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707A1 1 0 118.707 5.293l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clip-rule="evenodd"/>
+    <!-- Menu -->
+    <div class="px-4 pb-8">
+      <ul class="space-y-1.5">
+        @foreach ($links as $link)
+          <li>
+            <a
+              href="{{ route($link['route']) }}"
+              @click="open = false"
+              x-ref="firstLink"
+              class="flex items-center gap-3 w-full rounded-xl px-3.5 py-3
+                     text-[15px] text-white/90
+                     hover:bg-white/10 hover:text-white
+                     active:scale-[.99] transition
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            >
+              <!-- optional tiny bullet/icon -->
+              <span class="inline-block h-2 w-2 rounded-full bg-cyan-400/80"></span>
+              <span class="flex-1">{{ $link['label'] }}</span>
+              <svg class="h-4 w-4 text-white/60 group-hover:text-white/80 transition"
+                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          </li>
+        @endforeach
+
+        @auth
+          @if (auth()->user()->isAdmin())
+            <li class="mt-3 pt-3 border-t border-white/10">
+              <a href="{{ route('blog.index') }}" @click="open=false"
+                 class="flex items-center gap-3 w-full rounded-xl px-3.5 py-3
+                        text-[15px] text-white/90 hover:bg-white/10 hover:text-white
+                        active:scale-[.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
+                <span class="inline-block h-2 w-2 rounded-full bg-cyan-400/80"></span>
+                <span class="flex-1">Blog</span>
+                <svg class="h-4 w-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5l7 7-7 7" />
                 </svg>
               </a>
             </li>
-          @endforeach
-        </ul>
-
-        <!-- Divider -->
-        <div class="mx-6 my-2 h-px bg-white/10"></div>
-
-        <!-- Account / Admin -->
-        <div class="px-4 pb-[max(env(safe-area-inset-bottom),1rem)] space-y-1.5">
-          @auth
-            @if (auth()->user()->isAdmin())
-              <a href="{{ route('blog.index') }}" @click="open=false"
-                class="group flex items-center gap-3 rounded-xl px-4 py-3
-                        bg-white/5 hover:bg-white/10 border border-white/10 text-white transition">
-                <span class="flex-1">Blog</span>
-                <span class="text-white/40 group-hover:text-cyan-300">↗</span>
-              </a>
+            <li>
               <a href="{{ route('admin.dashboard') }}" @click="open=false"
-                class="group flex items-center gap-3 rounded-xl px-4 py-3
-                        bg-white/5 hover:bg-white/10 border border-white/10 text-white transition">
+                 class="flex items-center gap-3 w-full rounded-xl px-3.5 py-3
+                        text-[15px] text-white/90 hover:bg-white/10 hover:text-white
+                        active:scale-[.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
+                <span class="inline-block h-2 w-2 rounded-full bg-cyan-400/80"></span>
                 <span class="flex-1">Admin</span>
-                <span class="text-white/40 group-hover:text-cyan-300">↗</span>
+                <svg class="h-4 w-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5l7 7-7 7" />
+                </svg>
               </a>
+            </li>
+            <li>
               <a href="{{ route('admin.blog.index') }}" @click="open=false"
-                class="group flex items-center gap-3 rounded-xl px-4 py-3
-                        bg-white/5 hover:bg-white/10 border border-white/10 text-white transition">
+                 class="flex items-center gap-3 w-full rounded-xl px-3.5 py-3
+                        text-[15px] text-white/90 hover:bg-white/10 hover:text-white
+                        active:scale-[.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
+                <span class="inline-block h-2 w-2 rounded-full bg-cyan-400/80"></span>
                 <span class="flex-1">Manage Blog</span>
-                <span class="text-white/40 group-hover:text-cyan-300">↗</span>
+                <svg class="h-4 w-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5l7 7-7 7" />
+                </svg>
               </a>
-            @endif
+            </li>
+          @endif
 
-            <form method="POST" action="{{ route('logout') }}" class="pt-2">
+          <li class="mt-4 pt-4 border-t border-white/10">
+            <form method="POST" action="{{ route('logout') }}">
               @csrf
               <button type="submit"
-                      @click="open = false"
-                      class="w-full rounded-xl px-4 py-3 font-semibold
-                            bg-gradient-to-r from-cyan-500/90 to-teal-400/90
-                            hover:from-cyan-400/90 hover:to-teal-300/90
-                            border border-white/10 ring-1 ring-white/10
-                            text-white shadow-lg shadow-cyan-500/20 transition">
-                Logout
+                @click="open = false"
+                class="flex items-center gap-3 w-full rounded-xl px-3.5 py-3
+                       text-[15px] text-white/90 hover:bg-white/10 hover:text-white
+                       active:scale-[.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
+                <span class="inline-block h-2 w-2 rounded-full bg-cyan-400/80"></span>
+                <span class="flex-1 text-left">Logout</span>
               </button>
             </form>
-          @else
-            <a href="{{ route('login') }}" @click="open=false"
-              class="w-full inline-flex items-center justify-center rounded-xl px-4 py-3 font-semibold
-                      bg-white/10 hover:bg-white/20 border border-white/10 ring-1 ring-white/10
-                      text-white transition">
-              Login
+          </li>
+        @else
+          <li class="mt-4 pt-4 border-t border-white/10">
+            <a href="{{ route('login') }}" @click="open = false"
+               class="flex items-center gap-3 w-full rounded-xl px-3.5 py-3
+                      text-[15px] text-white/90 hover:bg-white/10 hover:text-white
+                      active:scale-[.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
+              <span class="inline-block h-2 w-2 rounded-full bg-cyan-400/80"></span>
+              <span class="flex-1">Login</span>
+              <svg class="h-4 w-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5l7 7-7 7" />
+              </svg>
             </a>
-          @endauth
-        </div>
-      </div>
-    </nav>
-  </div>
+          </li>
+        @endauth
+      </ul>
+    </div>
+  </nav>
+</div>
 
   <!-- Main -->
   <main id="main" class="relative z-0 pt-16">
