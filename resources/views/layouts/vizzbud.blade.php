@@ -119,12 +119,11 @@
 
           @php
             $navLink = function ($label, $route, $activePatterns = []) {
-                $isActive = request()->routeIs($activePatterns ?: $route);
                 return sprintf(
                     '<a href="%s" class="relative transition-colors duration-200 %s
                         after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:bg-cyan-400 after:transition-all after:duration-300 %s">%s</a>',
                     route($route),
-                    $isActive ? 'text-cyan-300 after:w-full' : 'text-white hover:text-cyan-300 after:w-0 hover:after:w-full',
+                    'text-white hover:text-cyan-300 after:w-0 hover:after:w-full',
                     '',
                     e($label)
                 );
