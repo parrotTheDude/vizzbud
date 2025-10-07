@@ -241,14 +241,14 @@
                   border border-white/10 ring-1 ring-white/10
                   backdrop-blur-md shadow-lg shadow-cyan-500/20
                   transition-all duration-300 hover:-translate-y-0.5">
-          🌊 Explore Dive Sites
+          Explore Dive Sites
         </a>
 
         <a href="{{ route('register') }}"
            class="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white
                   bg-white/10 hover:bg-white/20 border border-white/10 ring-1 ring-white/10
                   backdrop-blur-md shadow-sm transition-all duration-300 hover:-translate-y-0.5">
-          🪸 Create a Free Account
+          Create a Free Account
         </a>
       </div>
 
