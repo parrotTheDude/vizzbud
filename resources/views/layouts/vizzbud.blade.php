@@ -66,19 +66,18 @@
     @stack('head')
 </head>
 
-<body class="bg-slate-900 text-white font-sans" x-data="{ open:false }" x-cloak>
+<body class="bg-slate-900 text-white font-sans"
+      x-data="{ open:false, scrolled:false }"
+      x-init="
+        const onScroll = () => scrolled = window.scrollY > 8;
+        onScroll(); window.addEventListener('scroll', onScroll);
+      "
+      x-cloak>
   <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:bg-cyan-500 focus:text-slate-900 focus:rounded px-3 py-2">
     Skip to content
   </a>
 
-  <header
-    x-data="{ scrolled:false }"
-    x-init="
-      const onScroll = () => scrolled = window.scrollY > 8;
-      onScroll(); window.addEventListener('scroll', onScroll);
-    "
-    class="fixed inset-x-0 top-0 z-50"
-  >
+  <header class="fixed inset-x-0 top-0 z-50">
     <div class="relative isolate">
       <!-- Glass panel background (sits behind the content) -->
       <div
@@ -114,6 +113,7 @@
             $links = [
               ['label' => 'Dive Sites', 'route' => 'dive-sites.index'],
               ['label' => 'Dive Log', 'route' => 'logbook.index'],
+              ['label' => 'How it Works', 'route' => 'how_it_works'],
             ];
           @endphp
 
@@ -191,7 +191,6 @@
 
     <!-- Drawer -->
     <nav
-      x-trap.noscroll="open"
       x-init="$watch('open', v => v && $nextTick(() => $refs.firstLink?.focus()))"
       class="absolute right-0 top-0 z-10 h-full w-4/5 max-w-md bg-slate-900 border-l border-white/10 shadow-xl"
       x-bind:style="'transform: translateX(' + (open ? '0' : '100%') + '); transition: transform 300ms ease; will-change: transform;'"
