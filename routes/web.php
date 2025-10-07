@@ -39,15 +39,6 @@ Route::prefix('dive-sites')->name('dive-sites.')->group(function () {
     Route::get('/{diveSite}', [DiveSiteController::class, 'show'])->name('show');
 });
 
-// Condition Reports
-Route::prefix('report')->name('report.')->group(function () {
-    Route::get('/', [ConditionReportController::class, 'create'])->name('create');
-    Route::post('/', [ConditionReportController::class, 'store'])
-        ->middleware('throttle:5,1')
-        ->name('store');
-});
-Route::get('/reports', [ConditionReportController::class, 'index'])->name('report.index');
-
 // Dive Log (public view only)
 Route::get('/logbook', [UserDiveLogController::class, 'index'])->name('logbook.index');
 
