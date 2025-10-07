@@ -316,5 +316,50 @@
     </div>
   </footer>
 
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Respect reduced motion
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      // Prepare elements
+      const els = document.querySelectorAll('[data-reveal]');
+      els.forEach((el) => {
+        el.classList.add(
+          'opacity-0',
+          'translate-y-6',
+          'transition',
+          'duration-700',
+          'ease-out',
+          '[transform:translateZ(0)]' // nudge GPU accel
+        );
+        // optional stagger via attribute: data-reveal-delay="150"
+        const delay = parseInt(el.getAttribute('data-reveal-delay') || '0', 10);
+        if (delay) el.style.transitionDelay = `${delay}ms`;
+      });
+
+      // Observe and animate in once
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const el = e.target;
+          el.classList.remove('opacity-0', 'translate-y-6');
+          el.classList.add('opacity-100', 'translate-y-0');
+          // subtle scale pop if requested
+          if (el.hasAttribute('data-reveal-pop')) {
+            el.classList.add('scale-95');
+            // force reflow so the next class transition kicks in
+            el.getBoundingClientRect();
+            el.classList.remove('scale-95');
+            el.classList.add('scale-100');
+          }
+          io.unobserve(el);
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -10% 0px' });
+
+      els.forEach((el) => io.observe(el));
+    });
+  </script>
+
   @stack('scripts')
 </body>
