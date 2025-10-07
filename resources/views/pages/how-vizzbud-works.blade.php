@@ -12,7 +12,7 @@
   </div>
 
   {{-- header --}}
-  <header class="mb-10 sm:mb-14 text-center" data-reveal data-reveal-pop>
+  <header class="mb-10 sm:mb-14 text-center">
     <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight">How Vizzbud Works</h1>
     <p class="mt-3 text-white/70 max-w-2xl mx-auto">
       Understand conditions at a glance, log your dives, and plan safer adventures—powered by clean data and a simple map.
@@ -20,22 +20,22 @@
   </header>
 
   {{-- 1) Quick Start (how to use) --}}
-  <section class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 sm:p-8 mb-8" data-reveal>
+  <section class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 sm:p-8 mb-8">
     <h2 class="text-xl sm:text-2xl font-bold mb-2 inline-flex items-center gap-2">
        <span>Quick Start</span>
     </h2>
     <p class="text-white/70 mb-6">Three steps to get value fast.</p>
 
     <div class="grid md:grid-cols-3 gap-6">
-      <div class="rounded-xl bg-white/5 border border-white/10 p-5" data-reveal data-reveal-delay="0">
+      <div class="rounded-xl bg-white/5 border border-white/10 p-5">
         <h3 class="font-semibold">1) Explore Dive Sites</h3>
         <p class="text-white/70 text-sm mt-1">Open the map, search a site, or tap a marker. On desktop the info panel opens on the left; on mobile it slides up from the bottom.</p>
       </div>
-      <div class="rounded-xl bg-white/5 border border-white/10 p-5" data-reveal data-reveal-delay="100">
+      <div class="rounded-xl bg-white/5 border border-white/10 p-5">
         <h3 class="font-semibold">2) Check Live Conditions</h3>
         <p class="text-white/70 text-sm mt-1">See swell height, period, and direction—plus wind and temperature. The forecast chart shows the next 24 hours with a “now” line.</p>
       </div>
-      <div class="rounded-xl bg-white/5 border border-white/10 p-5" data-reveal data-reveal-delay="200">
+      <div class="rounded-xl bg-white/5 border border-white/10 p-5">
         <h3 class="font-semibold">3) Log Your Dives</h3>
         <p class="text-white/70 text-sm mt-1">After your dive, record depth, duration, visibility, and notes to build your history over time.</p>
       </div>
@@ -43,7 +43,7 @@
   </section>
 
   {{-- 2) Interpreting the Map (rings + colors) — unified card --}}
-  <section class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 sm:p-8 mb-8" data-reveal>
+  <section class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 sm:p-8 mb-8">
     <h2 class="text-xl sm:text-2xl font-bold mb-2 inline-flex items-center gap-2">
       <span>Interpreting the Map</span>
     </h2>
@@ -70,9 +70,7 @@
           <div class="flex flex-col items-center text-center
                       bg-white/5 border border-white/10 rounded-xl p-4 sm:p-5
                       transition-all duration-300 hover:bg-white/10 hover:shadow-lg {{ $it['shadow'] }}
-                      overflow-hidden min-w-0"
-                      data-reveal
-                      data-reveal-delay="{{ $loop->index * 100 }}">
+                      overflow-hidden min-w-0">
             {{-- SVG scales with viewport; never overflows --}}
             <svg viewBox="0 0 44 44" aria-hidden="true"
                 class="mb-3 mx-auto block"
@@ -138,7 +136,7 @@
   </section>
 
   {{-- 3) Forecasts & Charts — simplified copy --}}
-  <section class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 sm:p-8 mb-8" data-reveal>
+  <section class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 sm:p-8 mb-8">
     <h2 class="text-xl sm:text-2xl font-bold mb-2 inline-flex items-center gap-2">
       <span>Forecasts & Charts</span>
     </h2>
@@ -165,7 +163,7 @@
   </section>
 
   {{-- 4) Data Sources --}}
-  <section class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 sm:p-8 mb-8" data-reveal>
+  <section class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 sm:p-8 mb-8">
     <h2 class="text-xl sm:text-2xl font-bold mb-2 inline-flex items-center gap-2">
       <span>Data Sources</span>
     </h2>
@@ -190,7 +188,7 @@
   </section>
 
   {{-- 5) FAQ --}}
-  <section class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 sm:p-8" data-reveal>
+  <section class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 sm:p-8">
     <h2 class="text-xl sm:text-2xl font-bold mb-4 inline-flex items-center gap-2">
       <span>FAQ</span>
     </h2>
@@ -226,8 +224,8 @@
   </section>
 
    {{-- CTA / Final Section --}}
-  <section class="mt-12 text-center" data-reveal data-reveal-pop>
-    <div class="max-w-3xl mx-auto rounded-2xl border border-white/10 ring-1 ring-white/10 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl shadow-xl p-10 sm:p-12" data-reveal data-reveal-delay="120">
+  <section class="mt-12 text-center">
+    <div class="max-w-3xl mx-auto rounded-2xl border border-white/10 ring-1 ring-white/10 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl shadow-xl p-10 sm:p-12">
       <h2 class="text-2xl sm:text-3xl font-extrabold mb-4">Ready to Dive Smarter?</h2>
       <p class="text-white/70 mb-8 text-base sm:text-lg leading-relaxed">
         Vizzbud helps divers make confident decisions before every dive —
