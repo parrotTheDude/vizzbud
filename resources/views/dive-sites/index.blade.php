@@ -224,6 +224,8 @@ function diveSiteMap({ sites }) {
 
         init() {
 
+            this.isMobileView = window.innerWidth < 640;
+
             this.map = new mapboxgl.Map({
               container: 'map',
               style: 'mapbox://styles/mapbox/streets-v11',
@@ -231,8 +233,7 @@ function diveSiteMap({ sites }) {
               zoom: 11
             });
 
-            this.map.setPadding({ left: 430, right: 0, top: 0, bottom: 0 });
-            this.map.resize();
+            this.applyMapPadding();
 
             const urlParams = new URLSearchParams(window.location.search);
             const lat = parseFloat(urlParams.get('lat'));
@@ -327,7 +328,8 @@ function diveSiteMap({ sites }) {
             this.$watch('filterType', () => this.renderSites());
 
             window.addEventListener('resize', () => {
-                this.isMobileView = window.innerWidth < 640;
+              this.isMobileView = window.innerWidth < 640;
+              this.applyMapPadding();
             });
 
             this.$watch('selectedSite', site => {
@@ -630,6 +632,15 @@ function diveSiteMap({ sites }) {
             searchComponent.query = '';
             searchComponent.selectedId = null;
           }
+        },
+
+        applyMapPadding() {
+          if (this.isMobileView) {
+            this.map.setPadding({ left: 0, right: 0, top: 0, bottom: 0 });
+          } else {
+            this.map.setPadding({ left: 430, right: 0, top: 0, bottom: 0 }); // sidebar width
+          }
+          this.map.resize();
         },
 
         get filteredSites() {
