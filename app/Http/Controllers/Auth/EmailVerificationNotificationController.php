@@ -3,55 +3,72 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use App\Models\VerificationToken;
 use App\Services\PostmarkService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class EmailVerificationNotificationController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $key = 'resend-verification:' . $user->id;
+        $key  = 'resend-verification:' . $user->id;
 
+        // Limit to 3 attempts per 60s
         if (RateLimiter::tooManyAttempts($key, 3)) {
+            $seconds = RateLimiter::availableIn($key);
             throw ValidationException::withMessages([
-                'email' => 'Too many attempts. Please try again in ' . RateLimiter::availableIn($key) . ' seconds.',
+                'email' => "Too many attempts. Please try again in {$seconds} seconds.",
             ]);
         }
-
-        RateLimiter::hit($key, 60); // 3 attempts per 60 seconds
+        RateLimiter::hit($key, 60);
 
         if ($user->hasVerifiedEmail()) {
+            // Already verified → send them on their way
             return redirect()->intended(route('dashboard', absolute: false));
         }
 
-        // Create or update token
+        // Create/refresh token (24h)
         $token = Str::random(64);
-        \App\Models\VerificationToken::updateOrCreate(
+        VerificationToken::updateOrCreate(
             ['user_id' => $user->id],
             ['token' => $token, 'expires_at' => now()->addHours(24)]
         );
 
-        // Send email
         $verifyUrl = url(route('verify.email', ['token' => $token], false));
 
-        app(\App\Services\PostmarkService::class)->sendEmail(
-            39981023,
-            $user->email,
-            [
-                'action_url' => $verifyUrl,
-                'support_email' => config('mail.from.address'),
-                'year' => now()->year,
-                'name' => $user->name,
-            ],
-            alias: 'email-verification'
-        );
+        // Send via Postmark
+        try {
+            app(PostmarkService::class)->sendEmail(
+                templateId: (int) config('services.postmark.verify_template_id'),
+                to: $user->email,
+                variables: [
+                    'name'          => $user->name ?? 'there',
+                    'action_url'    => $verifyUrl,
+                    'support_email' => config('mail.from.address'),
+                    'year'          => now()->year,
+                ],
+                tag: 'email-verification',
+                options: [
+                    'replyTo'  => config('mail.from.address'),
+                    'metadata' => ['user_id' => (string) $user->id],
+                ]
+            );
 
-        return back()->with('status', 'Verification link resent!');
+            return back()->with('status', 'Verification link sent!');
+        } catch (Throwable $e) {
+            // Log but don't expose internals to the user
+            logger()->error('Postmark verification resend failed', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+
+            return back()->with('status', 'We couldn’t send the email just now. Please try again shortly.');
+        }
     }
 }

@@ -4,72 +4,84 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
+use App\Models\VerificationToken;
+use App\Services\PostmarkService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
-use App\Models\VerificationToken;
 use Illuminate\Support\Str;
+use Throwable;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
     public function create(): View
     {
         return view('auth.register');
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+        $validated = $request->validate([
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
-    
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'user',
-        ]);
-    
-        // Create verification token
+
+        $user = null;
         $token = Str::random(64);
-    
-        VerificationToken::create([
-            'user_id' => $user->id,
-            'token' => $token,
-            'expires_at' => now()->addHours(24),
-        ]);
-    
-        // Send verification email
+
+        DB::transaction(function () use (&$user, $validated, $token) {
+            $user = User::create([
+                'name'     => $validated['name'],
+                'email'    => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role'     => 'user',
+            ]);
+
+            // Clean any old tokens for this user (defensive)
+            VerificationToken::where('user_id', $user->id)->delete();
+
+            VerificationToken::create([
+                'user_id'    => $user->id,
+                'token'      => $token,
+                'expires_at' => now()->addHours(24),
+            ]);
+        });
+
+        // Build verify URL for your custom route
         $verifyUrl = url(route('verify.email', ['token' => $token], false));
-    
-        app(\App\Services\PostmarkService::class)->sendEmail(
-            39981023,
-            $user->email,
-            [
-                'name' => $user->name,
-                'action_url' => $verifyUrl,
-                'support_email' => config('mail.from.address'),
-                'year' => now()->year,
-            ],
-            alias: 'email-verification'
-        );
+
+        // Send with Postmark (uses your service wrapper)
+        try {
+            app(PostmarkService::class)->sendEmail(
+                templateId: (int) config('services.postmark.verify_template_id'),
+                to: $user->email,
+                variables: [
+                    'name'          => $user->name ?? 'there',
+                    'action_url'    => $verifyUrl,
+                    'support_email' => config('mail.from.address'),
+                    'year'          => now()->year,
+                ],
+                tag: 'email-verification',
+                options: [
+                    'replyTo'  => config('mail.from.address'),
+                    'metadata' => ['user_id' => (string) $user->id],
+                ]
+            );
+        } catch (Throwable $e) {
+            // Log but don't block sign-up; user can request a re-send
+            logger()->error('Postmark verify email failed', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
 
         Auth::login($user);
-    
+
         return redirect()->route('verification.notice');
     }
 }

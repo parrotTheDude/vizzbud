@@ -19,6 +19,8 @@ return [
         'from_email' => env('POSTMARK_FROM_EMAIL'),
         'reset_template_id' => env('POSTMARK_RESET_TEMPLATE_ID'),
         'message_stream' => env('POSTMARK_MESSAGE_STREAM', 'outbound'),
+        'reset_template_id' => env('POSTMARK_RESET_TEMPLATE_ID'),
+        'verify_template_id' => env('POSTMARK_VERIFY_TEMPLATE_ID'),
     ],
 
     'ses' => [
