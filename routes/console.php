@@ -18,5 +18,5 @@ Schedule::command('vizzbud:fetch-forecast')
     ->timezone('Australia/Sydney');
 
 Schedule::command('users:cleanup-unverified')
-->dailyAt('00:00')
-->timezone('Australia/Sydney');
+    ->dailyAt('00:00')
+    ->timezone('Australia/Sydney');

@@ -32,7 +32,6 @@ class FetchExternalConditions extends Command
         // Align to hour so we can enforce uniqueness per site per hour
         $retrievedAt = $now->copy()->minute(0)->second(0);
 
-        // TIP: add a unique index on (dive_site_id, retrieved_at)
         // Schema::table('external_conditions', fn($t) => $t->unique(['dive_site_id','retrieved_at']));
 
         DiveSite::query()
