@@ -161,9 +161,10 @@
         </div>
       </a>
 
-      {{-- Quick Action: Dive Log --}}
+      {{-- Dive Log --}}
       <a href="{{ route('logbook.index') }}"
-        class="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition">
+        class="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60
+              ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition">
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.10),transparent_60%)]"></div>
         <div class="relative p-6 sm:p-8">
           <h3 class="mt-2 text-2xl font-semibold">Dive Log</h3>
@@ -172,6 +173,24 @@
                       after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
                       after:bg-cyan-400 after:transition-all after:duration-300 group-hover:after:w-full">
             Open logbook
+          </span>
+        </div>
+      </a>
+
+      {{-- How it Works --}}
+      <a href="{{ route('how_it_works') }}"
+        class="lg:col-span-2 group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60
+              ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.10),transparent_60%)]"></div>
+        <div class="relative p-6 sm:p-8">
+          <h3 class="mt-2 text-2xl font-semibold">How Vizzbud Works</h3>
+          <p class="mt-2 text-sm text-white/70">
+            Learn how to read the dive site rings, understand forecasts, and where Vizzbud’s live data comes from.
+          </p>
+          <span class="mt-6 inline-block text-cyan-400 relative
+                      after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-0
+                      after:bg-cyan-400 after:transition-all after:duration-300 group-hover:after:w-full">
+            Learn more
           </span>
         </div>
       </a>
