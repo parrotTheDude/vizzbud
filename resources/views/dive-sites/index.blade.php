@@ -363,24 +363,30 @@ function diveSiteMap({ sites }) {
                     chartEl.style.height = '100%';
                     const dpi = Math.min(window.devicePixelRatio || 1, 2);
 
-                    // Build a 24h window where NOW is 2 hours into the chart (index 2)
+                    // Build a 24h window anchored around "now" but clamped to data bounds
+                    const all = site.forecast || [];
+                    const allTimes = all.map(f => new Date(f.forecast_time + 'Z')); // treat as UTC
                     const now = new Date();
                     const nowHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours());
 
-                    // Parse times (assuming your forecast_time is UTC; add 'Z' to be explicit)
-                    const all = site.forecast || [];
-                    const allTimes = all.map(f => new Date(f.forecast_time + 'Z'));
-
-                    // find first forecast point at or after this hour
+                    // find first forecast point at/after this hour
                     let nowIdx = allTimes.findIndex(t => t >= nowHour);
-                    if (nowIdx === -1) nowIdx = 0;
+                    if (nowIdx === -1) nowIdx = allTimes.length - 1; // fallback to last point if all in past
 
-                    // window: start 2 hours before “now”, then include 24 points total
-                    const START = Math.max(0, nowIdx - 2);
-                    const END   = START + 24;
-                    const forecastSlice = all.slice(START, END);
+                    const TOTAL = all.length;
+                    const WINDOW = 24;     // aim for 24 hours
+                    const BACK   = 2;      // show 2 hrs before "now" if possible
 
-                    // build labels & series (local time for display)
+                    // clamp the window so we don't run off either end
+                    let start = Math.max(0, Math.min(nowIdx - BACK, Math.max(0, TOTAL - WINDOW)));
+                    let end   = Math.min(start + WINDOW, TOTAL);
+
+                    const forecastSlice = all.slice(start, end);
+
+                    // where is "now" inside this slice? (for the vertical line)
+                    const nowPos = Math.max(0, Math.min(nowIdx - start, forecastSlice.length - 1));
+
+                    // labels & series
                     const labels = forecastSlice.map(f =>
                       new Date(f.forecast_time + 'Z').toLocaleTimeString(undefined, { hour: 'numeric', hour12: true }).toUpperCase()
                     );
@@ -402,14 +408,13 @@ function diveSiteMap({ sites }) {
                         const xAxis = scales.x;
                         if (!xAxis) return;
 
-                        // Always draw at index 2 (now)
-                        const x = xAxis.getPixelForValue(2);
+                        const x = xAxis.getPixelForValue(nowPos);
                         ctx.save();
                         ctx.beginPath();
                         ctx.moveTo(x, chartArea.top);
                         ctx.lineTo(x, chartArea.bottom);
                         ctx.lineWidth = 2;
-                        ctx.strokeStyle = 'rgba(59,130,246,0.45)'; // blue-500-ish
+                        ctx.strokeStyle = 'rgba(59,130,246,0.45)';
                         ctx.setLineDash([6, 4]);
                         ctx.stroke();
                         ctx.restore();
@@ -421,18 +426,6 @@ function diveSiteMap({ sites }) {
                         beforeDraw(chart) {
                             const { ctx, chartArea, scales, tooltip } = chart;
                             const x = tooltip?.caretX;
-
-                            // 🔹 Draw hover line
-                            if (x) {
-                                ctx.save();
-                                ctx.beginPath();
-                                ctx.moveTo(x, chartArea.top);
-                                ctx.lineTo(x, chartArea.bottom);
-                                ctx.lineWidth = 1;
-                                ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-                                ctx.stroke();
-                                ctx.restore();
-                            }
 
                             // 🔹 Shade night hours (7 PM to 6 AM)
                             const xScale = scales.x;
