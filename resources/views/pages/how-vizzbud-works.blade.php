@@ -108,19 +108,19 @@
             <tbody>
               <tr class="border-t border-white/10">
                 <td class="p-2"><span class="inline-flex items-center gap-2"><i class="w-2 h-2 rounded-full" style="background:#22c55e"></i> Green</span></td>
-                <td class="p-2">&lt; 0.6 m</td>
+                <td class="p-2">&lt; 1.2 m</td>
                 <td class="p-2">&lt; 12 kn</td>
                 <td class="p-2">Great for most divers</td>
               </tr>
               <tr class="border-t border-white/10">
                 <td class="p-2"><span class="inline-flex items-center gap-2"><i class="w-2 h-2 rounded-full" style="background:#eab308"></i> Yellow</span></td>
-                <td class="p-2">&lt; 1.0 m</td>
+                <td class="p-2">&lt; 1.8 m</td>
                 <td class="p-2">&lt; 18 kn</td>
                 <td class="p-2">Okay — check local exposure</td>
               </tr>
               <tr class="border-t border-white/10">
                 <td class="p-2"><span class="inline-flex items-center gap-2"><i class="w-2 h-2 rounded-full" style="background:#ef4444"></i> Red</span></td>
-                <td class="p-2">≥ 1.0 m</td>
+                <td class="p-2">≥ 1.8 m</td>
                 <td class="p-2">≥ 18 kn</td>
                 <td class="p-2">Challenging — likely not ideal</td>
               </tr>

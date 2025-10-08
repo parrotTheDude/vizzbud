@@ -103,6 +103,20 @@
              value="{{ \Carbon\Carbon::parse($log->dive_date)->format('Y-m-d\TH:i') }}">
     </label>
 
+    {{-- Title --}}
+    <label class="block">
+      <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Title</span>
+      <input
+        type="text"
+        name="title"
+        maxlength="255"
+        placeholder="e.g. Morning reef drift"
+        class="w-full rounded-xl px-4 py-2.5 text-white
+              bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+        value="{{ old('title', $log->title) }}"
+      />
+    </label>
+
     {{-- Depth / Duration / Visibility (units inside) --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <label class="block relative">

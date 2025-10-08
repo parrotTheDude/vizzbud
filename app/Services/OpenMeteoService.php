@@ -10,17 +10,17 @@ use Throwable;
 
 class OpenMeteoService
 {
-    // Tunables (can move to config/vizzbud.php if you prefer)
+    // Tunables
     private int $timeout   = 8;   // seconds
     private int $retries   = 2;   // extra tries (total 3)
     private int $cacheTtl  = 300; // seconds
     private bool $includeTide = false;
 
-    // Status thresholds (can override via env/config)
-    private float $greenMaxWaveM  = 1.0;
-    private float $greenMaxWindKt = 10.0;
-    private float $yellowMaxWaveM = 2.0;
-    private float $yellowMaxWindKt = 15.0;
+    // Status thresholds
+    private float $greenMaxWaveM  = 1.2;
+    private float $greenMaxWindKt = 12.0;
+    private float $yellowMaxWaveM = 1.8;
+    private float $yellowMaxWindKt = 18.0;
 
     public function __construct()
     {

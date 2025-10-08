@@ -1,11 +1,20 @@
 @extends('layouts.vizzbud')
 
 @php
-  $title = 'Dive #' . $diveNumber . ' @ ' . ($log->site->name ?? 'Unknown Site') . ' | Vizzbud';
-  $metaDescription = 'Details for Dive #' . $diveNumber .
-      ' at ' . ($log->site->name ?? 'an unknown location') .
-      ' — ' . ($log->depth ?? 'unknown') . 'm deep, ' .
-      ($log->duration ?? 'unknown') . ' minutes. View your personal dive stats on Vizzbud.';
+  $diveTitle = trim((string)($log->title ?? ''));
+  $siteName  = $log->site->name ?? 'Unknown Site';
+
+  $title = ($diveTitle !== '')
+    ? "{$diveTitle} · Dive #{$diveNumber} @ {$siteName} | Vizzbud"
+    : "Dive #{$diveNumber} @ {$siteName} | Vizzbud";
+
+  $metaDescription = ($diveTitle !== '')
+    ? "{$diveTitle} — Details for Dive #{$diveNumber} at {$siteName}: " .
+      ($log->depth ?? 'unknown') . "m / " . ($log->duration ?? 'unknown') .
+      " min. View your personal dive stats on Vizzbud."
+    : "Details for Dive #{$diveNumber} at {$siteName}: " .
+      ($log->depth ?? 'unknown') . "m / " . ($log->duration ?? 'unknown') .
+      " min. View your personal dive stats on Vizzbud.";
 
   $hasSite = isset($log->site) && is_numeric($log->site->lng ?? null) && is_numeric($log->site->lat ?? null);
 @endphp
@@ -63,6 +72,12 @@
     <h1 class="text-3xl font-extrabold tracking-tight text-white text-center sm:text-left">
       Dive #{{ $diveNumber }} @ {{ $log->site->name ?? 'Unknown Site' }}
     </h1>
+    @if(!empty($log->title))
+      <p class="mt-1 text-lg font-semibold text-cyan-300 text-center sm:text-left">
+        {{ $log->title }}
+      </p>
+    @endif
+
     <p class="mt-1 text-sm text-slate-400 text-center sm:text-left">
       {{ \Carbon\Carbon::parse($log->dive_date)->format('M j, Y') }}
     </p>
