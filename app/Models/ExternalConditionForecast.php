@@ -21,10 +21,22 @@ class ExternalConditionForecast extends Model
         'air_temperature',
     ];
 
+    protected $casts = [
+        'forecast_time' => 'datetime',
+    ];
+
     public $timestamps = true;
 
     public function diveSite()
     {
         return $this->belongsTo(DiveSite::class);
+    }
+
+    /** Grab upcoming rows from now (aligned to the hour), limit N */
+    public function scopeUpcoming($q, int $limit = 48)
+    {
+        return $q->where('forecast_time', '>=', now()->startOfHour())
+                 ->orderBy('forecast_time')
+                 ->limit($limit);
     }
 }

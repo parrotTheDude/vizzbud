@@ -17,50 +17,45 @@
   </header>
 
   {{-- overview / chips --}}
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-    @php
-      $total = $users instanceof \Illuminate\Pagination\LengthAwarePaginator ? $users->total() : $users->count();
-      $verified = $users->filter(fn($u) => !is_null($u->email_verified_at))->count();
-      $admins = $users->filter(fn($u) => (string)($u->role ?? '') === 'admin')->count();
-    @endphp
+  @php
+    // Use controller-provided $metrics if available; otherwise compute from the collection we have
+    $isPager = $users instanceof \Illuminate\Pagination\LengthAwarePaginator;
+    $fallbackTotal     = $isPager ? $users->total() : $users->count();
+    $fallbackVerified  = ($isPager ? collect($users->items()) : $users)->filter(fn($u)=>$u->email_verified_at)->count();
+    $fallbackAdmins    = ($isPager ? collect($users->items()) : $users)->where('role','admin')->count();
 
+    $m = $metrics ?? [
+      'total'      => $fallbackTotal,
+      'verified'   => $fallbackVerified,
+      'unverified' => max(0, $fallbackTotal - $fallbackVerified),
+      'admins'     => $fallbackAdmins,
+    ];
+  @endphp
+
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
     <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl p-5">
       <div class="text-sm text-white/60">Total users</div>
-      <div class="mt-1 text-2xl font-semibold tabular-nums">{{ number_format($total) }}</div>
+      <div class="mt-1 text-2xl font-semibold tabular-nums">{{ number_format($m['total']) }}</div>
     </div>
-
     <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl p-5">
       <div class="text-sm text-white/60">Email verified</div>
-      <div class="mt-1 text-2xl font-semibold tabular-nums text-emerald-300">{{ number_format($verified) }}</div>
+      <div class="mt-1 text-2xl font-semibold tabular-nums text-emerald-300">{{ number_format($m['verified']) }}</div>
     </div>
-
+    <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl p-5">
+      <div class="text-sm text-white/60">Unverified</div>
+      <div class="mt-1 text-2xl font-semibold tabular-nums text-rose-300">{{ number_format($m['unverified']) }}</div>
+    </div>
     <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl p-5">
       <div class="text-sm text-white/60">Admins</div>
-      <div class="mt-1 text-2xl font-semibold tabular-nums text-cyan-300">{{ number_format($admins) }}</div>
+      <div class="mt-1 text-2xl font-semibold tabular-nums text-cyan-300">{{ number_format($m['admins']) }}</div>
     </div>
   </div>
 
   {{-- toolbar --}}
-  <div class="mb-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div class="text-white/70 text-sm">
-      Welcome, admin. Below is a list of all registered users.
+      Welcome, admin. Below is a list of registered users.
     </div>
-
-    {{-- simple search (GET ?q=) --}}
-    <form method="GET" class="w-full sm:w-auto">
-      <div class="flex items-center gap-2 rounded-xl bg-white/10 border border-white/10 ring-1 ring-white/10 backdrop-blur-xl px-3 py-2">
-        <svg class="h-4 w-4 text-white/60" viewBox="0 0 24 24" fill="none">
-          <path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <input
-          type="text"
-          name="q"
-          value="{{ request('q') }}"
-          placeholder="Search by name or email…"
-          class="bg-transparent outline-none placeholder-white/40 text-sm w-full"
-          />
-      </div>
-    </form>
   </div>
 
   {{-- table card --}}
@@ -120,7 +115,9 @@
             </tr>
           @empty
             <tr>
-              <td colspan="6" class="px-4 py-8 text-center text-white/60">No users found.</td>
+              <td colspan="7" class="px-4 py-8 text-center text-white/60">
+                No users found.
+              </td>
             </tr>
           @endforelse
         </tbody>
