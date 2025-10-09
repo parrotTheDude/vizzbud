@@ -15,7 +15,7 @@ class FetchForecastConditions extends Command
 {
     protected $signature = 'vizzbud:fetch-forecast
         {--site= : ID or slug of a specific site}
-        {--hours=48 : How many hours ahead to store (<= 168 recommended)}
+        {--hours=96 : How many hours ahead to store (<= 168 recommended)}
         {--rate=0 : Sleep milliseconds between site requests (API friendliness)}
         {--chunk=100 : Upsert batch size}
         {--dry-run : Fetch & log but do not write}
@@ -25,11 +25,11 @@ class FetchForecastConditions extends Command
 
     public function handle(OpenMeteoService $weather)
     {
-        $hours = max(1, (int)$this->option('hours'));
-        $chunk = max(10, (int)$this->option('chunk'));
-        $rateMs = max(0, (int)$this->option('rate'));
-        $dryRun = (bool)$this->option('dry-run');
-        $shouldPrune = (bool)$this->option('prune');
+        $hours      = max(1, (int) $this->option('hours'));
+        $chunk      = max(10, (int) $this->option('chunk'));
+        $rateMs     = max(0, (int) $this->option('rate'));
+        $dryRun     = (bool) $this->option('dry-run');
+        $shouldPrune= (bool) $this->option('prune');
 
         $this->info("Fetching forecast conditions (horizon: {$hours}h, chunk: {$chunk}, rate: {$rateMs}ms, dry-run: " . ($dryRun ? 'yes' : 'no') . ").");
 
@@ -37,9 +37,8 @@ class FetchForecastConditions extends Command
         $siteOpt = $this->option('site');
         $sitesQuery = DiveSite::query()
             ->when($siteOpt, function ($q) use ($siteOpt) {
-                // accept numeric (ID) or slug/name string
                 if (is_numeric($siteOpt)) {
-                    $q->where('id', (int)$siteOpt);
+                    $q->where('id', (int) $siteOpt);
                 } else {
                     $q->where(function ($qq) use ($siteOpt) {
                         $qq->where('slug', $siteOpt)->orWhere('name', $siteOpt);
@@ -58,27 +57,28 @@ class FetchForecastConditions extends Command
         $bar = $this->output->createProgressBar($count);
         $bar->start();
 
-        $now = CarbonImmutable::now('UTC')->floorHour(); // normalize alignment to UTC hour
+        $now = CarbonImmutable::now('UTC')->floorHour(); 
+        $windowEnd = $now->addHours($hours);           
 
-        // Optionally prune stale rows first (older than "now" are in the past)
+        // Optional global prune of past rows
         if ($shouldPrune && !$dryRun) {
             $deleted = ExternalConditionForecast::where('forecast_time', '<', $now->toDateTimeString())->delete();
             $this->line(PHP_EOL . "Pruned {$deleted} past forecasts.");
         }
 
         $totals = [
-            'sites_ok' => 0,
-            'sites_fail' => 0,
-            'rows_upserted' => 0,
-            'rows_skipped' => 0,
+            'sites_ok'       => 0,
+            'sites_fail'     => 0,
+            'rows_upserted'  => 0,
+            'rows_skipped'   => 0,
+            'rows_pruned'    => 0, 
         ];
 
-        // Stream through sites to keep memory low
+        // Stream through sites
         $sitesQuery->cursor()->each(function (DiveSite $site) use (
-            $weather, $hours, $chunk, $dryRun, $rateMs, $now, $bar, &$totals
+            $weather, $hours, $chunk, $dryRun, $rateMs, $now, $windowEnd, $bar, &$totals
         ) {
             try {
-                // Basic guard for coordinates
                 if (!is_numeric($site->lat) || !is_numeric($site->lng)) {
                     $this->warn(PHP_EOL . "Skipping {$site->name}: invalid coordinates.");
                     $totals['sites_fail']++;
@@ -86,7 +86,7 @@ class FetchForecastConditions extends Command
                     return;
                 }
 
-                // Retry wrapper (simple linear backoff)
+                // Fetch from service (aligned by ISO, future-only)
                 $forecasts = $this->retry(3, function () use ($weather, $site) {
                     return $weather->fetchForecasts($site->lat, $site->lng);
                 }, 200);
@@ -99,9 +99,16 @@ class FetchForecastConditions extends Command
                 }
 
                 // Take horizon hours
-                $hoursData = array_slice($forecasts['hours'], 0, $hours);
+                $nowIso = \Carbon\CarbonImmutable::now('UTC')->floorHour()->toIso8601String();
+                $startIdx = 0;
+                foreach ($forecasts['hours'] as $i => $entry) {
+                    // guard + compare ISO strings
+                    $t = \Illuminate\Support\Arr::get($entry, 'time');
+                    if ($t && strtotime($t) >= strtotime($nowIso)) { $startIdx = $i; break; }
+                }
+                $hoursData = array_slice($forecasts['hours'], $startIdx, $hours);
 
-                // Map to rows (normalize keys + UTC hour)
+                // Map to rows (normalize to UTC hour)
                 $rows = [];
                 foreach ($hoursData as $entry) {
                     $t = Arr::get($entry, 'time');
@@ -109,8 +116,6 @@ class FetchForecastConditions extends Command
                         $totals['rows_skipped']++;
                         continue;
                     }
-
-                    // Normalize to UTC hour
                     $ts = CarbonImmutable::parse($t)->utc()->floorHour()->toDateTimeString();
 
                     $rows[] = [
@@ -138,23 +143,35 @@ class FetchForecastConditions extends Command
                 if ($dryRun) {
                     $this->line(PHP_EOL . "Dry-run: would upsert " . count($rows) . " rows for {$site->name}");
                 } else {
-                    // Upsert in chunks for performance
-                    $uniqueBy = ['dive_site_id', 'forecast_time'];
-                    $updateCols = [
-                        'wave_height','wave_period','wave_direction',
-                        'water_temperature','wind_speed','wind_direction','air_temperature',
-                        'updated_at'
-                    ];
+                    // Atomic per-site: upsert then prune outside the window
+                    DB::transaction(function () use ($site, $rows, $chunk, $now, $windowEnd, &$totals) {
+                        $uniqueBy = ['dive_site_id', 'forecast_time'];
+                        $updateCols = [
+                            'wave_height','wave_period','wave_direction',
+                            'water_temperature','wind_speed','wind_direction','air_temperature',
+                            'updated_at'
+                        ];
+                        foreach (array_chunk($rows, $chunk) as $batch) {
+                            ExternalConditionForecast::upsert($batch, $uniqueBy, $updateCols);
+                            $totals['rows_upserted'] += count($batch);
+                        }
 
-                    foreach (array_chunk($rows, $chunk) as $batch) {
-                        ExternalConditionForecast::upsert($batch, $uniqueBy, $updateCols);
-                        $totals['rows_upserted'] += count($batch);
-                    }
+                        // NEW: prune for this site beyond current window
+                        $deletedFuture = ExternalConditionForecast::where('dive_site_id', $site->id)
+                            ->where('forecast_time', '>=', $windowEnd->toDateTimeString())
+                            ->delete();
+
+                        // If you want to be super strict and also remove any odd “future < now” rows missed, you can:
+                        $deletedPast = ExternalConditionForecast::where('dive_site_id', $site->id)
+                            ->where('forecast_time', '<', $now->toDateTimeString())
+                            ->delete();
+
+                        $totals['rows_pruned'] += ($deletedFuture + $deletedPast);
+                    });
                 }
 
                 $totals['sites_ok']++;
 
-                // Lightweight polite delay
                 if ($rateMs > 0) {
                     usleep($rateMs * 1000);
                 }
@@ -168,33 +185,19 @@ class FetchForecastConditions extends Command
 
         $bar->finish();
         $this->newLine(2);
-        $this->info("Done. Sites OK: {$totals['sites_ok']} | Sites Fail: {$totals['sites_fail']} | Upserted: {$totals['rows_upserted']} | Skipped: {$totals['rows_skipped']}");
+        $this->info("Done. Sites OK: {$totals['sites_ok']} | Sites Fail: {$totals['sites_fail']} | Upserted: {$totals['rows_upserted']} | Skipped: {$totals['rows_skipped']} | Pruned: {$totals['rows_pruned']}");
 
         return Command::SUCCESS;
     }
 
-    /**
-     * Tiny retry helper.
-     *
-     * @template T
-     * @param  int      $times
-     * @param  callable $callback
-     * @param  int      $sleepMs
-     * @return mixed
-     * @throws \Throwable
-     */
     protected function retry(int $times, callable $callback, int $sleepMs = 0)
     {
         beginning:
         try {
             return $callback();
         } catch (Throwable $e) {
-            if (--$times <= 0) {
-                throw $e;
-            }
-            if ($sleepMs > 0) {
-                usleep($sleepMs * 1000);
-            }
+            if (--$times <= 0) throw $e;
+            if ($sleepMs > 0) usleep($sleepMs * 1000);
             goto beginning;
         }
     }

@@ -175,7 +175,7 @@ class OpenMeteoService
                             'longitude'     => $lng,
                             'hourly'        => 'wave_height,wave_period,wave_direction,sea_surface_temperature',
                             'timezone'      => 'UTC',
-                            'forecast_days' => 3,
+                            'forecast_days' => 4,
                         ]),
                     'weather' => $pool->as('weather')
                         ->timeout($this->timeout)->retry($this->retries, 200)
@@ -183,9 +183,9 @@ class OpenMeteoService
                             'latitude'       => $lat,
                             'longitude'      => $lng,
                             'hourly'         => 'wind_speed_10m,wind_direction_10m,temperature_2m',
-                            'windspeed_unit' => 'kn', // <-- knots here too
+                            'windspeed_unit' => 'kn',
                             'timezone'       => 'UTC',
-                            'forecast_days'  => 3,
+                            'forecast_days'  => 4,
                         ]),
                 ];
             });
@@ -207,7 +207,7 @@ class OpenMeteoService
             $result = [];
 
             foreach ($times as $i => $iso) {
-                $windKt = Arr::get($w, "hourly.wind_speed_10m.$i"); // already knots
+                $windKt = Arr::get($w, "hourly.wind_speed_10m.$i"); 
 
                 $result[] = [
                     'time'             => $iso,
@@ -215,7 +215,7 @@ class OpenMeteoService
                     'wavePeriod'       => Arr::get($m, "hourly.wave_period.$i"),
                     'waveDirection'    => Arr::get($m, "hourly.wave_direction.$i"),
                     'waterTemperature' => Arr::get($m, "hourly.sea_surface_temperature.$i"),
-                    'windSpeed'        => $windKt, // knots
+                    'windSpeed'        => $windKt,
                     'windDirection'    => Arr::get($w, "hourly.wind_direction_10m.$i"),
                     'airTemperature'   => Arr::get($w, "hourly.temperature_2m.$i"),
                 ];
