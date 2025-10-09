@@ -96,11 +96,6 @@ class DiveSite extends Model
             ->latestOfMany('forecast_time');
     }
 
-    public function diveLogs()
-    {
-        return $this->hasMany(DiveLog::class, 'dive_site_id');
-    }
-
     /** Route binding */
     public function getRouteKeyName(): string
     {

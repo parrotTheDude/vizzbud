@@ -160,8 +160,6 @@ class DiveSiteController extends Controller
                 ->limit(48),
         ]);
 
-        $recentDives = $diveSite->diveLogs()->latest()->take(5)->get();
-
-        return view('dive-sites.show', compact('diveSite', 'recentDives'));
+        return view('dive-sites.show', compact('diveSite'));
     }
 }
