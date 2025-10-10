@@ -367,9 +367,6 @@ function diveSiteMap({ sites }) {
                     });
                 }
 
-                  // 🔎 Debug once so you can see what the API gave you
-                  console.log('selectedSite.today_summary:', site?.today_summary);
-
                   // 🔤 Normalize to lowercase so 'Green' / 'YELLOW' still work
                   if (site && site.today_summary) {
                     ['morning','afternoon','night'].forEach(p => {
