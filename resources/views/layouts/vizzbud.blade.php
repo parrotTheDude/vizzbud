@@ -336,7 +336,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="relative border-t border-slate-800 bg-slate-900/60 backdrop-blur-xl backdrop-saturate-150">
+  <footer class="relative border-t border-slate-800 bg-slate-900/60 backdrop-blur-xl backdrop-saturate-150 z-10">
     <div class="mx-auto max-w-7xl px-6 py-8 flex flex-col items-center text-center text-slate-400 text-sm">
       
       <!-- Logo -->

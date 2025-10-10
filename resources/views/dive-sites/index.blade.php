@@ -172,7 +172,7 @@
 <div
   x-show="isMobileView && selectedSite"
   x-transition.opacity
-  class="fixed inset-0 z-20 bg-slate-900/40 backdrop-blur-sm"
+  class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
   @click="selectedSite = null"
 ></div>
 
@@ -181,7 +181,7 @@
   x-show="isMobileView"
   id="mobileInfoPanel"
   :class="selectedSite && isMobileView ? 'translate-y-0' : 'translate-y-full'"
-  class="fixed bottom-0 left-0 right-0 z-30
+  class="fixed bottom-0 left-0 right-0 z-50
          w-full max-h-[80vh]
          bg-white/30 backdrop-blur-xl border-t border-white/30
          ring-1 ring-white/20 shadow-2xl
@@ -222,15 +222,36 @@ function diveSiteMap({ sites }) {
         dragStartY: 0,
         dragging: false,
 
+
+        initialDesktop: { center: [151.3553, -33.8568], zoom: 11 },
+        initialMobile:  { center: [151.2900, -33.8100], zoom: 11 },
+
+        hasInteracted: false, // so we don't recenter after user pans/zooms
+
+        getInitialView() {
+          // URL overrides everything if provided
+          const url = new URLSearchParams(window.location.search);
+          const lat  = parseFloat(url.get('lat'));
+          const lng  = parseFloat(url.get('lng'));
+          const zoom = parseFloat(url.get('zoom'));
+          if (!isNaN(lat) && !isNaN(lng) && !isNaN(zoom)) {
+            return { center: [lng, lat], zoom };
+          }
+          // Otherwise pick by device
+          return this.isMobileView ? this.initialMobile : this.initialDesktop;
+        },
+
         init() {
 
             this.isMobileView = window.innerWidth < 640;
 
+            const view = this.getInitialView();
+
             this.map = new mapboxgl.Map({
               container: 'map',
               style: 'mapbox://styles/mapbox/streets-v11',
-              center: [151.3553, -33.8568],
-              zoom: 11
+              center: view.center,
+              zoom: view.zoom
             });
 
             this.applyMapPadding();
