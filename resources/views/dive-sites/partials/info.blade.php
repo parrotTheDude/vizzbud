@@ -19,15 +19,30 @@
           })()"
           x-show="selectedSite?.status"
         >
-          <span class="relative flex w-2.5 h-2.5">
-            <span class="relative inline-flex w-2.5 h-2.5 rounded-full"
+          <!-- Pulsing dot -->
+          <span class="relative inline-flex w-2.5 h-2.5">
+            <!-- soft pulse -->
+            <span
+              class="absolute inset-0 rounded-full opacity-60 animate-ping"
+              :class="(() => {
+                const s = (selectedSite?.status || '').toLowerCase();
+                if (s === 'green')  return 'bg-emerald-400';
+                if (s === 'yellow') return 'bg-amber-400';
+                if (s === 'red')    return 'bg-rose-500';
+                return 'bg-slate-400';
+              })()"
+            ></span>
+            <!-- solid core -->
+            <span
+              class="relative inline-flex w-2.5 h-2.5 rounded-full"
               :class="(() => {
                 const s = (selectedSite?.status || '').toLowerCase();
                 if (s === 'green')  return 'bg-emerald-500';
                 if (s === 'yellow') return 'bg-amber-400';
                 if (s === 'red')    return 'bg-rose-500';
                 return 'bg-slate-400';
-              })()"></span>
+              })()"
+            ></span>
           </span>
           <span class="uppercase tracking-wide text-[11px] opacity-70">Live</span>
           <span x-text="(() => {
