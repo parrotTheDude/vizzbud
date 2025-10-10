@@ -1,5 +1,5 @@
 <template x-if="selectedSite">
-  <div class="space-y-4 px-3 sm:px-4 text-slate-900">
+  <div class="space-y-3 sm:space-y-4 px-1 sm:px-4 text-slate-900 max-w-full">
 
     <!-- Header card: Name + Live status -->
     <section class="bg-white/35 backdrop-blur-xl border border-white/30 ring-1 ring-white/20 rounded-2xl shadow-sm p-4">
