@@ -10,30 +10,27 @@ use Illuminate\Http\Request;
 class DiveSiteController extends Controller
 {
     /**
-     * List sites + latest condition + next 48h forecast.
-     * - Select only columns you need
-     * - Constrain eager loads
-     * - Cache the fully formatted payload for a minute (cheap & safe)
-     * - Avoid re-parsing Carbon in a loop
-     * - Optional bbox filtering for map views
+     * List sites + latest condition + next 48h forecast + day-part summaries.
+     * - Optional bbox filter (?bbox=minLng,minLat,maxLng,maxLat)
+     * - Caches formatted payload for 60s
      */
     public function index(Request $request)
     {
-        // Optional map bounding box filter ?bbox=minLng,minLat,maxLng,maxLat
+        // Optional map bounding box filter
         [$minLng, $minLat, $maxLng, $maxLat] = array_pad(
             explode(',', (string) $request->query('bbox', '')), 4, null
         );
 
-        $cacheKey = 'sites:index:' . md5(implode(',', [$minLng,$minLat,$maxLng,$maxLat]));
+        $cacheKey = 'sites:index:' . md5(implode(',', [$minLng, $minLat, $maxLng, $maxLat]));
 
-        $payload = Cache::remember($cacheKey, 60, function () use ($minLng,$minLat,$maxLng,$maxLat) {
+        $payload = Cache::remember($cacheKey, 60, function () use ($minLng, $minLat, $maxLng, $maxLat) {
             $sitesQuery = DiveSite::query()
                 ->select([
                     'id','slug','name','description','lat','lng',
-                    'max_depth','avg_depth','dive_type','suitability'
+                    'max_depth','avg_depth','dive_type','suitability','timezone',
                 ])
                 ->with([
-                    // IMPORTANT: qualify columns to avoid ambiguity in the eager load
+                    // Latest snapshot
                     'latestCondition' => function ($q) {
                         $q->select([
                             'external_conditions.id',
@@ -49,16 +46,24 @@ class DiveSiteController extends Controller
                             'external_conditions.air_temperature',
                         ]);
                     },
+                    // Next 48h hourly forecast
                     'forecasts' => function ($q) {
                         $q->select([
                             'id','dive_site_id','forecast_time',
                             'wave_height','wave_period','wave_direction',
                             'water_temperature','wind_speed','wind_direction',
-                            'air_temperature','updated_at'
+                            'air_temperature','updated_at',
                         ])
                         ->where('forecast_time', '>=', Carbon::now()->startOfHour())
                         ->orderBy('forecast_time')
                         ->limit(48);
+                    },
+                    // Dayparts: pull a small forward window (we’ll filter per-site in PHP)
+                    'dayparts' => function ($q) {
+                        $q->select(['id','dive_site_id','local_date','part','status'])
+                        ->orderBy('local_date', 'desc')
+                        ->orderBy('part')
+                        ->limit(12);
                     },
                 ]);
 
@@ -70,10 +75,37 @@ class DiveSiteController extends Controller
 
             $sites = $sitesQuery->get();
 
-            $toIso = static fn($v) => $v ? Carbon::parse($v)->toDateTimeString() : null;
+            $toIso = static fn ($v) => $v ? Carbon::parse($v)->toDateTimeString() : null;
 
             $formattedSites = $sites->map(function ($site) use ($toIso) {
-                $c = $site->latestCondition;
+                $c   = $site->latestCondition;
+                $tz  = $site->timezone ?: 'UTC';
+                $todayLocal = Carbon::now($tz)->toDateString();
+
+                // Build dayparts grouped per local_date => {morning, afternoon, night}
+                $dayparts = $site->dayparts
+                    ->groupBy(fn ($r) => (string)$r->local_date)
+                    ->map(function ($rows, $date) {
+                        $byPart = $rows->pluck('status', 'part');
+                        return [
+                            'date'      => \Illuminate\Support\Carbon::parse($date)->toDateString(),
+                            'morning'   => $byPart['morning']   ?? null,
+                            'afternoon' => $byPart['afternoon'] ?? null,
+                            'night'     => $byPart['night']     ?? null,
+                        ];
+                    })
+                    ->filter(function ($d) use ($todayLocal) {
+                        return $d['date'] >= $todayLocal;
+                    })
+                    ->sortBy('date')
+                    ->values()
+                    ->take(3);
+
+                $todayRow = collect($dayparts)->first(fn($d) => $d['date'] === $todayLocal);
+
+                $todaySummary = $todayRow
+                    ? collect($todayRow)->only(['morning','afternoon','night'])
+                    : null;
 
                 return [
                     'id'          => $site->id,
@@ -86,6 +118,7 @@ class DiveSiteController extends Controller
                     'avg_depth'   => $site->avg_depth,
                     'dive_type'   => $site->dive_type,
                     'suitability' => $site->suitability,
+                    'timezone'    => $tz,
 
                     'retrieved_at'=> $toIso(optional($c)->retrieved_at),
                     'status'      => $c?->status,
@@ -114,6 +147,9 @@ class DiveSiteController extends Controller
                     }),
 
                     'forecast_updated_at' => $toIso($site->forecasts->max('updated_at')),
+
+                    'dayparts' => $dayparts->values(),
+                    'today_summary' => $todaySummary,
                 ];
             })->values();
 
@@ -122,7 +158,7 @@ class DiveSiteController extends Controller
                 ->orderBy('name')
                 ->get();
 
-            return compact('formattedSites','siteOptions');
+            return compact('formattedSites', 'siteOptions');
         });
 
         return view('dive-sites.index', [
@@ -133,6 +169,9 @@ class DiveSiteController extends Controller
 
     public function show(DiveSite $diveSite)
     {
+        $tz = $diveSite->timezone ?: 'UTC';
+        $todayLocal = \Illuminate\Support\Carbon::now($tz)->toDateString();
+
         $diveSite->loadMissing([
             'latestCondition' => function ($q) {
                 $q->select([
@@ -155,9 +194,13 @@ class DiveSiteController extends Controller
                     'water_temperature','wind_speed','wind_direction',
                     'air_temperature'
                 ])
-                ->where('forecast_time', '>=', Carbon::now()->startOfHour())
+                ->where('forecast_time', '>=', \Illuminate\Support\Carbon::now()->startOfHour())
                 ->orderBy('forecast_time')
                 ->limit(48),
+
+            // Only today’s parts in local tz (we store as local_date)
+            'dayparts' => fn($q) => $q->select(['id','dive_site_id','local_date','part','status'])
+                ->where('local_date', $todayLocal),
         ]);
 
         return view('dive-sites.show', compact('diveSite'));

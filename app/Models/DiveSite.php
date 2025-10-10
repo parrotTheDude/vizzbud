@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use App\Models\ExternalConditionDaypart;
 
 class DiveSite extends Model
 {
@@ -118,16 +119,44 @@ class DiveSite extends Model
                  ->whereBetween('lat', [$minLat, $maxLat]);
     }
 
-    /**
-     * Eager load forecasts within a window (hours).
-     * Usage: DiveSite::withForecastWindow(48)->get()
-     */
-    public function scopeWithForecastWindow(Builder $q, int $hours = 48): Builder
+    /** Day-part rows (one row per {local_date, part}) */
+    public function dayparts()
     {
-        return $q->with(['forecasts' => function ($fq) use ($hours) {
-            $fq->where('forecast_time', '>=', now()->startOfHour())
-               ->orderBy('forecast_time')
-               ->limit($hours);
-        }]);
+        return $this->hasMany(ExternalConditionDaypart::class)
+            ->orderBy('local_date')
+            ->orderBy('part');
+    }
+
+    /** Upcoming dayparts grouped by local date for N days */
+    public function upcomingDayparts(int $days = 3)
+    {
+        $tz   = $this->timezone ?? 'UTC';
+        $from = now($tz)->toDateString();
+        $to   = now($tz)->addDays($days - 1)->toDateString();
+
+        return $this->dayparts()
+            ->whereBetween('local_date', [$from, $to]);
+    }
+
+    /** Convenience: today's 3-part summary (null if none) */
+    public function getTodaySummaryAttribute()
+    {
+        $tz   = $this->timezone ?? 'UTC';
+        $today = now($tz)->toDateString();
+
+        // If relationship is loaded, use that; otherwise query cheaply
+        $rows = $this->relationLoaded('dayparts')
+            ? $this->dayparts->where('local_date', $today)
+            : $this->dayparts()->where('local_date', $today)->get(['part','status']);
+
+        if ($rows->isEmpty()) return null;
+
+        $byPart = $rows->pluck('status', 'part');
+
+        return [
+            'morning'   => $byPart['morning']   ?? null,
+            'afternoon' => $byPart['afternoon'] ?? null,
+            'night'     => $byPart['night']     ?? null,
+        ];
     }
 }
