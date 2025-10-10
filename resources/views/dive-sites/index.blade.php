@@ -229,7 +229,7 @@ function diveSiteMap({ sites }) {
             this.map = new mapboxgl.Map({
               container: 'map',
               style: 'mapbox://styles/mapbox/streets-v11',
-              center: [151.2653, -33.8568],
+              center: [151.3553, -33.8568],
               zoom: 11
             });
 
