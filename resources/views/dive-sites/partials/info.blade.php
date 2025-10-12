@@ -104,7 +104,7 @@
             x-show="selectedSite?.today_summary" x-transition>
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-semibold text-slate-800">Today’s Diveability</h3>
-        <span class="text-[11px] text-slate-500">6–11AM • 11–5PM • 5–10PM</span>
+        <span class="text-[11px] text-slate-500">6AM–12PM • 12PM–5PM • 5PM–9PM</span>
       </div>
 
       <div class="mt-3 grid grid-cols-3 gap-2">

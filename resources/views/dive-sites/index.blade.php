@@ -162,7 +162,7 @@
     <div class="pointer-events-none absolute inset-x-6 top-4 h-10 rounded-full bg-white/60 blur-2xl"></div>
 
     <!-- scrollable content, but only if taller than viewport -->
-    <div class="px-2 pt-[4.5rem] pb-6 overflow-y-auto max-h-screen">
+    <div class="px-2 pt-[4.5rem] pb-6 overflow-y-auto max-h-screen z-50">
       <div class="mb-4 h-px bg-white/50"></div>
       @include('dive-sites.partials.info', ['chartId' => 'swellChart-desktop'])
     </div>

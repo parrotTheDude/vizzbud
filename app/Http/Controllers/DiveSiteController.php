@@ -200,9 +200,33 @@ class DiveSiteController extends Controller
 
             // Only today’s parts in local tz (we store as local_date)
             'dayparts' => fn($q) => $q->select(['id','dive_site_id','local_date','part','status'])
-                ->where('local_date', $todayLocal),
-        ]);
+                ->where('local_date', '>=', Carbon::now()->toDateString())
+                ->orderBy('local_date')
+                ->orderBy('part')
+                ->limit(9), // 3 days × 3 parts
+            ]);
 
-        return view('dive-sites.show', compact('diveSite'));
+        $tz = $diveSite->timezone ?: 'UTC';
+        $todayLocal = Carbon::now($tz)->toDateString();
+
+        $daypartsGrouped = $diveSite->dayparts
+            ->groupBy(fn ($r) => (string)$r->local_date)
+            ->map(function ($rows, $date) {
+                $byPart = $rows->pluck('status', 'part');
+                return [
+                    'date'      => Carbon::parse($date)->toDateString(),
+                    'morning'   => $byPart['morning']   ?? null,
+                    'afternoon' => $byPart['afternoon'] ?? null,
+                    'night'     => $byPart['night']     ?? null,
+                ];
+            })
+            ->sortKeys()
+            ->take(3)
+            ->values();
+
+        return view('dive-sites.show', [
+            'diveSite' => $diveSite,
+            'daypartForecasts' => $daypartsGrouped,
+        ]);
     }
 }
