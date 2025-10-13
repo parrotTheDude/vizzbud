@@ -35,13 +35,24 @@
     <div class="absolute inset-0 rounded-b-3xl bg-gradient-to-t 
                 from-slate-900/85 via-slate-900/20 to-transparent"></div>
 
-    {{-- Centered Title + Location --}}
+    {{-- Centered Title + Location + Credit --}}
     <div class="absolute bottom-0 left-0 right-0 pb-10 flex flex-col items-center text-center px-6">
       <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg mb-2">
         {{ $diveSite->name }}
       </h1>
-      <p class="text-slate-300 text-sm sm:text-base font-medium">
+      <p class="text-slate-300 text-sm sm:text-base font-medium mb-1">
         {{ $diveSite->region }}, {{ $diveSite->country }}
+      </p>
+
+      {{-- 📸 Image Credit (now centered and always visible) --}}
+      <p class="text-[11px] sm:text-[12px] text-white/60">
+        Photos by 
+        <a href="https://www.instagram.com/lesleyy.spencerr"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline hover:text-white font-medium">
+          @lesleyy.spencerr
+        </a>
       </p>
     </div>
   </div>
@@ -208,7 +219,7 @@
         {{-- 🌈 Integrated Legend --}}
         <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm 
                     shadow-inner p-5 text-center">
-          <h3 class="text-sm font-semibold text-white mb-4">Dive Condition Key</h3>
+          <h3 class="text-white font-semibold text-lg text-center mb-3">Dive Condition Key</h3>
 
           <div class="flex flex-col sm:flex-row justify-center items-stretch gap-4 sm:gap-8 
                       text-[13px] text-white/80 leading-relaxed max-w-3xl mx-auto">
@@ -216,21 +227,21 @@
             {{-- Green --}}
             <div class="flex flex-col items-center text-center gap-1.5">
               <span class="w-3 h-3 bg-emerald-400 rounded-full shadow-sm"></span>
-              <p class="font-semibold text-white text-sm">Green – Great diving</p>
+              <p class="font-semibold text-white text-sm">Great diving</p>
               <p class="text-xs text-white/70 max-w-[220px]">Calm water, clear visibility, and easy conditions.</p>
             </div>
 
             {{-- Yellow --}}
             <div class="flex flex-col items-center text-center gap-1.5">
               <span class="w-3 h-3 bg-amber-400 rounded-full shadow-sm"></span>
-              <p class="font-semibold text-white text-sm">Yellow – Dive with caution</p>
+              <p class="font-semibold text-white text-sm">Dive with caution</p>
               <p class="text-xs text-white/70 max-w-[220px]">Moderate swell or shifting visibility, check before diving.</p>
             </div>
 
             {{-- Red --}}
             <div class="flex flex-col items-center text-center gap-1.5">
               <span class="w-3 h-3 bg-rose-400 rounded-full shadow-sm"></span>
-              <p class="font-semibold text-white text-sm">Red – Not ideal</p>
+              <p class="font-semibold text-white text-sm">Not ideal</p>
               <p class="text-xs text-white/70 max-w-[220px]">Strong currents, poor visibility, or unsafe surf.</p>
             </div>
 
@@ -239,4 +250,76 @@
       </div>
     @endif
 
+  {{-- 🧭 Local Intel + Map --}}
+  <section class="max-w-5xl mx-auto mb-14 px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+    <div class="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-xl border border-white/15 ring-1 ring-white/10 shadow-xl">
+      <h3 class="text-white font-semibold text-lg mb-4">Local Intel</h3>
+      <ul class="space-y-2 text-sm text-slate-300">
+        <li><strong class="text-white">Best Wind:</strong> {{ $diveSite->best_wind_dirs ?? 'N/A' }}</li>
+        <li><strong class="text-white">Hazards:</strong> {{ $diveSite->hazards ?? 'No major hazards recorded.' }}</li>
+        <li><strong class="text-white">Entry Notes:</strong> {{ $diveSite->entry_notes ?? 'Standard entry.' }}</li>
+        <li><strong class="text-white">Parking:</strong> {{ $diveSite->parking_notes ?? 'Limited nearby parking.' }}</li>
+        <li><strong class="text-white">Marine Life:</strong> {{ $diveSite->marine_life ?? 'Tropical reef species common.' }}</li>
+      </ul>
+    </div>
+
+    <div class="relative rounded-3xl overflow-hidden bg-white/10 backdrop-blur-xl border border-white/15 ring-1 ring-white/10 shadow-xl">
+      <div id="dive-site-map-desktop" class="hidden sm:block h-[380px] w-full"></div>
+      <div id="dive-site-map-mobile" class="sm:hidden h-[260px] w-full"></div>
+    </div>
+  </section>
+
+  {{-- 📖 About Section --}}
+  <section class="max-w-4xl mx-auto px-6 sm:px-8 mb-16">
+    <div class="rounded-3xl p-6 sm:p-8 bg-slate-900/40 backdrop-blur-xl border border-white/15 ring-1 ring-white/10 shadow-lg">
+      <h3 class="text-white font-semibold text-lg mb-3">About this site</h3>
+      <p class="text-slate-300 leading-relaxed whitespace-pre-line">
+        {{ $diveSite->description ?: 'No description provided yet.' }}
+      </p>
+    </div>
+  </section>
+</section>
+
+{{-- Mapbox Script --}}
+@push('scripts')
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+<script>
+  mapboxgl.accessToken = @json(config('services.mapbox.token'));
+  const site = { lat: {{ $diveSite->lat }}, lng: {{ $diveSite->lng }}, status: '{{ $status }}' };
+
+  function statusColor(s) {
+    return {
+      green: '#10B981', yellow: '#FACC15', red: '#EF4444', default: '#06B6D4'
+    }[s] || '#06B6D4';
+  }
+
+  function buildMarkerEl(status) {
+    const el = document.createElement('div');
+    el.style.width = '16px';
+    el.style.height = '16px';
+    el.style.borderRadius = '9999px';
+    const color = statusColor(status);
+    el.style.background = color;
+    el.style.boxShadow = `0 0 12px ${color}80`;
+    return el;
+  }
+
+  function initMap(id, zoom) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const map = new mapboxgl.Map({
+      container: id,
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [site.lng, site.lat],
+      zoom, interactive: false
+    });
+    new mapboxgl.Marker({ element: buildMarkerEl(site.status) })
+      .setLngLat([site.lng, site.lat])
+      .addTo(map);
+  }
+
+  initMap('dive-site-map-mobile', 12);
+  initMap('dive-site-map-desktop', 13);
+</script>
+@endpush
 @endsection
