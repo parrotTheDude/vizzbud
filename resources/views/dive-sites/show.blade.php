@@ -250,35 +250,7 @@
       </div>
     @endif
 
-  {{-- 🧭 Local Intel + Map --}}
-  <section class="max-w-5xl mx-auto mb-14 px-6 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-    <div class="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-xl border border-white/15 ring-1 ring-white/10 shadow-xl">
-      <h3 class="text-white font-semibold text-lg mb-4">Local Intel</h3>
-      <ul class="space-y-2 text-sm text-slate-300">
-        <li><strong class="text-white">Best Wind:</strong> {{ $diveSite->best_wind_dirs ?? 'N/A' }}</li>
-        <li><strong class="text-white">Hazards:</strong> {{ $diveSite->hazards ?? 'No major hazards recorded.' }}</li>
-        <li><strong class="text-white">Entry Notes:</strong> {{ $diveSite->entry_notes ?? 'Standard entry.' }}</li>
-        <li><strong class="text-white">Parking:</strong> {{ $diveSite->parking_notes ?? 'Limited nearby parking.' }}</li>
-        <li><strong class="text-white">Marine Life:</strong> {{ $diveSite->marine_life ?? 'Tropical reef species common.' }}</li>
-      </ul>
-    </div>
 
-    <div class="relative rounded-3xl overflow-hidden bg-white/10 backdrop-blur-xl border border-white/15 ring-1 ring-white/10 shadow-xl">
-      <div id="dive-site-map-desktop" class="hidden sm:block h-[380px] w-full"></div>
-      <div id="dive-site-map-mobile" class="sm:hidden h-[260px] w-full"></div>
-    </div>
-  </section>
-
-  {{-- 📖 About Section --}}
-  <section class="max-w-4xl mx-auto px-6 sm:px-8 mb-16">
-    <div class="rounded-3xl p-6 sm:p-8 bg-slate-900/40 backdrop-blur-xl border border-white/15 ring-1 ring-white/10 shadow-lg">
-      <h3 class="text-white font-semibold text-lg mb-3">About this site</h3>
-      <p class="text-slate-300 leading-relaxed whitespace-pre-line">
-        {{ $diveSite->description ?: 'No description provided yet.' }}
-      </p>
-    </div>
-  </section>
-</section>
 
 {{-- Mapbox Script --}}
 @push('scripts')
