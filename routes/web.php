@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Middleware\AdminMiddleware;
 use App\Models\DiveSite;
 use Spatie\Sitemap\SitemapGenerator;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,8 +60,17 @@ Route::prefix('forgot-password')->name('password.')->group(function () {
 
 // Email Verification
 Route::middleware('auth')->group(function () {
+    // Step 1: Notice page (where the user can click "Resend verification email")
     Route::view('/verify-email', 'auth.verify-email')->name('verification.notice');
-    Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verify.email');
+
+    // Step 2: Actual verification link (from email)
+    Route::get('/verify-email/{token}', [\App\Http\Controllers\Auth\VerifyEmailController::class, 'verify'])
+        ->name('verify.email');
+
+    // Step 3: Resend route (the form POSTs here)
+    Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1') // Max 6 per minute
+        ->name('verification.send');
 });
 
 Route::view('/how-it-works', 'pages.how-vizzbud-works')->name('how_it_works');

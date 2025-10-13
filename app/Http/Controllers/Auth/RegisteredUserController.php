@@ -32,9 +32,8 @@ class RegisteredUserController extends Controller
         ]);
 
         $user = null;
-        $token = Str::random(64);
 
-        DB::transaction(function () use (&$user, $validated, $token) {
+        DB::transaction(function () use (&$user, $validated) {
             $user = User::create([
                 'name'     => $validated['name'],
                 'email'    => $validated['email'],
@@ -42,43 +41,57 @@ class RegisteredUserController extends Controller
                 'role'     => 'user',
             ]);
 
-            // Clean any old tokens for this user (defensive)
-            VerificationToken::where('user_id', $user->id)->delete();
+            // Check for existing token for this user
+            $existing = VerificationToken::where('user_id', $user->id)->latest()->first();
 
-            VerificationToken::create([
-                'user_id'    => $user->id,
-                'token'      => $token,
-                'expires_at' => now()->addHours(24),
-            ]);
+            // Cooldown: prevent new token if one was just sent
+            if ($existing && $existing->created_at->gt(now()->subSeconds(60))) {
+                throw new \Exception('Please wait before requesting another verification email.');
+            }
+
+            // Reuse existing token if still valid
+            if ($existing && $existing->expires_at->isFuture()) {
+                $token = $existing->token;
+            } else {
+                $token = Str::random(64);
+
+                VerificationToken::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'token'      => $token,
+                        'expires_at' => now()->addHours(24),
+                        'created_at' => now(),
+                    ]
+                );
+            }
+
+            // Build verify URL
+            $verifyUrl = url(route('verify.email', ['token' => $token], false));
+
+            // Send via Postmark
+            try {
+                app(PostmarkService::class)->sendEmail(
+                    templateId: (int) config('services.postmark.verify_template_id'),
+                    to: $user->email,
+                    variables: [
+                        'name'          => $user->name ?? 'there',
+                        'action_url'    => $verifyUrl,
+                        'support_email' => config('mail.from.address'),
+                        'year'          => now()->year,
+                    ],
+                    tag: 'email-verification',
+                    options: [
+                        'replyTo'  => config('mail.from.address'),
+                        'metadata' => ['user_id' => (string) $user->id],
+                    ]
+                );
+            } catch (Throwable $e) {
+                logger()->error('Postmark verify email failed', [
+                    'user_id' => $user->id,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
         });
-
-        // Build verify URL for your custom route
-        $verifyUrl = url(route('verify.email', ['token' => $token], false));
-
-        // Send with Postmark (uses your service wrapper)
-        try {
-            app(PostmarkService::class)->sendEmail(
-                templateId: (int) config('services.postmark.verify_template_id'),
-                to: $user->email,
-                variables: [
-                    'name'          => $user->name ?? 'there',
-                    'action_url'    => $verifyUrl,
-                    'support_email' => config('mail.from.address'),
-                    'year'          => now()->year,
-                ],
-                tag: 'email-verification',
-                options: [
-                    'replyTo'  => config('mail.from.address'),
-                    'metadata' => ['user_id' => (string) $user->id],
-                ]
-            );
-        } catch (Throwable $e) {
-            // Log but don't block sign-up; user can request a re-send
-            logger()->error('Postmark verify email failed', [
-                'user_id' => $user->id,
-                'error'   => $e->getMessage(),
-            ]);
-        }
 
         Auth::login($user);
 

@@ -36,7 +36,7 @@ class VerifyEmailController extends Controller
         }
 
         $user = $record->user;
-        $user->markEmailAsVerified(); // assumes this method sets `email_verified_at`
+        $user->markEmailAsVerified();
 
         $record->delete();
 

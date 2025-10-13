@@ -12,14 +12,23 @@
                 bg-cyan-500/10 blur-3xl"></div>
   </div>
 
-  {{-- success toast --}}
   @if (session('status') === 'verification-link-sent')
     <div x-data="{ show: true }"
-         x-init="setTimeout(() => show = false, 5000)"
-         x-show="show" x-transition
-         class="mb-6 rounded-xl px-4 py-3 text-sm font-medium
+        x-init="setTimeout(() => show = false, 5000)"
+        x-show="show" x-transition
+        class="mb-6 rounded-xl px-4 py-3 text-sm font-medium
                 bg-emerald-500/15 text-emerald-200 border border-white/10 ring-1 ring-emerald-400/30">
-      ✅ A new verification link has been sent to your email address.
+      A new verification link has been sent to your email address.
+    </div>
+  @endif
+
+  @if ($errors->has('cooldown'))
+    <div x-data="{ show: true }"
+        x-init="setTimeout(() => show = false, 5000)"
+        x-show="show" x-transition
+        class="mb-6 rounded-xl px-4 py-3 text-sm font-medium
+                bg-amber-500/15 text-amber-200 border border-white/10 ring-1 ring-amber-400/30">
+      {{ $errors->first('cooldown') }}
     </div>
   @endif
 
@@ -32,17 +41,44 @@
     </p>
 
     {{-- resend --}}
-    <form method="POST" action="{{ route('verification.send') }}" class="mt-6">
+    <form 
+      method="POST" 
+      action="{{ route('verification.send') }}" 
+      x-data="{
+        cooldown: {{ session('cooldown_seconds') ?? 0 }},
+        startTimer() {
+          if (this.cooldown > 0) {
+            const interval = setInterval(() => {
+              if (this.cooldown > 0) {
+                this.cooldown--;
+              } else {
+                clearInterval(interval);
+              }
+            }, 1000);
+          }
+        }
+      }"
+      x-init="startTimer()"
+      class="mt-6"
+    >
       @csrf
       <button type="submit"
+              x-bind:disabled="cooldown > 0"
               class="group inline-flex w-full items-center justify-center gap-2
-                     rounded-xl px-4 py-3 font-semibold text-white
-                     bg-gradient-to-r from-cyan-500/90 to-teal-400/90
-                     hover:from-cyan-400/90 hover:to-teal-300/90
-                     border border-white/10 ring-1 ring-white/10
-                     backdrop-blur-md shadow-lg shadow-cyan-500/20
-                     transition-all duration-300 hover:-translate-y-0.5">
-        <span>Resend verification email</span>
+                    rounded-xl px-4 py-3 font-semibold text-white
+                    bg-gradient-to-r from-cyan-500/90 to-teal-400/90
+                    hover:from-cyan-400/90 hover:to-teal-300/90
+                    border border-white/10 ring-1 ring-white/10
+                    backdrop-blur-md shadow-lg shadow-cyan-500/20
+                    transition-all duration-300 hover:-translate-y-0.5
+                    disabled:opacity-50 disabled:cursor-not-allowed">
+        <template x-if="cooldown <= 0">
+          <span>Resend verification email</span>
+        </template>
+        <template x-if="cooldown > 0">
+          <span>Wait <span x-text="Math.ceil(cooldown)"></span>s</span>
+        </template>
+
         <svg class="h-4 w-4 opacity-80 group-hover:translate-x-0.5 transition-transform" viewBox="0 0 24 24" fill="none">
           <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
