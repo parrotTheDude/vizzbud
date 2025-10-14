@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use App\Models\ExternalConditionDaypart;
+use App\Models\DiveSitePhoto;
 
 class DiveSite extends Model
 {
@@ -158,5 +159,15 @@ class DiveSite extends Model
             'afternoon' => $byPart['afternoon'] ?? null,
             'night'     => $byPart['night']     ?? null,
         ];
+    }
+
+    public function photos()
+    {
+        return $this->hasMany(DiveSitePhoto::class)->orderBy('order');
+    }
+
+    public function featuredPhoto()
+    {
+        return $this->hasOne(DiveSitePhoto::class)->where('is_featured', true);
     }
 }

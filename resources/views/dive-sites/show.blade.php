@@ -250,7 +250,83 @@
       </div>
     @endif
 
+    {{-- 🧭 Local Intel --}}
+    <div class="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-xl border border-white/15 ring-1 ring-white/10 shadow-xl">
+      <h3 class="text-white font-semibold text-lg mb-5 flex items-center gap-2">
+        <img src="/icons/info.svg" class="w-4 h-4 invert opacity-80"> Local Intel
+      </h3>
 
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-300">
+        <div>
+          <strong class="text-white">Best Wind:</strong>
+          <p>{{ $diveSite->best_wind_dirs ?? 'N/A' }}</p>
+        </div>
+
+        <div>
+          <strong class="text-white">Hazards:</strong>
+          <p>{{ $diveSite->hazards ?? 'No major hazards recorded.' }}</p>
+        </div>
+
+        <div>
+          <strong class="text-white">Entry Notes:</strong>
+          <p>{{ $diveSite->entry_notes ?? 'Standard entry.' }}</p>
+        </div>
+
+        <div>
+          <strong class="text-white">Parking:</strong>
+          <p>{{ $diveSite->parking_notes ?? 'Limited nearby parking.' }}</p>
+        </div>
+
+        <div class="sm:col-span-2">
+          <strong class="text-white">Marine Life:</strong>
+          <p>{{ $diveSite->marine_life ?? 'Tropical reef species common.' }}</p>
+        </div>
+      </div>
+
+      {{-- Optional: add small “Pro Tips” box --}}
+      @if($diveSite->pro_tips)
+        <div class="mt-6 rounded-xl bg-amber-500/10 border border-amber-400/30 p-4">
+          <p class="text-amber-100 text-sm">
+            💡 <strong>Pro Tip:</strong> {{ $diveSite->pro_tips }}
+          </p>
+        </div>
+      @endif
+    </div>
+
+    {{-- 📖 About Section --}}
+    <section class="max-w-4xl mx-auto px-6 sm:px-8 mb-16">
+      <div class="rounded-3xl p-6 sm:p-8 bg-slate-900/40 backdrop-blur-xl border border-white/15 ring-1 ring-white/10 shadow-lg">
+        <h3 class="text-white font-semibold text-lg mb-5 flex items-center gap-2">
+          <img src="/icons/book-open.svg" class="w-4 h-4 invert opacity-80"> About This Site
+        </h3>
+
+        <div class="space-y-5 text-slate-300 leading-relaxed">
+          <p>{{ $diveSite->description ?: 'No description provided yet.' }}</p>
+
+          @if($diveSite->history)
+            <div>
+              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">History</h4>
+              <p>{{ $diveSite->history }}</p>
+            </div>
+          @endif
+
+          @if($diveSite->what_to_see)
+            <div>
+              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">What to See</h4>
+              <p>{{ $diveSite->what_to_see }}</p>
+            </div>
+          @endif
+
+          @if($diveSite->recommended_level)
+            <div>
+              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">Recommended Level</h4>
+              <p>{{ ucfirst($diveSite->recommended_level) }}</p>
+            </div>
+          @endif
+        </div>
+      </div>
+    </section>
+</section>
 
 {{-- Mapbox Script --}}
 @push('scripts')
