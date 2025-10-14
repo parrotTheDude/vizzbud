@@ -24,9 +24,25 @@
 
   {{-- 🌅 Hero --}}
   <div class="relative mb-0">
+    @php
+      $featuredPhoto = $diveSite->photos()->where('is_featured', true)->first();
+      $heroImage = $featuredPhoto ? asset($featuredPhoto->image_path) : asset('images/divesites/default.webp');
+      $photoArtist = null;
+      $photoCreditLink = null;
+
+      if ($featuredPhoto) {
+          if ($featuredPhoto->artist_instagram) {
+              $photoArtist = '@' . $featuredPhoto->artist_instagram;
+              $photoCreditLink = 'https://www.instagram.com/' . $featuredPhoto->artist_instagram;
+          } elseif ($featuredPhoto->artist_name) {
+              $photoArtist = $featuredPhoto->artist_name;
+          }
+      }
+    @endphp
+
     {{-- Background Image --}}
     <img 
-      src="{{ asset('images/divesites/shellybeach.webp') }}" 
+      src="{{ $heroImage }}" 
       alt="{{ $diveSite->name }} featured image"
       class="w-full h-[320px] sm:h-[460px] object-cover rounded-b-3xl border border-white/20 shadow-2xl"
     />
@@ -44,16 +60,23 @@
         {{ $diveSite->region }}, {{ $diveSite->country }}
       </p>
 
-      {{-- 📸 Image Credit (now centered and always visible) --}}
-      <p class="text-[11px] sm:text-[12px] text-white/60">
-        Photos by 
-        <a href="https://www.instagram.com/lesleyy.spencerr"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="underline hover:text-white font-medium">
-          @lesleyy.spencerr
-        </a>
-      </p>
+      {{-- 📸 Image Credit --}}
+      @if($featuredPhoto && ($photoArtist || $photoCreditLink))
+        <p class="text-[11px] sm:text-[12px] text-white/60">
+          Photo by 
+          @if($photoCreditLink)
+            <a href="{{ $photoCreditLink }}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="underline hover:text-white font-medium">
+              {{ $photoArtist }}
+            </a>
+          @else
+            <span class="font-medium">{{ $photoArtist }}</span>
+          @endif
+        </p>
+      @endif
+      
     </div>
   </div>
 
