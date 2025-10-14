@@ -23,7 +23,7 @@
 <section class="relative">
 
   {{-- 🌅 Hero --}}
-  <div class="relative sm:mb-4 mb-0">
+  <div class="relative mb-0">
     @php
       $featuredPhoto = $diveSite->photos()->where('is_featured', true)->first();
       $heroImage = $featuredPhoto ? asset($featuredPhoto->image_path) : asset('images/divesites/default.webp');
@@ -79,37 +79,37 @@
     </div>
   </div>
 
-  {{-- 🌊 Compact Info Bar (full-width on mobile, thin height) --}}
-  <section class="w-full flex justify-center mb-4 px-0 sm:px-0">
-    <div class="flex flex-wrap items-center justify-center sm:inline-flex
-                w-full sm:w-auto
-                bg-white/10 backdrop-blur-xl border border-white/10 ring-1 ring-white/5 shadow-md
-                rounded-none sm:rounded-full divide-x divide-white/10 overflow-hidden 
-                py-1 px-1.5 sm:px-2 sm:py-1.5">
+{{-- 🌊 Compact Info Bar (pill style, full-width mobile, subtle margin) --}}
+<section class="w-full flex justify-center my-4 sm:my-6 px-3 sm:px-0">
+  <div class="flex flex-wrap items-center justify-center sm:inline-flex
+              w-full sm:w-auto
+              bg-white/10 backdrop-blur-2xl border border-white/15 ring-1 ring-white/10 shadow-md
+              rounded-full divide-x divide-white/10 overflow-hidden
+              py-1.5 px-2 sm:px-3 sm:py-1.5 mx-auto max-w-[95%] sm:max-w-none">
 
-      @php
-        $items = [
-          ['icon' => 'diver.svg', 'label' => $diveSite->suitability],
-          ['icon' => $diveSite->dive_type === 'boat' ? 'boat.svg' : 'beach.svg', 'label' => ucfirst($diveSite->dive_type)],
-          ['icon' => 'pool-depth.svg', 'label' => 'Avg ' . number_format($diveSite->avg_depth, 0) . 'm'],
-          ['icon' => 'under-water.svg', 'label' => 'Max ' . number_format($diveSite->max_depth, 0) . 'm'],
-        ];
-      @endphp
+    @php
+      $items = [
+        ['icon' => 'diver.svg', 'label' => $diveSite->suitability],
+        ['icon' => $diveSite->dive_type === 'boat' ? 'boat.svg' : 'beach.svg', 'label' => ucfirst($diveSite->dive_type)],
+        ['icon' => 'pool-depth.svg', 'label' => 'Avg ' . number_format($diveSite->avg_depth, 0) . 'm'],
+        ['icon' => 'under-water.svg', 'label' => 'Max ' . number_format($diveSite->max_depth, 0) . 'm'],
+      ];
+    @endphp
 
-      @foreach ($items as $item)
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 
-                    flex-1 sm:flex-none
-                    px-2 sm:px-3 py-0.5 sm:py-1">
-          <img src="/icons/{{ $item['icon'] }}" 
-              class="w-3.5 h-3.5 sm:w-4 sm:h-4 invert opacity-80" 
-              alt="">
-          <span class="text-[11px] sm:text-[12px] text-white/90 font-medium tracking-tight leading-none">
-            {{ $item['label'] }}
-          </span>
-        </div>
-      @endforeach
-    </div>
-  </section>
+    @foreach ($items as $item)
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1
+                  flex-1 sm:flex-none
+                  px-2 sm:px-3 py-0.5 sm:py-1">
+        <img src="/icons/{{ $item['icon'] }}"
+             class="w-3.5 h-3.5 sm:w-4 sm:h-4 invert opacity-80"
+             alt="">
+        <span class="text-[11px] sm:text-[12px] text-white/90 font-medium tracking-tight leading-none">
+          {{ $item['label'] }}
+        </span>
+      </div>
+    @endforeach
+  </div>
+</section>
 
   {{-- 🌊 Conditions + Forecast (Stacked Layout, beginner-friendly) --}}
   <section class="max-w-5xl mx-auto mb-16 px-4 sm:px-8 space-y-10 sm:space-y-8">
