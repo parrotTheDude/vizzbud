@@ -23,7 +23,7 @@
 <section class="relative">
 
   {{-- 🌅 Hero --}}
-  <div class="relative mb-0">
+  <div class="relative sm:mb-4 mb-0">
     @php
       $featuredPhoto = $diveSite->photos()->where('is_featured', true)->first();
       $heroImage = $featuredPhoto ? asset($featuredPhoto->image_path) : asset('images/divesites/default.webp');
@@ -44,25 +44,25 @@
     <img 
       src="{{ $heroImage }}" 
       alt="{{ $diveSite->name }} featured image"
-      class="w-full h-[320px] sm:h-[460px] object-cover rounded-b-3xl border border-white/20 shadow-2xl"
+      class="w-full h-[320px] sm:h-[460px] object-cover border border-white/20 shadow-2xl"
     />
 
     {{-- Overlay Gradient --}}
-    <div class="absolute inset-0 rounded-b-3xl bg-gradient-to-t 
-                from-slate-900/85 via-slate-900/20 to-transparent"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent"></div>
 
-    {{-- Centered Title + Location + Credit --}}
-    <div class="absolute bottom-0 left-0 right-0 pb-10 flex flex-col items-center text-center px-6">
-      <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg mb-2">
+    {{-- Centered Title + Location + Credit (moved lower into the image) --}}
+    <div class="absolute bottom-4 left-0 right-0 flex flex-col items-center text-center px-4">
+      <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-md mb-1">
         {{ $diveSite->name }}
       </h1>
-      <p class="text-slate-300 text-sm sm:text-base font-medium mb-1">
+
+      <p class="text-slate-300 text-xs sm:text-sm font-medium mb-0.5">
         {{ $diveSite->region }}, {{ $diveSite->country }}
       </p>
 
       {{-- 📸 Image Credit --}}
       @if($featuredPhoto && ($photoArtist || $photoCreditLink))
-        <p class="text-[11px] sm:text-[12px] text-white/60">
+        <p class="text-[10px] sm:text-[11px] text-white/60 mt-1">
           Photo by 
           @if($photoCreditLink)
             <a href="{{ $photoCreditLink }}"
@@ -76,15 +76,16 @@
           @endif
         </p>
       @endif
-      
     </div>
   </div>
 
-  {{-- 🌊 Compact Info Bar --}}
-  <section class="w-full flex justify-center -mt-6 mb-10 px-4 sm:px-0">
-    <div class="inline-flex flex-wrap items-center justify-center
+  {{-- 🌊 Compact Info Bar (full-width on mobile, thin height) --}}
+  <section class="w-full flex justify-center mb-4 px-0 sm:px-0">
+    <div class="flex flex-wrap items-center justify-center sm:inline-flex
+                w-full sm:w-auto
                 bg-white/10 backdrop-blur-xl border border-white/10 ring-1 ring-white/5 shadow-md
-                rounded-full divide-x divide-white/10 overflow-hidden">
+                rounded-none sm:rounded-full divide-x divide-white/10 overflow-hidden 
+                py-1 px-1.5 sm:px-2 sm:py-1.5">
 
       @php
         $items = [
@@ -96,19 +97,22 @@
       @endphp
 
       @foreach ($items as $item)
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-4 py-2 sm:px-5 sm:py-2">
-          <img src="/icons/{{ $item['icon'] }}" class="w-4 h-4 invert opacity-80" alt="">
-          <span class="text-[13px] sm:text-[12.5px] text-white/90 font-medium tracking-tight">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 
+                    flex-1 sm:flex-none
+                    px-2 sm:px-3 py-0.5 sm:py-1">
+          <img src="/icons/{{ $item['icon'] }}" 
+              class="w-3.5 h-3.5 sm:w-4 sm:h-4 invert opacity-80" 
+              alt="">
+          <span class="text-[11px] sm:text-[12px] text-white/90 font-medium tracking-tight leading-none">
             {{ $item['label'] }}
           </span>
         </div>
       @endforeach
-
     </div>
   </section>
 
   {{-- 🌊 Conditions + Forecast (Stacked Layout, beginner-friendly) --}}
-  <section class="max-w-5xl mx-auto mt-10 mb-16 px-4 sm:px-8 space-y-10 sm:space-y-8">
+  <section class="max-w-5xl mx-auto mb-16 px-4 sm:px-8 space-y-10 sm:space-y-8">
 
     {{-- 🌊 Current Conditions --}}
     @if($c)
@@ -273,82 +277,7 @@
       </div>
     @endif
 
-    {{-- 🧭 Local Intel --}}
-    <div class="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-xl border border-white/15 ring-1 ring-white/10 shadow-xl">
-      <h3 class="text-white font-semibold text-lg mb-5 flex items-center gap-2">
-        <img src="/icons/info.svg" class="w-4 h-4 invert opacity-80"> Local Intel
-      </h3>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-slate-300">
-        <div>
-          <strong class="text-white">Best Wind:</strong>
-          <p>{{ $diveSite->best_wind_dirs ?? 'N/A' }}</p>
-        </div>
-
-        <div>
-          <strong class="text-white">Hazards:</strong>
-          <p>{{ $diveSite->hazards ?? 'No major hazards recorded.' }}</p>
-        </div>
-
-        <div>
-          <strong class="text-white">Entry Notes:</strong>
-          <p>{{ $diveSite->entry_notes ?? 'Standard entry.' }}</p>
-        </div>
-
-        <div>
-          <strong class="text-white">Parking:</strong>
-          <p>{{ $diveSite->parking_notes ?? 'Limited nearby parking.' }}</p>
-        </div>
-
-        <div class="sm:col-span-2">
-          <strong class="text-white">Marine Life:</strong>
-          <p>{{ $diveSite->marine_life ?? 'Tropical reef species common.' }}</p>
-        </div>
-      </div>
-
-      {{-- Optional: add small “Pro Tips” box --}}
-      @if($diveSite->pro_tips)
-        <div class="mt-6 rounded-xl bg-amber-500/10 border border-amber-400/30 p-4">
-          <p class="text-amber-100 text-sm">
-            💡 <strong>Pro Tip:</strong> {{ $diveSite->pro_tips }}
-          </p>
-        </div>
-      @endif
-    </div>
-
-    {{-- 📖 About Section --}}
-    <section class="max-w-4xl mx-auto px-6 sm:px-8 mb-16">
-      <div class="rounded-3xl p-6 sm:p-8 bg-slate-900/40 backdrop-blur-xl border border-white/15 ring-1 ring-white/10 shadow-lg">
-        <h3 class="text-white font-semibold text-lg mb-5 flex items-center gap-2">
-          <img src="/icons/book-open.svg" class="w-4 h-4 invert opacity-80"> About This Site
-        </h3>
-
-        <div class="space-y-5 text-slate-300 leading-relaxed">
-          <p>{{ $diveSite->description ?: 'No description provided yet.' }}</p>
-
-          @if($diveSite->history)
-            <div>
-              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">History</h4>
-              <p>{{ $diveSite->history }}</p>
-            </div>
-          @endif
-
-          @if($diveSite->what_to_see)
-            <div>
-              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">What to See</h4>
-              <p>{{ $diveSite->what_to_see }}</p>
-            </div>
-          @endif
-
-          @if($diveSite->recommended_level)
-            <div>
-              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">Recommended Level</h4>
-              <p>{{ ucfirst($diveSite->recommended_level) }}</p>
-            </div>
-          @endif
-        </div>
-      </div>
-    </section>
+    
 </section>
 
 {{-- Mapbox Script --}}

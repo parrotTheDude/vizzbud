@@ -68,12 +68,16 @@
             {{-- Body: stack on mobile, side-by-side on md+ --}}
             <div class="grid gap-6 md:grid-cols-2 items-stretch">
               {{-- Image block: guaranteed height on mobile --}}
+              @php
+                $featuredPhoto = $featured->photos()->where('is_featured', true)->first();
+                $heroImage = $featuredPhoto 
+                    ? asset($featuredPhoto->image_path) 
+                    : asset('images/divesites/default.webp');
+              @endphp
+
               <div class="relative overflow-hidden rounded-xl border border-white/10 md:order-1">
                 <div class="h-48 sm:h-56 md:h-full bg-cover bg-center transition group-hover:scale-[1.02]"
-                    style="background-image:url('{{ asset('images/main/turtle.webp') }}')"></div>
-                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 to-transparent p-3">
-                  <div class="text-xs text-white/80">Representative image</div>
-                </div>
+                    style="background-image:url('{{ $heroImage }}')"></div>
               </div>
 
               {{-- Details block --}}
