@@ -3,13 +3,13 @@
 
     <!-- Header card: Name + Live status -->
     <section class="bg-white/35 backdrop-blur-xl border border-white/30 ring-1 ring-white/20 rounded-2xl shadow-sm p-4">
-      <div class="flex items-center justify-between gap-3">
-        <h2 class="text-xl sm:text-2xl font-bold text-cyan-700" x-text="selectedSite.name"></h2>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 text-center sm:text-left">
+        <h2 class="text-lg sm:text-2xl font-bold text-cyan-700 leading-tight" x-text="selectedSite.name"></h2>
 
-        <!-- Live status chip (same line) -->
+        <!-- Live status chip -->
         <div
-          class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium
-                 backdrop-blur-sm border shadow-sm"
+          class="inline-flex items-center justify-center sm:justify-end gap-2 rounded-full px-3 py-1.5 text-xs font-medium
+                backdrop-blur-sm border shadow-sm mx-auto sm:mx-0 w-fit"
           :class="(() => {
             const s = (selectedSite?.status || '').toLowerCase();
             if (s === 'green')  return 'bg-emerald-500/15 text-emerald-700 border-emerald-400/20';
@@ -21,7 +21,6 @@
         >
           <!-- Pulsing dot -->
           <span class="relative inline-flex w-2.5 h-2.5">
-            <!-- soft pulse -->
             <span
               class="absolute inset-0 rounded-full opacity-60 animate-ping"
               :class="(() => {
@@ -32,7 +31,6 @@
                 return 'bg-slate-400';
               })()"
             ></span>
-            <!-- solid core -->
             <span
               class="relative inline-flex w-2.5 h-2.5 rounded-full"
               :class="(() => {
@@ -44,6 +42,7 @@
               })()"
             ></span>
           </span>
+
           <span class="uppercase tracking-wide text-[11px] opacity-70">Live</span>
           <span x-text="(() => {
             const s = (selectedSite?.status || '').toLowerCase();
