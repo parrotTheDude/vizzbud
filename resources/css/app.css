@@ -4,6 +4,7 @@
 
 /* --- Input field overrides (Vizzbud form readability fix) --- */
 @layer components {
+  /* Default (dark mode first) */
   input,
   select,
   textarea {
@@ -11,15 +12,22 @@
   }
 
   select option {
-    @apply text-slate-900 bg-white; /* readable dropdown options */
+    @apply text-slate-900 bg-white;
   }
-}
 
-/* --- Light mode inversion --- */
-@media (prefers-color-scheme: light) {
-  input,
-  select,
-  textarea {
+  /* Light mode variant (Tailwind-managed) */
+  .light input,
+  .light select,
+  .light textarea,
+  :root[data-theme='light'] input,
+  :root[data-theme='light'] select,
+  :root[data-theme='light'] textarea,
+  :root[class~='light'] input,
+  :root[class~='light'] select,
+  :root[class~='light'] textarea,
+  html:not(.dark) input,
+  html:not(.dark) select,
+  html:not(.dark) textarea {
     @apply text-slate-900 bg-white border-slate-300 ring-slate-200 placeholder-slate-500;
   }
 }
