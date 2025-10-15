@@ -66,9 +66,8 @@
           @keydown.arrow-up.prevent="move(-1)"
           @keydown.enter.prevent="select(focusedIndex)"
           placeholder="Search dive sites…"
-          :class="['w-full rounded-xl px-4 py-2.5 text-white placeholder-white/50',
-                   'bg-white/10 backdrop-blur-md border ring-1',
-                   diveSiteError ? 'border-rose-400/50 ring-rose-400/30' : 'border-white/10 ring-white/10']"
+          :class="['w-full rounded-xl px-4 py-2.5 placeholder-white/50 backdrop-blur-md',
+                  diveSiteError ? 'ring-rose-400/30 border-rose-400/50' : '']"
         />
 
         <input type="hidden" name="dive_site_id" :value="selectedId">
@@ -98,8 +97,7 @@
       <input type="datetime-local"
              name="dive_date"
              required
-             class="w-full rounded-xl px-4 py-2.5 text-white
-                    bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+             class="w-full rounded-xl px-4 py-2.5 backdrop-blur-md"
              value="{{ \Carbon\Carbon::parse($log->dive_date)->format('Y-m-d\TH:i') }}">
     </label>
 
@@ -111,8 +109,7 @@
         name="title"
         maxlength="255"
         placeholder="e.g. Morning reef drift"
-        class="w-full rounded-xl px-4 py-2.5 text-white
-              bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+        class="w-full rounded-xl px-4 py-2.5 backdrop-blur-md"
         value="{{ old('title', $log->title) }}"
       />
     </label>
@@ -122,8 +119,7 @@
       <label class="block relative">
         <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Depth</span>
         <input type="number" step="0.1" name="depth" required
-               class="w-full rounded-xl px-4 py-2.5 pr-10 text-white
-                      bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+               class="w-full rounded-xl px-4 py-2.5 pr-10 backdrop-blur-md"
                placeholder="e.g. 18"
                value="{{ old('depth', $log->depth) }}"/>
         <span class="pointer-events-none absolute right-3 top-[38px] text-sm text-slate-300">m</span>
@@ -132,8 +128,7 @@
       <label class="block relative">
         <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Duration</span>
         <input type="number" name="duration" required
-               class="w-full rounded-xl px-4 py-2.5 pr-12 text-white
-                      bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+               class="w-full rounded-xl px-4 py-2.5 pr-10 backdrop-blur-md"
                placeholder="e.g. 45"
                value="{{ old('duration', $log->duration) }}"/>
         <span class="pointer-events-none absolute right-3 top-[38px] text-sm text-slate-300">min</span>
@@ -142,8 +137,7 @@
       <label class="block relative">
         <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Visibility</span>
         <input type="number" step="0.1" name="visibility" required
-               class="w-full rounded-xl px-4 py-2.5 pr-10 text-white
-                      bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+               class="w-full rounded-xl px-4 py-2.5 pr-10 backdrop-blur-md"
                placeholder="e.g. 10"
                value="{{ old('visibility', $log->visibility) }}"/>
         <span class="pointer-events-none absolute right-3 top-[38px] text-sm text-slate-300">m</span>
@@ -156,31 +150,31 @@
 
       <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <input name="buddy" placeholder="Dive Buddy"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md"
                value="{{ old('buddy', $log->buddy) }}">
 
         <input name="air_start" type="number" step="0.1" placeholder="Air Start (bar)"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md"
                value="{{ old('air_start', $log->air_start) }}">
 
         <input name="air_end" type="number" step="0.1" placeholder="Air End (bar)"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md"
                value="{{ old('air_end', $log->air_end) }}">
 
         <input name="temperature" type="number" step="0.1" placeholder="Water Temp (°C)"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md"
                value="{{ old('temperature', $log->temperature) }}">
 
         <input name="suit_type" placeholder="Wetsuit / Drysuit"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md"
                value="{{ old('suit_type', $log->suit_type) }}">
 
         <input name="tank_type" placeholder="Tank Type"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md"
                value="{{ old('tank_type', $log->tank_type) }}">
 
         <input name="weight_used" placeholder="Weight Used (kg)"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10"
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md"
                value="{{ old('weight_used', $log->weight_used) }}">
 
         <label class="sm:col-span-2">
