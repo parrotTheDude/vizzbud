@@ -354,6 +354,15 @@ function diveSiteMap({ sites }) {
             });
 
             this.$watch('selectedSite', site => {
+
+                if (this.isMobileView) {
+                  if (site) {
+                    document.body.classList.add('no-scroll');
+                  } else {
+                    document.body.classList.remove('no-scroll');
+                  }
+                }
+
                 this.renderSites();
                 if (!site || !site.forecast || !site.forecast.length) return;
 

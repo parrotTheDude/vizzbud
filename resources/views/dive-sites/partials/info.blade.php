@@ -3,13 +3,15 @@
 
     <!-- Header card: Name + Live status -->
     <section class="bg-white/35 backdrop-blur-xl border border-white/30 ring-1 ring-white/20 rounded-2xl shadow-sm p-4">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 text-center sm:text-left">
-        <h2 class="text-lg sm:text-2xl font-bold text-cyan-700 leading-tight" x-text="selectedSite.name"></h2>
+      <div class="flex flex-col items-center text-center gap-2">
+        <!-- Dive site title -->
+        <h2 class="text-lg sm:text-2xl font-bold text-cyan-700 leading-tight"
+            x-text="selectedSite.name"></h2>
 
         <!-- Live status chip -->
         <div
-          class="inline-flex items-center justify-center sm:justify-end gap-2 rounded-full px-3 py-1.5 text-xs font-medium
-                backdrop-blur-sm border shadow-sm mx-auto sm:mx-0 w-fit"
+          class="inline-flex items-center justify-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium
+                backdrop-blur-sm border shadow-sm w-fit"
           :class="(() => {
             const s = (selectedSite?.status || '').toLowerCase();
             if (s === 'green')  return 'bg-emerald-500/15 text-emerald-700 border-emerald-400/20';

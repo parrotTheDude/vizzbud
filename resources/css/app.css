@@ -31,3 +31,10 @@
     @apply text-slate-900 bg-white border-slate-300 ring-slate-200 placeholder-slate-500;
   }
 }
+
+/* --- Utility: Lock scroll when menus or panels are open --- */
+.no-scroll {
+  overflow: hidden;
+  height: 100vh;
+  touch-action: none;
+}
