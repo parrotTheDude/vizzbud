@@ -256,6 +256,9 @@ function diveSiteMap({ sites }) {
 
             this.applyMapPadding();
 
+            this.map.on('dragstart', () => this.hasInteracted = true);
+            this.map.on('zoomstart', () => this.hasInteracted = true);
+
             const urlParams = new URLSearchParams(window.location.search);
             const lat = parseFloat(urlParams.get('lat'));
             const lng = parseFloat(urlParams.get('lng'));
@@ -343,6 +346,14 @@ function diveSiteMap({ sites }) {
             navigator.geolocation.getCurrentPosition(position => {
                 this.userLat = position.coords.latitude;
                 this.userLng = position.coords.longitude;
+
+                if (!this.hasInteracted && !this.selectedSite) {
+                    this.map.flyTo({
+                        center: [this.userLng, this.userLat],
+                        zoom: 11,
+                        speed: 0.8
+                    });
+                }
             });
 
             this.$watch('filterLevel', () => this.renderSites());
