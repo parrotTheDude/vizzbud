@@ -31,9 +31,9 @@ class BuildDaypartForecasts extends Command
     {
         parent::__construct();
         $this->greenMaxWaveM   = (float) env('VIZZBUD_GREEN_MAX_WAVE_M',  1.2);
-        $this->greenMaxWindKt  = (float) env('VIZZBUD_GREEN_MAX_WIND_KT', 12.0);
+        $this->greenMaxWindKt  = (float) env('VIZZBUD_GREEN_MAX_WIND_KT', 10.0);
         $this->yellowMaxWaveM  = (float) env('VIZZBUD_YELLOW_MAX_WAVE_M', 1.8);
-        $this->yellowMaxWindKt = (float) env('VIZZBUD_YELLOW_MAX_WIND_KT',18.0);
+        $this->yellowMaxWindKt = (float) env('VIZZBUD_YELLOW_MAX_WIND_KT',16.0);
     }
 
     public function handle(): int
@@ -219,15 +219,27 @@ class BuildDaypartForecasts extends Command
     /** Same logic as service; returns green/yellow/red/unknown */
     private function computeStatus(?float $waveM, ?float $windKt): string
     {
+        // No data = safest to assume poor
         if ($waveM === null || $windKt === null) {
-            return 'unknown'; // don’t penalize missing bucket, you can choose 'red' if you prefer
+            return 'red';
         }
-        if ($waveM < $this->greenMaxWaveM && $windKt < $this->greenMaxWindKt) {
+
+        // ✅ Excellent conditions (both calm)
+        if ($waveM <= $this->greenMaxWaveM && $windKt <= $this->greenMaxWindKt) {
             return 'green';
         }
-        if ($waveM < $this->yellowMaxWaveM && $windKt < $this->yellowMaxWindKt) {
+
+        // 🟡 Fair / borderline conditions
+        // Either waves OR wind exceed green slightly, but both within yellow range
+        if (
+            ($waveM <= $this->yellowMaxWaveM && $windKt <= $this->yellowMaxWindKt) ||
+            ($waveM <= $this->greenMaxWaveM && $windKt <= $this->yellowMaxWindKt) ||
+            ($waveM <= $this->yellowMaxWaveM && $windKt <= $this->greenMaxWindKt)
+        ) {
             return 'yellow';
         }
+
+        // 🔴 Rough or unsafe
         return 'red';
     }
 }

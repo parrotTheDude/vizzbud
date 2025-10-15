@@ -18,9 +18,9 @@ class OpenMeteoService
 
     // Status thresholds
     private float $greenMaxWaveM  = 1.2;
-    private float $greenMaxWindKt = 12.0;
+    private float $greenMaxWindKt = 10.0;
     private float $yellowMaxWaveM = 1.8;
-    private float $yellowMaxWindKt = 18.0;
+    private float $yellowMaxWindKt = 16.0;
 
     public function __construct()
     {
@@ -231,18 +231,31 @@ class OpenMeteoService
     }
 
     // ---- helpers ----
-
     private function computeStatus(?float $waveM, ?float $windKt): string
     {
+        // 🚫 Missing data — safest to mark as poor
         if ($waveM === null || $windKt === null) {
             return 'red';
         }
-        if ($waveM < $this->greenMaxWaveM && $windKt < $this->greenMaxWindKt) {
+
+        // ✅ Green (Good conditions)
+        // Calm seas and light winds — both below green thresholds
+        if ($waveM <= $this->greenMaxWaveM && $windKt <= $this->greenMaxWindKt) {
             return 'green';
         }
-        if ($waveM < $this->yellowMaxWaveM && $windKt < $this->yellowMaxWindKt) {
+
+        // 🟡 Yellow (Fair / Borderline)
+        // Either swell or wind exceeds green limit slightly but still within yellow range
+        if (
+            ($waveM <= $this->yellowMaxWaveM && $windKt <= $this->yellowMaxWindKt) ||
+            ($waveM <= $this->greenMaxWaveM && $windKt <= $this->yellowMaxWindKt) ||
+            ($waveM <= $this->yellowMaxWaveM && $windKt <= $this->greenMaxWindKt)
+        ) {
             return 'yellow';
         }
+
+        // 🔴 Red (Poor / Unsafe)
+        // Anything above yellow limits — too rough or windy
         return 'red';
     }
 
