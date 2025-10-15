@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* --- Input field overrides (Vizzbud form readability fix) --- */
+@layer components {
+  input,
+  select,
+  textarea {
+    @apply text-white placeholder-white/50 bg-slate-900/80 border border-white/10 ring-1 ring-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400;
+  }
+
+  select option {
+    @apply text-slate-900 bg-white; /* readable dropdown options */
+  }
+}
+
+/* --- Light mode inversion --- */
+@media (prefers-color-scheme: light) {
+  input,
+  select,
+  textarea {
+    @apply text-slate-900 bg-white border-slate-300 ring-slate-200 placeholder-slate-500;
+  }
+}

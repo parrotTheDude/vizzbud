@@ -147,25 +147,25 @@
     <div x-show="step === 2" x-transition>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <input name="buddy" x-ref="buddy" placeholder="Dive Buddy"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md">
 
         <input name="air_start" type="number" step="0.1" placeholder="Air Start (bar)"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md">
 
         <input name="air_end" type="number" step="0.1" placeholder="Air End (bar)"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md">
 
         <input name="temperature" type="number" step="0.1" placeholder="Water Temp (°C)"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md">
 
         <input name="suit_type" placeholder="Wetsuit / Drysuit"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md">
 
         <input name="tank_type" placeholder="Tank Type"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md">
 
         <input name="weight_used" placeholder="Weight Used (kg)"
-               class="rounded-xl px-4 py-2.5 text-white bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
+               class="rounded-xl px-4 py-2.5 backdrop-blur-md">
 
         <label class="sm:col-span-2">
           <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Rating</span>
