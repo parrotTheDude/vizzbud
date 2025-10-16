@@ -13,10 +13,6 @@ class UserDiveLogController extends Controller
 {
     public function index(Request $request)
     {
-        log_activity('logbook_viewed', $request->user(), [
-            'selected_year' => $request->input('year', now()->year),
-        ]);
-
         $userId = (int) auth()->id();
         $selectedYear = (int) $request->input('year', now()->year);
 
