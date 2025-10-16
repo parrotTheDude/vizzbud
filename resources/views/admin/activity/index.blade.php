@@ -50,63 +50,81 @@
 
   {{-- Filters --}}
   @php
-    $filtersUsed = request()->hasAny(['user','action','model','from','to']);
+    $filtersUsed = request()->hasAny(['user','action','model','from','to','include_self']);
   @endphp
 
-    <form method="GET"
+  <form method="GET"
         class="w-full mb-6 bg-white/5 border border-white/10 ring-1 ring-white/10
-                backdrop-blur-md rounded-xl p-4">
+              backdrop-blur-md rounded-xl p-4">
 
     {{-- Filters Row --}}
     <div class="flex flex-wrap gap-3 mb-4">
 
-        {{-- User --}}
-        <div class="flex flex-col flex-1 min-w-[180px] text-white/80 text-sm">
+      {{-- User --}}
+      <div class="flex flex-col flex-1 min-w-[180px] text-white/80 text-sm">
         <label for="user" class="mb-1">User</label>
         <input id="user" type="text" name="user" placeholder="Name or email"
-                value="{{ request('user') }}"
-                class="rounded-lg bg-white/10 text-white px-3 py-2 h-[42px]
-                        border border-white/10 ring-1 ring-white/10 backdrop-blur-md
-                        focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
-        </div>
+              value="{{ request('user') }}"
+              class="rounded-lg bg-white/10 text-white px-3 py-2 h-[42px]
+                      border border-white/10 ring-1 ring-white/10 backdrop-blur-md
+                      focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
+      </div>
 
-        {{-- Action --}}
-        <div class="flex flex-col flex-1 min-w-[140px] text-white/80 text-sm">
+      {{-- Action --}}
+      <div class="flex flex-col flex-1 min-w-[140px] text-white/80 text-sm">
         <label for="action" class="mb-1">Action</label>
         <input id="action" type="text" name="action" placeholder="e.g. login"
-                value="{{ request('action') }}"
-                class="rounded-lg bg-white/10 text-white px-3 py-2 h-[42px]
-                        border border-white/10 ring-1 ring-white/10 backdrop-blur-md
-                        focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
-        </div>
+              value="{{ request('action') }}"
+              class="rounded-lg bg-white/10 text-white px-3 py-2 h-[42px]
+                      border border-white/10 ring-1 ring-white/10 backdrop-blur-md
+                      focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
+      </div>
 
-        {{-- Model --}}
-        <div class="flex flex-col flex-1 min-w-[140px] text-white/80 text-sm">
+      {{-- Model --}}
+      <div class="flex flex-col flex-1 min-w-[140px] text-white/80 text-sm">
         <label for="model" class="mb-1">Model</label>
         <input id="model" type="text" name="model" placeholder="e.g. User"
-                value="{{ request('model') }}"
-                class="rounded-lg bg-white/10 text-white px-3 py-2 h-[42px]
-                        border border-white/10 ring-1 ring-white/10 backdrop-blur-md
-                        focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
-        </div>
+              value="{{ request('model') }}"
+              class="rounded-lg bg-white/10 text-white px-3 py-2 h-[42px]
+                      border border-white/10 ring-1 ring-white/10 backdrop-blur-md
+                      focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
+      </div>
 
-        {{-- From --}}
-        <div class="flex flex-col flex-1 min-w-[140px] text-white/80 text-sm">
+      {{-- From --}}
+      <div class="flex flex-col flex-1 min-w-[140px] text-white/80 text-sm">
         <label for="from" class="mb-1">From</label>
         <input id="from" type="date" name="from" value="{{ request('from') }}"
-                class="rounded-lg bg-white/10 text-white px-3 py-2 h-[42px]
-                        border border-white/10 ring-1 ring-white/10 backdrop-blur-md
-                        focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
-        </div>
+              class="rounded-lg bg-white/10 text-white px-3 py-2 h-[42px]
+                      border border-white/10 ring-1 ring-white/10 backdrop-blur-md
+                      focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
+      </div>
 
-        {{-- To --}}
-        <div class="flex flex-col flex-1 min-w-[140px] text-white/80 text-sm">
+      {{-- To --}}
+      <div class="flex flex-col flex-1 min-w-[140px] text-white/80 text-sm">
         <label for="to" class="mb-1">To</label>
         <input id="to" type="date" name="to" value="{{ request('to') }}"
-                class="rounded-lg bg-white/10 text-white px-3 py-2 h-[42px]
-                        border border-white/10 ring-1 ring-white/10 backdrop-blur-md
-                        focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
+              class="rounded-lg bg-white/10 text-white px-3 py-2 h-[42px]
+                      border border-white/10 ring-1 ring-white/10 backdrop-blur-md
+                      focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
+      </div>
+
+      {{-- Include self toggle --}}
+      <div x-data="{ on: {{ request('include_self') ? 'true' : 'false' }} }"
+          class="flex flex-col flex-1 min-w-[160px] text-white/80 text-sm justify-end">
+        <label for="include_self" class="mb-1">Include</label>
+        <div class="flex items-center gap-3 h-[42px]">
+          <span class="whitespace-nowrap text-white/80">Show my logs</span>
+          <button type="button"
+                  @click="on = !on; $refs.input.checked = on"
+                  :class="on ? 'bg-cyan-500/90' : 'bg-white/15'"
+                  class="relative inline-flex h-6 w-11 rounded-full transition-colors duration-300 border border-white/20 flex-shrink-0 focus:outline-none">
+            <span :class="on ? 'translate-x-5 bg-white' : 'translate-x-0.5 bg-white/70'"
+                  class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full shadow-sm transform transition duration-300 ease-in-out"></span>
+          </button>
+          <input type="checkbox" name="include_self" value="1" x-ref="input"
+                class="hidden" @checked(request('include_self'))>
         </div>
+      </div>
     </div>
 
     {{-- Buttons Row --}}

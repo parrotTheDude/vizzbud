@@ -14,59 +14,52 @@ class ActivityLogController extends Controller
     {
         $query = ActivityLog::with('user')->latest();
 
-        // 🔍 Search filters
-        if ($user = $request->input('user')) {
-            $query->whereHas('user', function ($q) use ($user) {
-                $q->where('name', 'like', "%{$user}%")
-                  ->orWhere('email', 'like', "%{$user}%");
+        // Optional filters
+        if ($request->filled('user')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->user}%")
+                ->orWhere('email', 'like', "%{$request->user}%");
             });
         }
 
-        if ($action = $request->input('action')) {
-            $query->where('action', 'like', "%{$action}%");
+        if ($request->filled('action')) {
+            $query->where('action', 'like', "%{$request->action}%");
         }
 
-        if ($model = $request->input('model')) {
-            $query->where('model_type', 'like', "%{$model}%");
+        if ($request->filled('model')) {
+            $query->where('model_type', 'like', "%{$request->model}%");
         }
 
-        if ($from = $request->input('from')) {
-            $query->whereDate('created_at', '>=', $from);
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->from);
         }
 
-        if ($to = $request->input('to')) {
-            $query->whereDate('created_at', '<=', $to);
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->to);
         }
 
-        if ($search = $request->input('q')) {
-            $query->where(function ($q2) use ($search) {
-                $q2->where('action', 'like', "%{$search}%")
-                    ->orWhere('metadata', 'like', "%{$search}%")
-                    ->orWhere('model_type', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($qu) use ($search) {
-                        $qu->where('name', 'like', "%{$search}%")
-                           ->orWhere('email', 'like', "%{$search}%");
-                    });
-            });
+        // 🔒 Exclude current user's logs by default
+        if (!$request->boolean('include_self')) {
+            $query->where('user_id', '!=', auth()->id());
         }
 
-        $logs = $query->paginate(25)->appends($request->query());
+        $logs = $query->paginate(25);
 
-        // 📊 Summary analytics
-        $summary = cache()->remember('activity_summary', 30, function () {
-            return [
-                'recent' => ActivityLog::where('created_at', '>=', now()->subDay())->count(),
-                'active_users' => ActivityLog::where('created_at', '>=', now()->subDays(7))
-                    ->distinct('user_id')->count(),
-                'top_action' => ActivityLog::select('action', DB::raw('COUNT(*) as c'))
-                    ->groupBy('action')->orderByDesc('c')->first(),
-            ];
-        });
+        $filtersUsed = $request->hasAny(['user', 'action', 'model', 'from', 'to', 'include_self']);
 
-        return view('admin.activity.index', [
-            'logs' => $logs,
-            'summary' => $summary,
-        ]);
+        // Summary for cards (keep your existing logic)
+        $summary = [
+            'recent' => ActivityLog::where('created_at', '>=', now()->subDay())->count(),
+            'active_users' => ActivityLog::distinct('user_id')
+                                ->where('created_at', '>=', now()->subDays(7))
+                                ->count('user_id'),
+            'top_action' => ActivityLog::select('action')
+                                ->groupBy('action')
+                                ->orderByRaw('COUNT(*) DESC')
+                                ->first(),
+        ];
+
+        return view('admin.activity.index', compact('logs', 'summary', 'filtersUsed'));
     }
 
     /** Export JSON or CSV */
