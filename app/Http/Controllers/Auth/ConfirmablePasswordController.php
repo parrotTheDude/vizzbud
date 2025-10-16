@@ -24,16 +24,31 @@ class ConfirmablePasswordController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        // Attempt password validation
         if (! Auth::guard('web')->validate([
-            'email' => $request->user()->email,
+            'email' => $user->email,
             'password' => $request->password,
         ])) {
+            // ❌ Log failed confirmation attempt
+            log_activity('password_confirmation_failed', $user, [
+                'ip' => $request->ip(),
+                'agent' => substr($request->userAgent(), 0, 255),
+            ]);
+
             throw ValidationException::withMessages([
                 'password' => __('auth.password'),
             ]);
         }
 
+        // ✅ Password confirmed successfully
         $request->session()->put('auth.password_confirmed_at', time());
+
+        log_activity('password_confirmed', $user, [
+            'ip' => $request->ip(),
+            'agent' => substr($request->userAgent(), 0, 255),
+        ]);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

@@ -24,9 +24,26 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        // Attempt authentication via the FormRequest
+        try {
+            $request->authenticate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Log failed login attempt
+            log_activity('login_failed', null, [
+                'email' => $request->input('email'),
+                'ip' => $request->ip(),
+            ]);
+            throw $e; // rethrow for Laravel's normal handling
+        }
 
+        // Success: regenerate session for security
         $request->session()->regenerate();
+
+        // Log successful login
+        log_activity('user_login', Auth::user(), [
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         return redirect()->intended(route('logbook.index'));
     }
@@ -36,10 +53,19 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+
+        if ($user) {
+            // Log before actually logging out
+            log_activity('user_logout', $user, [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

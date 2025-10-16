@@ -22,6 +22,13 @@ class EmailVerificationNotificationController extends Controller
         // 🔒 Global abuse limiter: max 3 requests per 60s per user
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
+
+            log_activity('verification_email_rate_limited', $user, [
+                'remaining_cooldown' => $seconds,
+                'ip' => $request->ip(),
+                'agent' => substr($request->userAgent(), 0, 255),
+            ]);
+
             throw ValidationException::withMessages([
                 'email' => "Too many attempts. Please try again in {$seconds} seconds.",
             ]);
@@ -31,6 +38,7 @@ class EmailVerificationNotificationController extends Controller
 
         // ✅ Already verified? Redirect
         if ($user->hasVerifiedEmail()) {
+            log_activity('verification_email_skipped_already_verified', $user);
             return redirect()->intended(route('dashboard', absolute: false));
         }
 
@@ -41,6 +49,12 @@ class EmailVerificationNotificationController extends Controller
         if ($existing && $existing->updated_at?->gt(now('UTC')->subSeconds(90))) {
             $remaining = (int) $existing->updated_at->addSeconds(90)->diffInSeconds(now('UTC'), false);
             $remaining = max(1, $remaining * -1); // show positive seconds
+
+            log_activity('verification_email_cooldown_active', $user, [
+                'remaining_seconds' => $remaining,
+                'ip' => $request->ip(),
+                'agent' => substr($request->userAgent(), 0, 255),
+            ]);
 
             return back()->withErrors([
                 'cooldown' => "Please wait {$remaining} seconds before requesting another verification email.",
@@ -84,14 +98,21 @@ class EmailVerificationNotificationController extends Controller
                 ]
             );
 
-            logger()->info('Verification email sent', [
-                'user_id' => $user->id,
+            log_activity('verification_email_sent', $user, [
+                'email' => $user->email,
                 'token' => $token,
-                'time_utc' => now('UTC')->toDateTimeString(),
+                'ip' => $request->ip(),
+                'agent' => substr($request->userAgent(), 0, 255),
             ]);
 
             return back()->with('status', 'verification-link-sent');
         } catch (Throwable $e) {
+            log_activity('verification_email_failed', $user, [
+                'error' => $e->getMessage(),
+                'ip' => $request->ip(),
+                'agent' => substr($request->userAgent(), 0, 255),
+            ]);
+
             logger()->error('Postmark verification resend failed', [
                 'user_id' => $user->id,
                 'error'   => $e->getMessage(),
