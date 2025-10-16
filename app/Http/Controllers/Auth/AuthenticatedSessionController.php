@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -31,8 +32,20 @@ class AuthenticatedSessionController extends Controller
             // 🔐 Attempt authentication via the validated FormRequest
             $request->authenticate();
 
+            $user = Auth::user();
+
+            // 🔄 Auto-upgrade password hashing if outdated
+            if (Hash::needsRehash($user->password)) {
+                $user->password = Hash::make($request->password);
+                $user->save();
+
+                log_activity('user_password_rehashed', $user, [
+                    'algorithm' => config('hashing.driver'),
+                ]);
+            }
+
             // 🧾 Log successful login
-            log_activity('user_login_success', Auth::user(), [
+            log_activity('user_login_success', $user, [
                 'email'  => $request->input('email'),
                 'method' => 'form_login',
             ]);
@@ -44,7 +57,7 @@ class AuthenticatedSessionController extends Controller
                 'reason' => 'invalid_credentials',
             ]);
 
-            throw $e; // rethrow for Laravel's normal validation error response
+            throw $e;
         }
 
         // ✅ Session regeneration for protection against fixation attacks
@@ -63,8 +76,7 @@ class AuthenticatedSessionController extends Controller
 
         if ($user) {
             // 🧾 Log logout before invalidating session
-            log_activity('user_logout', $user, [
-            ]);
+            log_activity('user_logout', $user);
         }
 
         // 🚪 Terminate authentication session
