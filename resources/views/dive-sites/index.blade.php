@@ -744,10 +744,21 @@ function diveSiteMap({ sites }) {
 
         timeAgo(dateString) {
           if (!dateString) return '—';
+
+          // Try to parse safely
+          let then = new Date(dateString);
+          if (isNaN(then.getTime())) {
+            // Fallback if format is missing timezone info
+            then = new Date(dateString + 'Z');
+          }
+
           const now = new Date();
-          const then = new Date(dateString.endsWith('Z') ? dateString : dateString + 'Z');
           const diffMs = now - then;
           const diffSec = Math.floor(diffMs / 1000);
+
+          // Handle negative/future timestamps gracefully
+          if (diffSec < 0) return 'just now';
+
           const diffMin = Math.floor(diffSec / 60);
           const diffHr = Math.floor(diffMin / 60);
           const diffDay = Math.floor(diffHr / 24);
@@ -757,10 +768,8 @@ function diveSiteMap({ sites }) {
           if (diffHr < 24) return `${diffHr}h ago`;
           if (diffDay < 7) return `${diffDay}d ago`;
 
-          // fallback to full date for older data
-          return new Date(dateString).toLocaleDateString(undefined, {
-            day: 'numeric', month: 'short', year: 'numeric'
-          });
+          // fallback for older timestamps
+          return then.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
         },
 
         formatWind(speed, dir) {

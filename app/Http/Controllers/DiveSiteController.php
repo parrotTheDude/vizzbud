@@ -120,7 +120,7 @@ class DiveSiteController extends Controller
                     'suitability' => $site->suitability,
                     'timezone'    => $tz,
 
-                    'retrieved_at'=> $toIso(optional($c)->retrieved_at),
+                    'retrieved_at' => optional($c?->retrieved_at)->toIso8601String(),
                     'status'      => $c?->status,
 
                     'conditions'  => $c ? [
