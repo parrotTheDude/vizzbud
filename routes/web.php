@@ -1,27 +1,29 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DiveSiteController;
-use App\Http\Controllers\ConditionReportController;
-use App\Http\Controllers\UserDiveLogController;
-use App\Http\Controllers\Auth\ForgotPasswordController;
-use App\Http\Controllers\Auth\VerifyEmailController;
-use App\Http\Controllers\BlogPostController;
-use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\{
+    DiveSiteController,
+    ConditionReportController,
+    UserDiveLogController,
+    BlogPostController,
+    SitemapController,
+    AdminController,
+    SuggestionController,
+    Auth\ForgotPasswordController,
+    Auth\VerifyEmailController,
+    Auth\EmailVerificationNotificationController
+};
 use App\Http\Middleware\AdminMiddleware;
 use App\Models\DiveSite;
 use Spatie\Sitemap\SitemapGenerator;
-use App\Http\Controllers\Auth\EmailVerificationNotificationController;
-use App\Http\Controllers\SuggestionController;
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes
+| 🌐 Public Routes
 |--------------------------------------------------------------------------
 */
 
-// Home
+// 🏠 Home
 Route::get('/', function () {
     $featured = DiveSite::whereHas('latestCondition')
         ->with('latestCondition')
@@ -29,28 +31,28 @@ Route::get('/', function () {
         ->first();
 
     return view('home', [
-        'featured'     => $featured,
-        'sites'        => DiveSite::all(),
-        'siteOptions'  => DiveSite::select('id','name')->orderBy('name')->get(),
+        'featured'    => $featured,
+        'sites'       => DiveSite::all(),
+        'siteOptions' => DiveSite::select('id', 'name')->orderBy('name')->get(),
     ]);
 })->name('home');
 
-// Dive Sites
+// 🐠 Dive Sites
 Route::prefix('dive-sites')->name('dive-sites.')->group(function () {
     Route::get('/', [DiveSiteController::class, 'index'])->name('index');
     Route::get('/{diveSite}', [DiveSiteController::class, 'show'])->name('show');
 });
 
-// Dive Log (public view only)
+// 📘 Dive Log (Public)
 Route::get('/logbook', [UserDiveLogController::class, 'index'])->name('logbook.index');
 
-// Blog
+// 📰 Blog
 Route::prefix('blog')->name('blog.')->group(function () {
     Route::get('/', [BlogPostController::class, 'index'])->name('index');
     Route::get('/{slug}', [BlogPostController::class, 'show'])->name('show');
 });
 
-// Sitemap
+// 🗺 Sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 
 // 🔑 Password Reset
@@ -59,80 +61,86 @@ Route::prefix('forgot-password')->name('password.')->group(function () {
     Route::post('/', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('email');
 });
 
-// Email Verification
+// 📧 Email Verification
 Route::middleware('auth')->group(function () {
-    // Step 1: Notice page (where the user can click "Resend verification email")
-    Route::view('/verify-email', 'auth.verify-email')->name('verification.notice');
-
-    // Step 2: Actual verification link (from email)
-    Route::get('/verify-email/{token}', [\App\Http\Controllers\Auth\VerifyEmailController::class, 'verify'])
-        ->name('verify.email');
-
-    // Step 3: Resend route (the form POSTs here)
+    Route::view('/verify-email', 'auth.verify-email')->name('verification.notice'); // Step 1
+    Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verify.email'); // Step 2
     Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
         ->middleware('throttle:6,1') // Max 6 per minute
-        ->name('verification.send');
+        ->name('verification.send'); // Step 3
 });
 
+// 📖 Static Pages
 Route::view('/how-it-works', 'pages.how-vizzbud-works')->name('how_it_works');
 
+// 💬 Suggestions (Public)
 Route::post('/suggestions', [SuggestionController::class, 'store'])
     ->middleware('throttle:3,1') // Max 3 submissions per minute per IP
     ->name('suggestions.store');
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated + Verified Routes
+| 🔐 Authenticated + Verified Routes
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified'])->prefix('logbook')->name('logbook.')->group(function () {
-    Route::get('/create', [UserDiveLogController::class, 'create'])->name('create');
-    Route::post('/', [UserDiveLogController::class, 'store'])->name('store');
-    Route::get('/chart', [UserDiveLogController::class, 'chart'])->name('chart');
-    Route::get('/table', [UserDiveLogController::class, 'table'])->name('table');
-    Route::get('/{log}', [UserDiveLogController::class, 'show'])->name('show');
-    Route::get('/{log}/edit', [UserDiveLogController::class, 'edit'])->name('edit');
-    Route::put('/{log}', [UserDiveLogController::class, 'update'])->name('update');
-});
+Route::middleware(['auth', 'verified'])
+    ->prefix('logbook')
+    ->name('logbook.')
+    ->group(function () {
+        Route::get('/create', [UserDiveLogController::class, 'create'])->name('create');
+        Route::post('/', [UserDiveLogController::class, 'store'])->name('store');
+        Route::get('/chart', [UserDiveLogController::class, 'chart'])->name('chart');
+        Route::get('/table', [UserDiveLogController::class, 'table'])->name('table');
+        Route::get('/{log}', [UserDiveLogController::class, 'show'])->name('show');
+        Route::get('/{log}/edit', [UserDiveLogController::class, 'edit'])->name('edit');
+        Route::put('/{log}', [UserDiveLogController::class, 'update'])->name('update');
+    });
 
 /*
 |--------------------------------------------------------------------------
-| Admin Routes
+| 🛠 Admin Routes
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+Route::middleware(['auth', AdminMiddleware::class])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
 
-    // Blog management
-    Route::prefix('blog')->name('blog.')->group(function () {
-        Route::get('/', [BlogPostController::class, 'adminIndex'])->name('index');
-        Route::get('/create', [BlogPostController::class, 'create'])->name('create');
-        Route::post('/', [BlogPostController::class, 'store'])->name('store');
-        Route::get('/{post}/edit', [BlogPostController::class, 'edit'])->name('edit');
-        Route::put('/{post}', [BlogPostController::class, 'update'])->name('update');
-        Route::delete('/{post}', [BlogPostController::class, 'destroy'])->name('destroy');
-        Route::post('/upload-image', [BlogPostController::class, 'uploadImage'])->name('upload');
-        Route::patch('/{post}/toggle-publish', [BlogPostController::class, 'togglePublish'])->name('togglePublish');
+        // Dashboard
+        Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+
+        // Blog Management
+        Route::prefix('blog')->name('blog.')->group(function () {
+            Route::get('/', [BlogPostController::class, 'adminIndex'])->name('index');
+            Route::get('/create', [BlogPostController::class, 'create'])->name('create');
+            Route::post('/', [BlogPostController::class, 'store'])->name('store');
+            Route::get('/{post}/edit', [BlogPostController::class, 'edit'])->name('edit');
+            Route::put('/{post}', [BlogPostController::class, 'update'])->name('update');
+            Route::delete('/{post}', [BlogPostController::class, 'destroy'])->name('destroy');
+            Route::post('/upload-image', [BlogPostController::class, 'uploadImage'])->name('upload');
+            Route::patch('/{post}/toggle-publish', [BlogPostController::class, 'togglePublish'])->name('togglePublish');
+        });
+
+        // Suggestions Management
+        Route::prefix('suggestions')->name('suggestions.')->group(function () {
+            Route::get('/', [SuggestionController::class, 'index'])->name('index');
+            Route::post('/{suggestion}/reviewed', [SuggestionController::class, 'markReviewed'])->name('markReviewed');
+        });
     });
 
-    // Suggestions management
-    Route::prefix('suggestions')->name('suggestions.')->group(function () {
-        Route::get('/', [SuggestionController::class, 'index'])->name('index');
-        Route::post('/{suggestion}/reviewed', [SuggestionController::class, 'markReviewed'])->name('markReviewed');
-    });
-});
+/*
+|--------------------------------------------------------------------------
+| 🧭 Sitemap Generator (Manual Regeneration)
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/sitemap.xml', function () {
     $path = public_path('sitemap.xml');
+    SitemapGenerator::create(config('app.url'))->writeToFile($path);
 
-    SitemapGenerator::create(config('app.url'))
-        ->writeToFile($path);
-
-    return response()->file($path, [
-        'Content-Type' => 'application/xml',
-    ]);
+    return response()->file($path, ['Content-Type' => 'application/xml']);
 });
 
 require __DIR__.'/auth.php';
