@@ -27,38 +27,45 @@ class NewPasswordController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
             'password' => [
                 'required',
                 'confirmed',
                 'min:8',
-                'regex:/[a-z]/',      // Must contain at least one lowercase letter
-                'regex:/[A-Z]/',      // Must contain at least one uppercase letter
-                'regex:/[0-9]/',      // Must contain at least one digit
-                'regex:/[@$!%*#?&]/', // Must contain a special character
+                'regex:/[a-z]/',      // At least one lowercase
+                'regex:/[A-Z]/',      // At least one uppercase
+                'regex:/[0-9]/',      // At least one digit
+                'regex:/[@$!%*#?&]/', // At least one symbol
             ],
         ]);
 
-        // 🧾 Log attempt
+        // 🧹 Normalize email
+        $email = normalize_email($validated['email']);
+        $timestamp = now('UTC')->toDateTimeString();
+
+        // 🧾 Log initial attempt
         log_activity('password_reset_attempted', null, [
-            'email' => $request->email,
-            'ip'    => $request->ip(),
-            'agent' => substr($request->userAgent(), 0, 255),
+            'email' => $email,
         ]);
 
         $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user) use ($request) {
+            [
+                'email' => $email,
+                'password' => $validated['password'],
+                'password_confirmation' => $validated['password_confirmation'],
+                'token' => $validated['token'],
+            ],
+            function (User $user) use ($validated) {
                 $user->forceFill([
-                    'password'       => Hash::make($request->password),
+                    'password'       => Hash::make($validated['password']),
                     'remember_token' => Str::random(60),
                 ])->save();
 
                 event(new PasswordReset($user));
 
-                // ✅ Log successful reset
+                // ✅ Log success
                 log_activity('password_reset_successful', $user, [
                     'email' => $user->email,
                 ]);
@@ -69,16 +76,14 @@ class NewPasswordController extends Controller
             return redirect()->route('login')->with('status', __($status));
         }
 
-        // ❌ Log failure (invalid token or email mismatch)
+        // ❌ Log failure
         log_activity('password_reset_failed', null, [
-            'email'  => $request->email,
+            'email'  => $email,
             'status' => $status,
-            'ip'     => $request->ip(),
-            'agent'  => substr($request->userAgent(), 0, 255),
         ]);
 
         return back()
-            ->withInput($request->only('email'))
+            ->withInput(['email' => $email])
             ->withErrors(['email' => __($status)]);
     }
 }

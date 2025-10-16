@@ -12,10 +12,12 @@ use Illuminate\Validation\Rules\Password;
 class PasswordController extends Controller
 {
     /**
-     * Update the user's password.
+     * Update the authenticated user's password.
      */
     public function update(Request $request): RedirectResponse
     {
+        $timestamp = now('UTC')->toDateTimeString();
+
         try {
             $validated = $request->validateWithBag('updatePassword', [
                 'current_password' => ['required', 'current_password'],
@@ -25,17 +27,13 @@ class PasswordController extends Controller
             // ❌ Validation failed (wrong current password, etc.)
             log_activity('password_update_failed', $request->user(), [
                 'reason' => 'validation_error',
-                'ip'     => $request->ip(),
-                'agent'  => substr($request->userAgent(), 0, 255),
             ]);
 
             throw $e;
         }
 
-        // 🧾 Log attempt before update
+        // 🧾 Log attempt
         log_activity('password_update_attempted', $request->user(), [
-            'ip'    => $request->ip(),
-            'agent' => substr($request->userAgent(), 0, 255),
         ]);
 
         // ✅ Perform update
@@ -45,8 +43,6 @@ class PasswordController extends Controller
 
         // ✅ Log success
         log_activity('password_update_successful', $request->user(), [
-            'ip'    => $request->ip(),
-            'agent' => substr($request->userAgent(), 0, 255),
         ]);
 
         return back()->with('status', 'password-updated');

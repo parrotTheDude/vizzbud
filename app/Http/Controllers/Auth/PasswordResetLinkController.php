@@ -25,30 +25,29 @@ class PasswordResetLinkController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        // ✅ Validate input
+        $validated = $request->validate([
             'email' => ['required', 'email'],
         ]);
 
-        // Attempt to send password reset link
-        $status = Password::sendResetLink(
-            $request->only('email')
-        );
+        // 🧹 Normalize the email for consistency
+        $email = normalize_email($validated['email']);
+        $timestamp = now('UTC')->toDateTimeString();
 
-        // 🧾 Log the attempt (always)
-        log_activity(
-            'password_reset_link_requested',
-            null,
-            [
-                'email'   => $request->email,
-                'status'  => $status,
-                'ip'      => $request->ip(),
-                'success' => $status === Password::RESET_LINK_SENT,
-            ]
-        );
+        // 🚀 Attempt to send password reset link
+        $status = Password::sendResetLink(['email' => $email]);
 
+        // 🧾 Log every attempt
+        log_activity('password_reset_link_requested', null, [
+            'email'   => $email,
+            'status'  => $status,
+            'success' => $status === Password::RESET_LINK_SENT,
+        ]);
+
+        // 🔁 Return response
         return $status === Password::RESET_LINK_SENT
             ? back()->with('status', __($status))
-            : back()->withInput($request->only('email'))
+            : back()->withInput(['email' => $email])
                     ->withErrors(['email' => __($status)]);
     }
 }

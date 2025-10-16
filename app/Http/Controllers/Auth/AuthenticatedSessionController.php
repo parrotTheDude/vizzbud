@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -24,45 +25,49 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        // Attempt authentication via the FormRequest
+        $timestamp = now('UTC')->toDateTimeString();
+
         try {
+            // 🔐 Attempt authentication via the validated FormRequest
             $request->authenticate();
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Log failed login attempt
-            log_activity('login_failed', null, [
-                'email' => $request->input('email'),
-                'ip' => $request->ip(),
+
+            // 🧾 Log successful login
+            log_activity('user_login_success', Auth::user(), [
+                'email'  => $request->input('email'),
+                'method' => 'form_login',
             ]);
-            throw $e; // rethrow for Laravel's normal handling
+
+        } catch (ValidationException $e) {
+            // ❌ Log failed login attempt
+            log_activity('user_login_failed', null, [
+                'email'  => $request->input('email'),
+                'reason' => 'invalid_credentials',
+            ]);
+
+            throw $e; // rethrow for Laravel's normal validation error response
         }
 
-        // Success: regenerate session for security
+        // ✅ Session regeneration for protection against fixation attacks
         $request->session()->regenerate();
-
-        // Log successful login
-        log_activity('user_login', Auth::user(), [
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-        ]);
 
         return redirect()->intended(route('logbook.index'));
     }
 
     /**
-     * Destroy an authenticated session.
+     * Destroy an authenticated session (logout).
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $timestamp = now('UTC')->toDateTimeString();
         $user = Auth::user();
 
         if ($user) {
-            // Log before actually logging out
+            // 🧾 Log logout before invalidating session
             log_activity('user_logout', $user, [
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
             ]);
         }
 
+        // 🚪 Terminate authentication session
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

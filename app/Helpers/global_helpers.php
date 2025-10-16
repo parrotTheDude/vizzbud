@@ -14,4 +14,12 @@ if (!function_exists('log_activity')) {
     {
         ActivityLogger::log($action, $model, $meta);
     }
+
+    if (! function_exists('normalize_email')) {
+        function normalize_email(?string $email): ?string
+        {
+            if ($email === null) return null;
+            return strtolower(trim($email));
+        }
+    }
 }

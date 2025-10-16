@@ -21,36 +21,39 @@ class ForgotPasswordController extends Controller
      */
     public function sendResetLinkEmail(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
-
-        $email = $request->input('email');
-
-        // 📝 Log attempt (regardless of success)
-        log_activity('password_reset_link_requested', null, [
-            'email' => $email,
-            'ip'    => $request->ip(),
-            'agent' => substr($request->userAgent(), 0, 255),
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
         ]);
 
+        // 🧹 Normalize email for consistent lookup
+        $email = normalize_email($validated['email']);
+
+        // 🕓 Timestamp for logging
+        $timestamp = now('UTC')->toDateTimeString();
+
+        // 📝 Always log the attempt
+        log_activity('password_reset_link_requested', null, [
+            'email' => $email,
+        ]);
+
+        // Attempt to send password reset link
         $status = Password::sendResetLink(['email' => $email]);
 
         if ($status === Password::RESET_LINK_SENT) {
-            // ✅ Successfully sent
             log_activity('password_reset_link_sent', null, [
                 'email' => $email,
                 'ip'    => $request->ip(),
                 'agent' => substr($request->userAgent(), 0, 255),
+                'time'  => $timestamp,
             ]);
 
             return back()->with(['status' => __($status)]);
         }
 
-        // ❌ Failed (email not found or invalid)
+        // ❌ Failed — usually "user not found"
         log_activity('password_reset_link_failed', null, [
-            'email' => $email,
+            'email'  => $email,
             'status' => $status,
-            'ip'     => $request->ip(),
-            'agent'  => substr($request->userAgent(), 0, 255),
         ]);
 
         return back()->withErrors(['email' => __($status)]);

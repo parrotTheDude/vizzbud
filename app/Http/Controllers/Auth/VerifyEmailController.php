@@ -12,28 +12,29 @@ use App\Models\VerificationToken;
 class VerifyEmailController extends Controller
 {
     /**
-     * Mark the authenticated user's email address as verified.
+     * Handle verification for logged-in users (Laravel default).
      */
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
         $user = $request->user();
+        $email = $user->email ? normalize_email($user->email) : null;
 
+        // 🧾 Already verified
         if ($user->hasVerifiedEmail()) {
             log_activity('email_already_verified', $user, [
-                'ip' => $request->ip(),
-                'agent' => substr($request->userAgent(), 0, 255),
+                'email' => $email,
             ]);
 
             return redirect()->intended(route('dashboard', absolute: false) . '?verified=1');
         }
 
+        // ✅ Freshly verified
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
 
             log_activity('email_verified', $user, [
+                'email'  => $email,
                 'method' => 'EmailVerificationRequest',
-                'ip' => $request->ip(),
-                'agent' => substr($request->userAgent(), 0, 255),
             ]);
         }
 
@@ -41,31 +42,33 @@ class VerifyEmailController extends Controller
     }
 
     /**
-     * Handle verification via token link (custom flow).
+     * Handle verification via custom token link (email link).
      */
-    public function verify(Request $request, $token)
+    public function verify(Request $request, string $token): RedirectResponse
     {
         $record = VerificationToken::where('token', $token)->first();
 
         if (! $record || $record->isExpired()) {
             log_activity('email_verification_failed', null, [
-                'token' => $token,
-                'reason' => 'invalid_or_expired',
-                'ip' => $request->ip(),
+                'token'   => $token,
+                'reason'  => 'invalid_or_expired',
             ]);
 
-            return redirect()->route('login')->withErrors(['email' => 'Invalid or expired verification link.']);
+            return redirect()->route('login')->withErrors([
+                'email' => 'Invalid or expired verification link.',
+            ]);
         }
 
         $user = $record->user;
-        $user->markEmailAsVerified();
+        $email = $user->email ? normalize_email($user->email) : null;
 
+        $user->markEmailAsVerified();
         $record->delete();
 
         log_activity('email_verified', $user, [
-            'method' => 'token_link',
-            'token_used' => $token,
-            'ip' => $request->ip(),
+            'email'       => $email,
+            'method'      => 'token_link',
+            'token_used'  => $token,
         ]);
 
         return redirect('/logbook')->with('verified', true);

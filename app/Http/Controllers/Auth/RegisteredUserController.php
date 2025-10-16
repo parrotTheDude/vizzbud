@@ -27,13 +27,18 @@ class RegisteredUserController extends Controller
     {
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'email'    => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
+
+        // 🧹 Normalize email
+        $email = normalize_email($validated['email']);
+        $validated['email'] = $email;
 
         $user = null;
 
         DB::transaction(function () use (&$user, $validated) {
+            // 🧾 Create user
             $user = User::create([
                 'name'     => $validated['name'],
                 'email'    => $validated['email'],
@@ -41,40 +46,33 @@ class RegisteredUserController extends Controller
                 'role'     => 'user',
             ]);
 
-            // 🧾 Log creation immediately
             log_activity('user_registered', $user, [
                 'email' => $user->email,
                 'name'  => $user->name,
             ]);
 
-            // Check for existing token for this user
+            // 🔁 Handle verification token (reuse or create)
             $existing = VerificationToken::where('user_id', $user->id)->latest()->first();
 
-            // Cooldown: prevent new token if one was just sent
-            if ($existing && $existing->created_at->gt(now()->subSeconds(60))) {
+            if ($existing && $existing->created_at->gt(now('UTC')->subSeconds(60))) {
                 throw new \Exception('Please wait before requesting another verification email.');
             }
 
-            // Reuse existing token if still valid
-            if ($existing && $existing->expires_at->isFuture()) {
-                $token = $existing->token;
-            } else {
-                $token = Str::random(64);
+            $token = $existing && $existing->expires_at->isFuture()
+                ? $existing->token
+                : Str::random(64);
 
-                VerificationToken::updateOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'token'      => $token,
-                        'expires_at' => now()->addHours(24),
-                        'created_at' => now(),
-                    ]
-                );
-            }
+            VerificationToken::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'token'      => $token,
+                    'expires_at' => now('UTC')->addHours(24),
+                    'created_at' => now('UTC'),
+                ]
+            );
 
-            // Build verify URL
             $verifyUrl = url(route('verify.email', ['token' => $token], false));
 
-            // Send via Postmark
             try {
                 app(PostmarkService::class)->sendEmail(
                     templateId: (int) config('services.postmark.verify_template_id'),
@@ -83,7 +81,7 @@ class RegisteredUserController extends Controller
                         'name'          => $user->name ?? 'there',
                         'action_url'    => $verifyUrl,
                         'support_email' => config('mail.from.address'),
-                        'year'          => now()->year,
+                        'year'          => now('UTC')->year,
                     ],
                     tag: 'email-verification',
                     options: [
@@ -92,18 +90,15 @@ class RegisteredUserController extends Controller
                     ]
                 );
 
-                // ✅ Log success
                 log_activity('verification_email_sent', $user, [
-                    'email' => $user->email,
-                    'token' => $token,
+                    'email'  => $user->email,
+                    'token'  => $token,
                     'method' => 'Postmark',
                 ]);
             } catch (Throwable $e) {
-                // ⚠️ Log failure
                 log_activity('verification_email_failed', $user, [
                     'error' => $e->getMessage(),
                 ]);
-
                 logger()->error('Postmark verify email failed', [
                     'user_id' => $user->id,
                     'error'   => $e->getMessage(),
@@ -111,13 +106,10 @@ class RegisteredUserController extends Controller
             }
         });
 
-        // Auto-login user
+        // 🚪 Auto-login
         Auth::login($user);
 
-        // 🧾 Log login after registration
         log_activity('user_logged_in_after_registration', $user, [
-            'ip' => $request->ip(),
-            'agent' => substr($request->userAgent(), 0, 255),
         ]);
 
         return redirect()->route('verification.notice');
