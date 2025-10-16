@@ -256,7 +256,11 @@ function createDive({ sites }) {
         this.open = false;              // hard close
         this.siteError = false;
         if (this.autoTitle && !this.title) this.title = site.name;
-        this.$nextTick(() => this.$refs.search?.blur());  // prevent “stuck under” look
+        this.$nextTick(() => {
+          this.$refs.search?.blur();
+          // ensure dropdown stays closed even if blur triggers focus handlers
+          setTimeout(() => { this.open = false }, 50);
+        });
         },
     canGoStep2() {
       return !!this.selectedId && (this.title||'').trim() !== '' &&
