@@ -38,11 +38,5 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
         date_default_timezone_set(config('app.timezone'));
-
-        if (!function_exists('log_activity')) {
-            function log_activity(string $action, $model = null, array $meta = []): void {
-                \App\Helpers\ActivityHelper::log($action, $model, $meta);
-            }
-        }
     }
 }
