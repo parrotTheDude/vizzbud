@@ -9,6 +9,7 @@ use App\Http\Controllers\{
     SitemapController,
     AdminController,
     SuggestionController,
+    Admin\ActivityLogController,
     Auth\ForgotPasswordController,
     Auth\VerifyEmailController,
     Auth\EmailVerificationNotificationController
@@ -127,6 +128,13 @@ Route::middleware(['auth', AdminMiddleware::class])
         Route::prefix('suggestions')->name('suggestions.')->group(function () {
             Route::get('/', [SuggestionController::class, 'index'])->name('index');
             Route::post('/{suggestion}/reviewed', [SuggestionController::class, 'markReviewed'])->name('markReviewed');
+        });
+
+        // Activity Logs
+        Route::prefix('activity')->name('activity.')->group(function () {
+            Route::get('/', [ActivityLogController::class, 'index'])->name('index');
+            Route::get('/export', [ActivityLogController::class, 'export'])->name('export');
+            Route::get('/user/{id}', [ActivityLogController::class, 'user'])->name('user');
         });
     });
 
