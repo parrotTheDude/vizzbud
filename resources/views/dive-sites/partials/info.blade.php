@@ -205,7 +205,7 @@
         <!-- 🕒 Updated -->
         <div class="flex items-center justify-center gap-2 text-[11px] text-slate-600 col-span-2">
           <img src="/icons/update.svg" class="w-3 h-3" alt="Updated">
-          <span><strong>Updated:</strong> <span x-text="formatDate(selectedSite.retrieved_at)"></span></span>
+          <span><strong>Updated:</strong> <span x-text="timeAgo(selectedSite.retrieved_at)"></span></span>
         </div>
       </div>
     </section>
