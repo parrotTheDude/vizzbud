@@ -255,6 +255,11 @@ function editDive({ sites, initialId = null, initialName = '' }) {
       this.selectedId = site.id;
       this.open = false;
       this.diveSiteError = false;
+
+      this.$nextTick(() => {
+        this.$root.querySelector('input[type="text"]')?.blur();
+        setTimeout(() => { this.open = false }, 50); // ensures it stays closed
+      });
     },
     validateDiveSite() {
       const ok = !!this.selectedId;
