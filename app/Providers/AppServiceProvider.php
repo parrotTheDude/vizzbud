@@ -17,6 +17,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $helpers = app_path('Helpers/global_helpers.php');
+        if (file_exists($helpers)) {
+            require_once $helpers;
+        }
+
         $this->app->singleton(MarkdownConverter::class, function () {
             $environment = new Environment();
             $environment->addExtension(new CommonMarkCoreExtension());
