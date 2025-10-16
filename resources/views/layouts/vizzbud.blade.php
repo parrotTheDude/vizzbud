@@ -136,9 +136,7 @@
 
           @auth
             @if (auth()->user()->isAdmin())
-              {!! $navLink('Blog', 'blog.index', ['blog.*']) !!}
               {!! $navLink('Admin', 'admin.dashboard') !!}
-              {!! $navLink('Manage Blog', 'admin.blog.index', ['admin.blog.*']) !!}
             @endif
 
             <form method="POST" action="{{ route('logout') }}" class="relative">
@@ -256,19 +254,6 @@
 
         @auth
           @if (auth()->user()->isAdmin())
-            <li class="mt-3 pt-3 border-t border-white/10">
-              <a href="{{ route('blog.index') }}" @click="open=false"
-                 class="flex items-center gap-3 w-full rounded-xl px-3.5 py-3
-                        text-[15px] text-white/90 hover:bg-white/10 hover:text-white
-                        active:scale-[.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
-                <span class="inline-block h-2 w-2 rounded-full bg-cyan-400/80"></span>
-                <span class="flex-1">Blog</span>
-                <svg class="h-4 w-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5l7 7-7 7" />
-                </svg>
-              </a>
-            </li>
             <li>
               <a href="{{ route('admin.dashboard') }}" @click="open=false"
                  class="flex items-center gap-3 w-full rounded-xl px-3.5 py-3
@@ -276,19 +261,6 @@
                         active:scale-[.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
                 <span class="inline-block h-2 w-2 rounded-full bg-cyan-400/80"></span>
                 <span class="flex-1">Admin</span>
-                <svg class="h-4 w-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5l7 7-7 7" />
-                </svg>
-              </a>
-            </li>
-            <li>
-              <a href="{{ route('admin.blog.index') }}" @click="open=false"
-                 class="flex items-center gap-3 w-full rounded-xl px-3.5 py-3
-                        text-[15px] text-white/90 hover:bg-white/10 hover:text-white
-                        active:scale-[.99] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
-                <span class="inline-block h-2 w-2 rounded-full bg-cyan-400/80"></span>
-                <span class="flex-1">Manage Blog</span>
                 <svg class="h-4 w-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5l7 7-7 7" />

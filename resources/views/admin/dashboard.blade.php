@@ -5,60 +5,69 @@
 @section('content')
 <section class="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
 
-  {{-- ambient glow --}}
+  {{-- Ambient Glow --}}
   <div class="pointer-events-none absolute inset-0 -z-10">
     <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[36rem] h-[36rem] rounded-full bg-cyan-500/10 blur-3xl"></div>
   </div>
 
-  {{-- header --}}
+  {{-- Header --}}
   <header class="mb-8 sm:mb-10">
     <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Admin Dashboard</h1>
-    <p class="mt-2 text-white/70">Manage users at a glance.</p>
+    <p class="mt-2 text-white/70">Overview of users, dives, and site activity.</p>
   </header>
 
-  {{-- overview / chips --}}
-  @php
-    // Use controller-provided $metrics if available; otherwise compute from the collection we have
-    $isPager = $users instanceof \Illuminate\Pagination\LengthAwarePaginator;
-    $fallbackTotal     = $isPager ? $users->total() : $users->count();
-    $fallbackVerified  = ($isPager ? collect($users->items()) : $users)->filter(fn($u)=>$u->email_verified_at)->count();
-    $fallbackAdmins    = ($isPager ? collect($users->items()) : $users)->where('role','admin')->count();
+  {{-- Quick Actions --}}
+  <div class="flex flex-wrap gap-3 mb-10">
+    <a href="{{ route('admin.blog.index') }}"
+      class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-white/10 
+              border border-white/15 ring-1 ring-white/10 text-white/90 text-sm font-medium
+              hover:bg-white/20 hover:text-white transition shadow-sm">
+      📰 Manage Blog Posts
+    </a>
 
-    $m = $metrics ?? [
-      'total'      => $fallbackTotal,
-      'verified'   => $fallbackVerified,
-      'unverified' => max(0, $fallbackTotal - $fallbackVerified),
-      'admins'     => $fallbackAdmins,
-    ];
-  @endphp
+    <a href="{{ route('admin.blog.create') }}"
+      class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-cyan-600 
+              text-white text-sm font-medium hover:bg-cyan-500 transition shadow-md">
+      ✏️ Create New Post
+    </a>
+  </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
+  {{-- Dashboard Metrics --}}
+  <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
+    {{-- Dives Logged --}}
     <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl p-5">
-      <div class="text-sm text-white/60">Total users</div>
-      <div class="mt-1 text-2xl font-semibold tabular-nums">{{ number_format($m['total']) }}</div>
+      <div class="text-sm text-white/60">Dives Logged</div>
+      <div class="mt-1 text-2xl font-semibold tabular-nums text-cyan-300">
+        {{ number_format($metrics['dives_logged'] ?? 0) }}
+      </div>
     </div>
+
+    {{-- Hours Underwater --}}
     <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl p-5">
-      <div class="text-sm text-white/60">Email verified</div>
-      <div class="mt-1 text-2xl font-semibold tabular-nums text-emerald-300">{{ number_format($m['verified']) }}</div>
+      <div class="text-sm text-white/60">Hours Underwater</div>
+      <div class="mt-1 text-2xl font-semibold tabular-nums text-emerald-300">
+        {{ number_format($metrics['hours_under'] ?? 0, 1) }}
+      </div>
     </div>
+
+    {{-- Dive Sites Listed --}}
     <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl p-5">
-      <div class="text-sm text-white/60">Unverified</div>
-      <div class="mt-1 text-2xl font-semibold tabular-nums text-rose-300">{{ number_format($m['unverified']) }}</div>
+      <div class="text-sm text-white/60">Dive Sites Listed</div>
+      <div class="mt-1 text-2xl font-semibold tabular-nums text-blue-300">
+        {{ number_format($metrics['dive_sites'] ?? 0) }}
+      </div>
     </div>
+
+    {{-- Total Users --}}
     <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl p-5">
-      <div class="text-sm text-white/60">Admins</div>
-      <div class="mt-1 text-2xl font-semibold tabular-nums text-cyan-300">{{ number_format($m['admins']) }}</div>
+      <div class="text-sm text-white/60">Registered Users</div>
+      <div class="mt-1 text-2xl font-semibold tabular-nums text-white">
+        {{ number_format($metrics['total'] ?? 0) }}
+      </div>
     </div>
   </div>
 
-  {{-- toolbar --}}
-  <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <div class="text-white/70 text-sm">
-      Welcome, admin. Below is a list of registered users.
-    </div>
-  </div>
-
-  {{-- table card --}}
+  {{-- User Table --}}
   <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl overflow-hidden">
     <div class="overflow-x-auto">
       <table class="min-w-full text-left text-sm">
@@ -101,10 +110,8 @@
               <td class="px-4 py-3">
                 <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 {{ $verifiedChip }}">
                   @if ($v)
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 .01 1.4l-7.2 7.3a1 1 0 0 1-1.42.01L4.9 11.5a1 1 0 1 1 1.4-1.42l2.2 2.2 6.5-6.6a1 1 0 0 1 1.4.01Z" clip-rule="evenodd"/></svg>
                     Verified
                   @else
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.3 5.7a1 1 0 0 1 0 1.4L13.4 12l4.9 4.9a1 1 0 1 1-1.4 1.4L12 13.4l-4.9 4.9a1 1 0 1 1-1.4-1.4L10.6 12 5.7 7.1a1 1 0 0 1 1.4-1.4L12 10.6l4.9-4.9a1 1 0 0 1 1.4 0Z"/></svg>
                     Unverified
                   @endif
                 </span>
@@ -124,7 +131,7 @@
       </table>
     </div>
 
-    {{-- footer / pagination --}}
+    {{-- Pagination --}}
     @if($users instanceof \Illuminate\Pagination\LengthAwarePaginator)
       <div class="px-4 py-3 border-t border-white/10 bg-white/5">
         {{ $users->withQueryString()->links() }}
