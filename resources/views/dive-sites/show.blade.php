@@ -450,7 +450,9 @@
           </p>
 
           {{-- Form --}}
-          <form action="{{ route('suggestions.store') }}" method="POST" class="space-y-4" x-on:submit="sent = true">
+          <form action="{{ route('suggestions.store') }}" method="POST" 
+                class="space-y-4 max-w-md mx-auto"  {{-- 🧭 limit width + center --}}
+                x-on:submit="sent = true">
             @csrf
             <input type="hidden" name="dive_site_id" value="{{ $diveSite->id }}">
             <input type="hidden" name="dive_site" value="{{ $diveSite->name }}">
