@@ -44,11 +44,11 @@
     <img 
       src="{{ $heroImage }}" 
       alt="{{ $diveSite->name }} featured image"
-      class="w-full h-[320px] sm:h-[460px] object-cover border border-white/20 shadow-2xl"
+      class="w-full h-[320px] sm:h-[460px] object-cover rounded-b-3xl border border-white/20 shadow-2xl"
     />
 
     {{-- Overlay Gradient --}}
-    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent"></div>
+    <div class="absolute inset-0 bg-gradient-to-t rounded-b-3xl from-slate-900/90 via-slate-900/40 to-transparent"></div>
 
     {{-- Centered Title + Location + Credit (moved lower into the image) --}}
     <div class="absolute bottom-4 left-0 right-0 flex flex-col items-center text-center px-4">
@@ -78,6 +78,27 @@
       @endif
     </div>
   </div>
+
+@if(session('success'))
+  <div 
+    x-data="{ show: true }"
+    x-show="show"
+    x-transition:enter="transition ease-out duration-500"
+    x-transition:enter-start="opacity-0 -translate-y-4"
+    x-transition:enter-end="opacity-100 translate-y-0"
+    x-transition:leave="transition ease-in duration-500"
+    x-transition:leave-start="opacity-100 translate-y-0"
+    x-transition:leave-end="opacity-0 -translate-y-4"
+    x-init="setTimeout(() => show = false, 4000)" {{-- hides after 4 s --}}
+    class="fixed top-[7em] left-1/2 -translate-x-1/2 
+           px-5 py-2 rounded-full 
+           bg-emerald-500/20 border border-emerald-400/30 
+           text-emerald-200 text-sm font-medium text-center
+           shadow-lg backdrop-blur-md z-50"
+  >
+    {{ session('success') }}
+  </div>
+@endif
 
 {{-- 🌊 Compact Info Bar (pill style, full-width mobile, subtle margin) --}}
 <section class="w-full flex justify-center my-4 sm:my-6 px-3 sm:px-0">
@@ -277,49 +298,202 @@
       </div>
     @endif
 
-    
+    {{-- 🌏 Local Intel --}}
+    @if($diveSite->hazards || $diveSite->entry_notes || $diveSite->parking_notes || $diveSite->marine_life || $diveSite->pro_tips)
+      <div class="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-2xl 
+                  border border-white/15 ring-1 ring-white/10 shadow-xl w-full text-center mb-16">
+        <h2 class="text-white font-semibold text-lg sm:text-xl mb-6">
+          Local Intel
+        </h2>
+
+        <div class="space-y-3 text-sm text-slate-300 text-left sm:text-center sm:mx-auto sm:max-w-3xl">
+          @if($diveSite->hazards)
+            <p><strong class="text-white">Hazards:</strong> {{ $diveSite->hazards }}</p>
+          @endif
+
+          @if($diveSite->entry_notes)
+            <p><strong class="text-white">Entry Notes:</strong> {{ $diveSite->entry_notes }}</p>
+          @endif
+
+          @if($diveSite->parking_notes)
+            <p><strong class="text-white">Parking Info:</strong> {{ $diveSite->parking_notes }}</p>
+          @endif
+
+          @if($diveSite->marine_life)
+            <p><strong class="text-white">Marine Life:</strong> {{ $diveSite->marine_life }}</p>
+          @endif
+        </div>
+
+        @if($diveSite->pro_tips)
+          <div class="mt-6 rounded-xl bg-amber-500/10 border border-amber-400/30 p-4 sm:mx-auto sm:max-w-3xl">
+            <p class="text-amber-100 text-sm leading-relaxed">
+              <strong class="text-amber-300">Pro Tip:</strong> {{ $diveSite->pro_tips }}
+            </p>
+          </div>
+        @endif
+      </div>
+    @endif
+
+    {{-- 📖 About Section --}}
+    @php
+      $hasAboutContent = $diveSite->description || $diveSite->history || $diveSite->what_to_see || $diveSite->recommended_level;
+    @endphp
+
+    @if ($hasAboutContent)
+      <div class="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-2xl 
+                  border border-white/15 ring-1 ring-white/10 shadow-xl w-full text-center">
+        
+        {{-- Centered Title --}}
+        <h2 class="text-white font-semibold text-lg sm:text-xl mb-6">
+          About This Site
+        </h2>
+
+        {{-- Content --}}
+        <div class="space-y-6 text-slate-300 leading-relaxed text-[15px] text-left sm:text-center sm:mx-auto sm:max-w-3xl">
+          @if($diveSite->description)
+            <p class="text-white/90 text-base sm:text-[17px] leading-relaxed">
+              {{ $diveSite->description }}
+            </p>
+          @endif
+
+          @if($diveSite->history)
+            <div>
+              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">
+                History
+              </h4>
+              <p>{{ $diveSite->history }}</p>
+            </div>
+          @endif
+
+          @if($diveSite->what_to_see)
+            <div>
+              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">
+                What to See
+              </h4>
+              <p>{{ $diveSite->what_to_see }}</p>
+            </div>
+          @endif
+
+          @if($diveSite->recommended_level)
+            <div>
+              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">
+                Recommended Level
+              </h4>
+              <p>{{ ucfirst($diveSite->recommended_level) }}</p>
+            </div>
+          @endif
+        </div>
+      </div>
+    @endif
+
+    {{-- 📍 Nearby Dive Sites --}}
+    @if(isset($nearbySites) && $nearbySites->isNotEmpty())
+      <div class="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-2xl 
+                  border border-white/15 ring-1 ring-white/10 shadow-xl w-full text-center mt-16">
+        
+        <h2 class="text-white font-semibold text-lg sm:text-xl mb-6">
+          Nearby Dive Sites
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-slate-200 max-w-5xl mx-auto">
+          @foreach($nearbySites as $site)
+            @php
+              $thumb = optional($site->photos->first())->image_path 
+                ? asset($site->photos->first()->image_path) 
+                : asset('images/divesites/default.webp');
+            @endphp
+
+            <a href="{{ route('dive-sites.show', $site->slug) }}" 
+              class="group block rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 
+                      transition overflow-hidden text-left">
+              
+              {{-- Thumbnail --}}
+              <div class="relative w-full h-44 sm:h-48 overflow-hidden">
+                <img 
+                  src="{{ $thumb }}" 
+                  alt="{{ $site->name }} thumbnail"
+                  class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                >
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/30 to-transparent"></div>
+                
+                <div class="absolute bottom-3 left-3 right-3 text-white drop-shadow-sm">
+                  <h3 class="text-base font-semibold leading-tight">{{ $site->name }}</h3>
+                  <p class="text-xs text-white/70 mt-0.5">
+                    @if($site->region || $site->country)
+                      {{ $site->region ? $site->region . ', ' : '' }}{{ $site->country }}
+                      <span class="opacity-50 mx-1">•</span>
+                    @endif
+                    {{ number_format($site->distance, 1) }} km away
+                  </p>
+                </div>
+              </div>
+            </a>
+          @endforeach
+        </div>
+      </div>
+    @endif
+
+    {{-- ✏️ Suggest an Edit --}}
+    <section 
+      x-data="{ sent: false }" 
+      class="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-2xl 
+            border border-white/15 ring-1 ring-white/10 shadow-xl w-full text-center mt-16">
+
+      <template x-if="!sent">
+        <div>
+          <h2 class="text-white font-semibold text-lg sm:text-xl mb-4">
+            Spot something outdated?
+          </h2>
+          <p class="text-slate-300 text-sm max-w-2xl mx-auto mb-6">
+            Help us keep <strong>{{ $diveSite->name }}</strong> accurate — if you notice missing info, incorrect details, 
+            or want to share local knowledge, send us a quick note below.
+          </p>
+
+          {{-- Form --}}
+          <form action="{{ route('suggestions.store') }}" method="POST" class="space-y-4" x-on:submit="sent = true">
+            @csrf
+            <input type="hidden" name="dive_site_id" value="{{ $diveSite->id }}">
+            <input type="hidden" name="dive_site" value="{{ $diveSite->name }}">
+
+            {{-- 🕵️ Honeypot --}}
+            <div class="hidden">
+              <label for="website">Leave this field blank</label>
+              <input type="text" id="website" name="website" autocomplete="off">
+            </div>
+
+            <div>
+              <label for="name" class="text-sm text-white/80">Your Name (optional)</label>
+              <input type="text" name="name" id="name"
+                    class="w-full rounded-md bg-white/10 border border-white/20 text-white p-2 text-sm">
+            </div>
+
+            <div>
+              <label for="email" class="text-sm text-white/80">Your Email (optional)</label>
+              <input type="email" name="email" id="email"
+                    class="w-full rounded-md bg-white/10 border border-white/20 text-white p-2 text-sm">
+            </div>
+
+            <div>
+              <label for="message" class="text-sm text-white/80">What needs updating?</label>
+              <textarea name="message" id="message" rows="4" required
+                        class="w-full rounded-md bg-white/10 border border-white/20 text-white p-2 text-sm"></textarea>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2 rounded-md transition">
+              Submit Suggestion
+            </button>
+          </form>
+        </div>
+      </template>
+
+      <template x-if="sent">
+        <div class="py-10">
+          <h3 class="text-white font-semibold text-lg mb-2">Thank you!</h3>
+          <p class="text-slate-300 text-sm">Your suggestion for <strong>{{ $diveSite->name }}</strong> has been sent successfully.</p>
+        </div>
+      </template>
+    </section>
 </section>
 
-{{-- Mapbox Script --}}
-@push('scripts')
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
-<script>
-  mapboxgl.accessToken = @json(config('services.mapbox.token'));
-  const site = { lat: {{ $diveSite->lat }}, lng: {{ $diveSite->lng }}, status: '{{ $status }}' };
-
-  function statusColor(s) {
-    return {
-      green: '#10B981', yellow: '#FACC15', red: '#EF4444', default: '#06B6D4'
-    }[s] || '#06B6D4';
-  }
-
-  function buildMarkerEl(status) {
-    const el = document.createElement('div');
-    el.style.width = '16px';
-    el.style.height = '16px';
-    el.style.borderRadius = '9999px';
-    const color = statusColor(status);
-    el.style.background = color;
-    el.style.boxShadow = `0 0 12px ${color}80`;
-    return el;
-  }
-
-  function initMap(id, zoom) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const map = new mapboxgl.Map({
-      container: id,
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [site.lng, site.lat],
-      zoom, interactive: false
-    });
-    new mapboxgl.Marker({ element: buildMarkerEl(site.status) })
-      .setLngLat([site.lng, site.lat])
-      .addTo(map);
-  }
-
-  initMap('dive-site-map-mobile', 12);
-  initMap('dive-site-map-desktop', 13);
-</script>
-@endpush
 @endsection

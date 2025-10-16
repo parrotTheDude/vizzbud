@@ -13,6 +13,7 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Models\DiveSite;
 use Spatie\Sitemap\SitemapGenerator;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\SuggestionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +76,10 @@ Route::middleware('auth')->group(function () {
 
 Route::view('/how-it-works', 'pages.how-vizzbud-works')->name('how_it_works');
 
+Route::post('/suggestions', [SuggestionController::class, 'store'])
+    ->middleware('throttle:3,1') // Max 3 submissions per minute per IP
+    ->name('suggestions.store');
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated + Verified Routes
@@ -110,6 +115,12 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')->name('admi
         Route::delete('/{post}', [BlogPostController::class, 'destroy'])->name('destroy');
         Route::post('/upload-image', [BlogPostController::class, 'uploadImage'])->name('upload');
         Route::patch('/{post}/toggle-publish', [BlogPostController::class, 'togglePublish'])->name('togglePublish');
+    });
+
+    // Suggestions management
+    Route::prefix('suggestions')->name('suggestions.')->group(function () {
+        Route::get('/', [SuggestionController::class, 'index'])->name('index');
+        Route::post('/{suggestion}/reviewed', [SuggestionController::class, 'markReviewed'])->name('markReviewed');
     });
 });
 

@@ -206,6 +206,7 @@ class DiveSiteController extends Controller
                 ->limit(9), // 3 days × 3 parts
             ]);
 
+        $nearbySites = $diveSite->nearbySites(3);
         $tz = $diveSite->timezone ?: 'UTC';
         $todayLocal = Carbon::now($tz)->toDateString();
 
@@ -227,6 +228,7 @@ class DiveSiteController extends Controller
         return view('dive-sites.show', [
             'diveSite' => $diveSite,
             'daypartForecasts' => $daypartsGrouped,
+            'nearbySites' => $nearbySites,
         ]);
     }
 }
