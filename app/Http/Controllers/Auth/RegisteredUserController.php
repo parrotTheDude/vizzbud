@@ -41,6 +41,12 @@ class RegisteredUserController extends Controller
                 'role'     => 'user',
             ]);
 
+            // 🧾 Log creation immediately
+            log_activity('user_registered', $user, [
+                'email' => $user->email,
+                'name'  => $user->name,
+            ]);
+
             // Check for existing token for this user
             $existing = VerificationToken::where('user_id', $user->id)->latest()->first();
 
@@ -85,7 +91,19 @@ class RegisteredUserController extends Controller
                         'metadata' => ['user_id' => (string) $user->id],
                     ]
                 );
+
+                // ✅ Log success
+                log_activity('verification_email_sent', $user, [
+                    'email' => $user->email,
+                    'token' => $token,
+                    'method' => 'Postmark',
+                ]);
             } catch (Throwable $e) {
+                // ⚠️ Log failure
+                log_activity('verification_email_failed', $user, [
+                    'error' => $e->getMessage(),
+                ]);
+
                 logger()->error('Postmark verify email failed', [
                     'user_id' => $user->id,
                     'error'   => $e->getMessage(),
@@ -93,7 +111,14 @@ class RegisteredUserController extends Controller
             }
         });
 
+        // Auto-login user
         Auth::login($user);
+
+        // 🧾 Log login after registration
+        log_activity('user_logged_in_after_registration', $user, [
+            'ip' => $request->ip(),
+            'agent' => substr($request->userAgent(), 0, 255),
+        ]);
 
         return redirect()->route('verification.notice');
     }

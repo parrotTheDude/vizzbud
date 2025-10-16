@@ -16,22 +16,44 @@ class VerifyEmailController extends Controller
      */
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
-        if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            log_activity('email_already_verified', $user, [
+                'ip' => $request->ip(),
+                'agent' => substr($request->userAgent(), 0, 255),
+            ]);
+
+            return redirect()->intended(route('dashboard', absolute: false) . '?verified=1');
         }
 
-        if ($request->user()->markEmailAsVerified()) {
-            event(new Verified($request->user()));
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+
+            log_activity('email_verified', $user, [
+                'method' => 'EmailVerificationRequest',
+                'ip' => $request->ip(),
+                'agent' => substr($request->userAgent(), 0, 255),
+            ]);
         }
 
-        return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+        return redirect()->intended(route('dashboard', absolute: false) . '?verified=1');
     }
 
+    /**
+     * Handle verification via token link (custom flow).
+     */
     public function verify(Request $request, $token)
     {
         $record = VerificationToken::where('token', $token)->first();
 
         if (! $record || $record->isExpired()) {
+            log_activity('email_verification_failed', null, [
+                'token' => $token,
+                'reason' => 'invalid_or_expired',
+                'ip' => $request->ip(),
+            ]);
+
             return redirect()->route('login')->withErrors(['email' => 'Invalid or expired verification link.']);
         }
 
@@ -39,6 +61,12 @@ class VerifyEmailController extends Controller
         $user->markEmailAsVerified();
 
         $record->delete();
+
+        log_activity('email_verified', $user, [
+            'method' => 'token_link',
+            'token_used' => $token,
+            'ip' => $request->ip(),
+        ]);
 
         return redirect('/logbook')->with('verified', true);
     }
