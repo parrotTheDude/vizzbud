@@ -10,6 +10,11 @@ class SuggestionController extends Controller
     public function store(Request $request)
     {
         if ($request->filled('website')) {
+            log_activity('suggestion_spam_blocked', null, [
+                'ip' => $request->ip(),
+                'email' => $request->input('email'),
+                'message' => $request->input('message'),
+            ]);
             abort(403, 'Spam detected.');
         }
 
@@ -31,6 +36,13 @@ class SuggestionController extends Controller
             'message'        => $validated['message'],
         ]);
 
+        log_activity('suggestion_submitted', null, [
+            'name' => $validated['name'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'dive_site' => $validated['dive_site'],
+            'category' => $validated['category'] ?? null,
+        ]);
+
         // ✅ Redirect instead of JSON
         return back()->with('success', 'Thanks for your feedback! We’ll review it soon.');
     }
@@ -38,6 +50,8 @@ class SuggestionController extends Controller
     public function index()
     {
         $suggestions = Suggestion::latest()->paginate(20);
+
+        log_activity('admin_suggestions_index_viewed', $request->user());
 
         return view('admin.suggestions.index', compact('suggestions'));
     }
@@ -47,6 +61,10 @@ class SuggestionController extends Controller
         $suggestion->update([
             'reviewed' => true,
             'reviewed_at' => now(),
+        ]);
+
+        log_activity('suggestion_marked_reviewed', $suggestion, [
+            'reviewed_by' => optional(auth()->user())->id,
         ]);
 
         return back()->with('success', 'Suggestion marked as reviewed.');

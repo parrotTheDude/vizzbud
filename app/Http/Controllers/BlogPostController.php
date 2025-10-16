@@ -33,6 +33,7 @@ class BlogPostController extends Controller
     public function adminIndex()
     {
         $posts = BlogPost::latest()->paginate(10);
+        log_activity('admin_blog_index_viewed', $request->user());
         return view('admin.blog.index', compact('posts'));
     }
 
@@ -78,6 +79,12 @@ class BlogPostController extends Controller
         $validated['published'] = !empty($validated['published_at']);
 
         BlogPost::create($validated);
+
+        log_activity('blog_post_created', $post, [
+            'title' => $post->title,
+            'slug' => $post->slug,
+            'published' => $post->published,
+        ]);
 
         return redirect()->route('admin.blog.index')->with('success', 'Post created.');
     }
@@ -127,12 +134,24 @@ class BlogPostController extends Controller
 
         $post->update($validated);
 
+        log_activity('blog_post_updated', $post, [
+            'title' => $post->title,
+            'slug' => $post->slug,
+            'published' => $post->published,
+        ]);
+
         return redirect()->route('admin.blog.index')->with('success', 'Post updated.');
     }
 
     public function destroy(BlogPost $post)
     {
         $post->delete();
+
+        log_activity('blog_post_deleted', $post, [
+            'title' => $post->title,
+            'slug' => $post->slug,
+        ]);
+
         return back()->with('success', 'Post deleted.');
     }
 
@@ -153,11 +172,19 @@ class BlogPostController extends Controller
             $filename = 'blog/' . uniqid() . '.webp';
             Storage::disk('public')->put($filename, $resized);
 
+            log_activity('blog_image_uploaded', null, [
+                'path' => $filename,
+            ]);
+
             return response()->json(['location' => Storage::url($filename)]);
         } catch (\Throwable $e) {
             \Log::error('TinyMCE Image Upload Failed', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
+            ]);
+
+            log_activity('blog_image_upload_failed', null, [
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json(['error' => 'Upload failed.'], 500);
@@ -169,6 +196,11 @@ class BlogPostController extends Controller
         $post->published = !$post->published;
         $post->published_at = $post->published ? now() : null;
         $post->save();
+
+        log_activity('blog_post_toggled_publish', $post, [
+            'published' => $post->published,
+            'published_at' => $post->published_at,
+        ]);
 
         return back()->with('success', 'Post status updated.');
     }

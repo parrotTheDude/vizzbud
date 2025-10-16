@@ -225,6 +225,11 @@ class DiveSiteController extends Controller
             ->take(3)
             ->values();
 
+        log_activity('divesite_viewed', $diveSite, [
+            'slug' => $diveSite->slug,
+            'name' => $diveSite->name,
+        ]);
+
         return view('dive-sites.show', [
             'diveSite' => $diveSite,
             'daypartForecasts' => $daypartsGrouped,

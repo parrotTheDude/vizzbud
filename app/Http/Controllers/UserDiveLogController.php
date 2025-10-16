@@ -13,6 +13,10 @@ class UserDiveLogController extends Controller
 {
     public function index(Request $request)
     {
+        log_activity('logbook_viewed', $request->user(), [
+            'selected_year' => $request->input('year', now()->year),
+        ]);
+
         $userId = (int) auth()->id();
         $selectedYear = (int) $request->input('year', now()->year);
 
@@ -181,6 +185,13 @@ class UserDiveLogController extends Controller
 
         \App\Models\UserDiveLog::create($validated);
 
+        log_activity('dive_log_created', auth()->user(), [
+            'dive_site_id' => $validated['dive_site_id'] ?? null,
+            'dive_date' => $validated['dive_date']->toDateString(),
+            'depth' => $validated['depth'],
+            'duration' => $validated['duration'],
+        ]);
+
        $userId = (int) auth()->id();
         $diveYear = (int) Carbon::parse($validated['dive_date'])->year;
         Cache::forget("logbook:index:{$userId}:{$diveYear}");
@@ -247,6 +258,11 @@ class UserDiveLogController extends Controller
         $prevId = $sortedIds[$index + 1] ?? null;
         $nextId = $sortedIds[$index - 1] ?? null;
 
+        log_activity('dive_log_viewed', $log, [
+            'id' => $log->id,
+            'site' => optional($log->site)->name,
+        ]);
+
         return view('logbook.show', compact('log', 'diveNumber', 'prevId', 'nextId'));
     }
 
@@ -263,6 +279,10 @@ class UserDiveLogController extends Controller
         $sites = \App\Models\DiveSite::orderBy('name')->get(['id','name','lat','lng']);
         $siteOptions = $sites->map(fn ($s) => [
             'id' => $s->id, 'name' => $s->name, 'lat' => $s->lat, 'lng' => $s->lng,
+        ]);
+
+        log_activity('dive_log_edit_viewed', $log, [
+            'id' => $log->id,
         ]);
 
         return view('logbook.edit', compact('log', 'siteOptions'));
@@ -300,6 +320,13 @@ class UserDiveLogController extends Controller
         $validated['dive_date'] = \Carbon\Carbon::parse($validated['dive_date'])->setTimeFrom(\Carbon\Carbon::now());
 
         $log->update($validated);
+
+        log_activity('dive_log_updated', $log, [
+            'id' => $log->id,
+            'dive_site_id' => $validated['dive_site_id'] ?? null,
+            'depth' => $validated['depth'],
+            'duration' => $validated['duration'],
+        ]);
 
         // bust both caches (this year + all years)
         \Illuminate\Support\Facades\Cache::forget("logbook:index:{$userId}:{$log->dive_date->year}");
