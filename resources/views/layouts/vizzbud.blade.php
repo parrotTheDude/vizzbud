@@ -337,17 +337,23 @@
 
   <!-- Footer -->
   <footer class="relative border-t border-slate-800 bg-slate-900/60 backdrop-blur-xl backdrop-saturate-150 z-10">
-    <div class="mx-auto max-w-7xl px-6 py-8 flex flex-col items-center text-center text-slate-400 text-sm">
-      
+    <div class="mx-auto max-w-7xl px-6 py-10 flex flex-col items-center text-center text-slate-400 text-sm space-y-3">
+
       <!-- Logo -->
-      <img src="{{ asset('vizzbudLogo.png') }}" alt="Vizzbud Logo" class="w-10 h-10 mb-2">
+      <img src="{{ asset('vizzbudLogo.png') }}" alt="Vizzbud Logo" class="w-10 h-10 mb-1">
 
       <!-- Brand -->
       <span class="text-white font-semibold text-lg">Vizzbud</span>
-      <span class="mt-1 text-slate-400">Dive smarter. Made for divers worldwide.</span>
+      <span class="text-slate-400 text-sm">Dive smarter. Made for divers worldwide.</span>
+
+      <!-- Disclaimer -->
+      <p class="max-w-xl text-xs text-slate-500 leading-relaxed mt-3">
+        <strong class="text-slate-400">Disclaimer:</strong> Dive conditions shown on Vizzbud are based on external data sources 
+        and forecasts. Always use your own experience, training, and local knowledge to assess dive safety before entering the water.
+      </p>
 
       <!-- Copyright -->
-      <span class="mt-4 text-xs text-slate-500">© 2025 Vizzbud · Made for divers</span>
+      <span class="mt-2 text-[11px] text-slate-600">© 2025 Vizzbud · Made for divers</span>
     </div>
   </footer>
 
