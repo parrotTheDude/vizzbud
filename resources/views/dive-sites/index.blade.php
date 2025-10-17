@@ -15,7 +15,7 @@
   x-data="diveSiteMap({ sites: @js($sites) })"
 >
   {{-- Search and Controls --}}
-<div class="absolute top-4 left-2 z-20 w-[90%] sm:w-[410px]" x-data="siteSearch()">
+<div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:left-2 sm:translate-x-0 sm:w-[410px]" x-data="siteSearch()">
   <div class="flex items-start gap-2 relative w-full">
     {{-- Search Bar --}}
     <div class="relative flex-1">
@@ -44,9 +44,10 @@
         x-show="query.length"
         type="button"
         @click="query=''; selectedId=null; open=false; const m=Alpine.$data(document.querySelector('[x-data^=diveSiteMap]')); if(m) m.selectedSite=null;"
-        class="absolute right-3 top-1/2 -translate-y-1/2
-               text-slate-500 hover:text-black
-               text-2xl z-40 transition">
+        class="absolute right-3 top-1/2 -translate-y-[55%]
+              text-slate-500 hover:text-black
+              text-2xl z-40 transition leading-none"
+      >
         ×
       </button>
     </div>
