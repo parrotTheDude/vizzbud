@@ -14,158 +14,110 @@
   style="height: calc(100vh - 64px);"
   x-data="diveSiteMap({ sites: @js($sites) })"
 >
-    {{-- Search and Controls --}}
-   <div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 space-y-2 w-full px-4 sm:left-1 sm:translate-x-0 sm:max-w-[428px] sm:w-auto">
-        <div class="flex items-center gap-2">
-            {{-- Search Bar --}}
-            <div class="relative z-40 mb-2 w-full sm:w-[364px]" x-data="siteSearch()">
-              <input
-                type="text"
-                x-model="query"
-                @focus="open = true"
-                @click.away="open = false"
-                @keydown.arrow-down.prevent="move(1)"
-                @keydown.arrow-up.prevent="move(-1)"
-                @keydown.enter.prevent="select(focusedIndex)"
-                placeholder="Search dive sites..."
-                class="w-full rounded-full px-5 py-3 pr-12
-                      text-slate-900 placeholder-slate-500
-                      bg-white/25 backdrop-blur-2xl backdrop-saturate-150
-                      border border-white/30 ring-1 ring-white/20
-                      shadow-[0_8px_32px_rgba(31,38,135,0.25)]
-                      focus:ring-2 focus:ring-cyan-400 focus:shadow-[0_8px_36px_rgba(14,165,233,0.3)]
-                      hover:bg-white/30 hover:shadow-[0_8px_36px_rgba(31,38,135,0.3)]
-                      transition-all duration-200 ease-out
-                      placeholder:opacity-70 placeholder:not-italic"
-              />
+  {{-- Search and Controls --}}
+<div class="absolute top-4 left-2 z-20 w-[90%] sm:w-[410px]" x-data="siteSearch()">
+  <div class="flex items-start gap-2 relative w-full">
+    {{-- Search Bar --}}
+    <div class="relative flex-1">
+      <input
+        type="text"
+        x-model="query"
+        @focus="open = true"
+        @click.away="open = false"
+        @keydown.arrow-down.prevent="move(1)"
+        @keydown.arrow-up.prevent="move(-1)"
+        @keydown.enter.prevent="select(focusedIndex)"
+        placeholder="Search dive sites..."
+        class="w-full rounded-full px-5 py-3 pr-12
+               text-slate-900 placeholder-slate-500
+               bg-white/25 backdrop-blur-2xl backdrop-saturate-150
+               border border-white/30 ring-1 ring-white/20
+               shadow-[0_8px_32px_rgba(31,38,135,0.25)]
+               focus:ring-2 focus:ring-cyan-400 focus:shadow-[0_8px_36px_rgba(14,165,233,0.3)]
+               hover:bg-white/30 hover:shadow-[0_8px_36px_rgba(31,38,135,0.3)]
+               transition-all duration-200 ease-out
+               placeholder:opacity-70 placeholder:not-italic"
+      />
 
-              {{-- Clear button --}}
-              <button 
-                  x-show="query.length" 
-                  type="button" 
-                  @click="query=''; selectedId=null; open=false; const m=Alpine.$data(document.querySelector('[x-data^=diveSiteMap]')); if(m) m.selectedSite=null;" 
-                  class="absolute right-3 top-1/2 -translate-y-1/2 
-                          text-slate-500 hover:text-black 
-                          text-2xl z-40 transition">
-                  ×
-              </button>
+      {{-- Clear button --}}
+      <button
+        x-show="query.length"
+        type="button"
+        @click="query=''; selectedId=null; open=false; const m=Alpine.$data(document.querySelector('[x-data^=diveSiteMap]')); if(m) m.selectedSite=null;"
+        class="absolute right-3 top-1/2 -translate-y-1/2
+               text-slate-500 hover:text-black
+               text-2xl z-40 transition">
+        ×
+      </button>
+    </div>
 
-              <input type="hidden" name="dive_site_id" :value="selectedId">
+  {{-- Filter Button --}}
+  <button
+    @click="showFilters = !showFilters"
+    class="bg-white/30 backdrop-blur-md border border-white/30 
+           hover:ring-2 hover:ring-cyan-400
+           text-slate-800 rounded-full w-12 h-12
+           shadow-md flex items-center justify-center 
+           transition z-40"
+  >
+    <img src="/icons/filter.svg" alt="Filter" class="w-6 h-6">
+  </button>
 
-              <div class="relative">
-                <ul
-                  x-show="open && filtered.length"
-                  data-search-list
-                  x-transition.opacity
-                  class="absolute z-30 w-full mt-2
-                        max-h-72 overflow-y-auto overflow-x-hidden
-                        rounded-2xl border border-white/30
-                        bg-white/20 backdrop-blur-xl
-                        ring-1 ring-white/20 divide-y divide-white/20
-                        shadow-[0_8px_32px_rgba(31,38,135,0.37)]
-                        scrollbar-thin scrollbar-thumb-white/30 scrollbar-track-transparent"
-                >
-                  <template x-for="(site, index) in filtered" :key="site.id">
-                    <li
-                      :data-item="index"
-                      @click="select(index)"
-                      @mouseover="focusedIndex = index"
-                      :class="[
-                        'px-4 py-3 cursor-pointer select-none transition-all duration-200',
-                        index === focusedIndex
-                          ? 'bg-white/40 backdrop-blur-md shadow-inner scale-[1.01]'
-                          : 'hover:bg-white/30 hover:backdrop-blur-md'
-                      ]"
-                    >
-                      <div class="font-semibold text-slate-900 truncate tracking-wide" x-text="site.name"></div>
-                      <div class="text-xs text-slate-700 mt-0.5 truncate opacity-90">
-                        <template x-if="site.region || site.country">
-                          <span>
-                            <span x-text="site.region || ''"></span>
-                            <template x-if="site.region && site.country">, </template>
-                            <span x-text="site.country || ''"></span>
-                          </span>
-                        </template>
-                      </div>
-                    </li>
-                  </template>
-                </ul>
-              </div>
-
-              <!-- Optional “no results” block -->
-              <div
-                x-show="open && !filtered.length && debouncedQuery"
-                class="mt-2 rounded-xl bg-white/30 backdrop-blur-md border border-white/30 p-3 text-sm text-slate-700"
-              >
-                No results for “<span x-text="query"></span>”.
-              </div>
-            </div>
-
-            <button
-                @click="showFilters = !showFilters"
-                class="bg-white/30 backdrop-blur-md border border-white/30 
-                      hover:ring-2 hover:ring-cyan-400
-                      text-slate-800 rounded-full w-10 h-10 
-                      shadow-md flex items-center justify-center 
-                      transition relative -top-1 z-40"
-            >
-                <img src="/icons/filter.svg" alt="Filter" class="w-6 h-6">
-            </button>
-        </div>
-
-       <div x-show="showFilters" x-transition>
-        {{-- Filters --}}
-        <div class="bg-white/30 backdrop-blur-md border border-white/30
-                    rounded-xl p-3 shadow-lg space-y-3 text-sm relative z-30
-                    w-full sm:w-[395px]">
-
-          <select
-            x-model="filterLevel"
-            @change="$dispatch('filter-changed')"
-            class="w-full rounded-lg px-3 py-2
-                  bg-white/40 backdrop-blur-sm border border-white/30
-                  text-slate-800 font-semibold shadow-sm
-                  focus:ring-2 focus:ring-cyan-400 focus:outline-none">
-            <option value="">All Levels</option>
-            <option value="Open Water">Open Water</option>
-            <option value="Advanced">Advanced</option>
-            <option value="Deep">Deep</option>
-          </select>
-
-          <select
-            x-model="filterType"
-            @change="$dispatch('filter-changed')"
-            class="w-full rounded-lg px-3 py-2
-                  bg-white/40 backdrop-blur-sm border border-white/30
-                  text-slate-800 font-semibold shadow-sm
-                  focus:ring-2 focus:ring-cyan-400 focus:outline-none">
-            <option value="">All Types</option>
-            <option value="shore">Shore</option>
-            <option value="boat">Boat</option>
-          </select>
-
-          {{-- Actions: full-width when no filters, split 2 columns when any filter is set --}}
-          <div :class="hasActiveFilters ? 'grid grid-cols-2 gap-2' : ''">
-            <button
-              @click="centerMap"
-              class="w-full rounded-full px-4 py-2 font-semibold
-                    bg-cyan-500/90 hover:bg-cyan-500 text-white shadow-md transition">
-              Find Me
-            </button>
-
-            <template x-if="hasActiveFilters">
-              <button
-                @click="resetFilters"
-                class="w-full rounded-full px-4 py-2 font-semibold
-                      bg-white/40 hover:bg-white/50 text-slate-900
-                      border border-white/40 backdrop-blur-sm shadow transition">
-                Reset
-              </button>
+    {{-- Dropdown (matches full 430 px width) --}}
+    <ul
+      x-show="open && filtered.length"
+      data-search-list
+      x-transition.opacity
+      class="absolute left-0 right-0 top-full mt-2
+             max-h-72 overflow-y-auto overflow-x-hidden
+             rounded-2xl border border-white/30
+             bg-white/20 backdrop-blur-xl backdrop-saturate-150
+             ring-1 ring-white/20 divide-y divide-white/20
+             shadow-[0_8px_32px_rgba(31,38,135,0.37)]
+             scrollbar-thin scrollbar-thumb-white/30 scrollbar-track-transparent"
+    >
+      <template x-for="(site, index) in filtered" :key="site.id">
+        <li
+          :data-item="index"
+          @click="select(index)"
+          @mouseover="focusedIndex = index"
+          :class="[
+            'px-4 py-3 cursor-pointer select-none transition-all duration-200',
+            index === focusedIndex
+              ? 'bg-white/40 backdrop-blur-md shadow-inner scale-[1.01]'
+              : 'hover:bg-white/30 hover:backdrop-blur-md'
+          ]"
+        >
+          <div class="font-semibold text-slate-900 truncate tracking-wide" x-text="site.name"></div>
+          <div class="text-xs text-slate-700 mt-0.5 truncate opacity-90">
+            <template x-if="site.region || site.country">
+              <span>
+                <span x-text="site.region || ''"></span>
+                <template x-if="site.region && site.country">, </template>
+                <span x-text="site.country || ''"></span>
+              </span>
             </template>
           </div>
-        </div>
-      </div>
-    </div>
+        </li>
+      </template>
+    </ul>
+  </div>
+
+  <!-- Loading & No Results -->
+  <div
+    x-show="open && loading"
+    x-transition.opacity
+    class="mt-2 rounded-xl bg-white/30 backdrop-blur-md border border-white/30 p-3 text-sm text-slate-700 text-center">
+    Searching...
+  </div>
+
+  <div
+    x-show="open && !filtered.length && debouncedQuery && !loading"
+    x-transition.opacity
+    class="mt-2 rounded-xl bg-white/30 backdrop-blur-md border border-white/30 p-3 text-sm text-slate-700 text-center">
+    No results for “<span x-text="query"></span>”.
+  </div>
+</div>
 
     {{-- Map --}}
     <div id="map" class="w-full" style="height: calc(100vh - 64px);"></div>
