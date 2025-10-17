@@ -10,6 +10,7 @@ use App\Http\Controllers\{
     AdminController,
     SuggestionController,
     Admin\ActivityLogController,
+    Admin\DiveSiteSearchController,
     Auth\ForgotPasswordController,
     Auth\VerifyEmailController,
     Auth\EmailVerificationNotificationController
@@ -78,6 +79,16 @@ Route::view('/how-it-works', 'pages.how-vizzbud-works')->name('how_it_works');
 Route::post('/suggestions', [SuggestionController::class, 'store'])
     ->middleware('throttle:3,1') // Max 3 submissions per minute per IP
     ->name('suggestions.store');
+
+Route::get('/api/dive-sites/search', [DiveSiteSearchController::class, 'search'])->name('api.dive-sites.search');
+
+Route::middleware(['auth', AdminMiddleware::class])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        // Test search page
+        Route::get('/dive-sites/search-test', [DiveSiteSearchController::class, 'index'])->name('dive-sites.search-test');
+    });
 
 /*
 |--------------------------------------------------------------------------

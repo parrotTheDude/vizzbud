@@ -20,21 +20,23 @@
             {{-- Search Bar --}}
             <div class="relative z-40 mb-2 w-full sm:w-[364px]" x-data="siteSearch()">
               <input
-                  type="text"
-                  x-model="query"
-                  @focus="open = true"
-                  @click.away="open = false"
-                  @keydown.arrow-down.prevent="move(1)"
-                  @keydown.arrow-up.prevent="move(-1)"
-                  @keydown.enter.prevent="select(focusedIndex)"
-                  placeholder="Search dive sites..."
-                  class="w-full rounded-full px-5 py-3 pr-12 
-                          text-black placeholder-slate-600 
-                          bg-white/30 backdrop-blur-md
-                          hover:ring-2 hover:ring-cyan-400
-                          border border-white/30 shadow-lg
-                          focus:outline-none focus:ring-2 focus:ring-cyan-400
-                          transition"
+                type="text"
+                x-model="query"
+                @focus="open = true"
+                @click.away="open = false"
+                @keydown.arrow-down.prevent="move(1)"
+                @keydown.arrow-up.prevent="move(-1)"
+                @keydown.enter.prevent="select(focusedIndex)"
+                placeholder="Search dive sites..."
+                class="w-full rounded-full px-5 py-3 pr-12
+                      text-slate-900 placeholder-slate-500
+                      bg-white/25 backdrop-blur-xl
+                      border border-white/30 ring-1 ring-white/20
+                      shadow-[0_8px_32px_rgba(31,38,135,0.25)]
+                      focus:ring-2 focus:ring-cyan-400 focus:shadow-[0_8px_40px_rgba(14,165,233,0.25)]
+                      hover:shadow-[0_8px_36px_rgba(31,38,135,0.3)]
+                      transition-all duration-200 ease-out
+                      placeholder:opacity-70 placeholder:not-italic"
               />
 
               {{-- Clear button --}}
@@ -50,25 +52,45 @@
 
               <input type="hidden" name="dive_site_id" :value="selectedId">
 
-              <ul
-                x-show="open && filtered.length"
-                data-search-list
-                class="absolute z-30 bg-white/30 backdrop-blur-md text-black rounded-2xl shadow-lg w-full mt-2 max-h-60 overflow-y-auto border border-white/30"
-                x-transition
-              >
-                <template x-for="(site, index) in filtered" :key="site.id">
-                  <li
-                    :data-item="index"
-                    :class="{
-                      'bg-white/50 backdrop-blur-sm': index === focusedIndex,
-                      'px-4 py-2 cursor-pointer transition-colors': true
-                    }"
-                    @click="select(index)"
-                    @mouseover="focusedIndex = index"
-                    x-html="highlight(site.name, debouncedQuery)"
-                  ></li>
-                </template>
-              </ul>
+              <div class="relative">
+                <ul
+                  x-show="open && filtered.length"
+                  data-search-list
+                  x-transition.opacity
+                  class="absolute z-30 w-full mt-2
+                        max-h-72 overflow-y-auto overflow-x-hidden
+                        rounded-2xl border border-white/30
+                        bg-white/20 backdrop-blur-xl
+                        ring-1 ring-white/20 divide-y divide-white/20
+                        shadow-[0_8px_32px_rgba(31,38,135,0.37)]
+                        scrollbar-thin scrollbar-thumb-white/30 scrollbar-track-transparent"
+                >
+                  <template x-for="(site, index) in filtered" :key="site.id">
+                    <li
+                      :data-item="index"
+                      @click="select(index)"
+                      @mouseover="focusedIndex = index"
+                      :class="[
+                        'px-4 py-3 cursor-pointer select-none transition-all duration-200',
+                        index === focusedIndex
+                          ? 'bg-white/40 backdrop-blur-md shadow-inner scale-[1.01]'
+                          : 'hover:bg-white/30 hover:backdrop-blur-md'
+                      ]"
+                    >
+                      <div class="font-semibold text-slate-900 truncate tracking-wide" x-text="site.name"></div>
+                      <div class="text-xs text-slate-700 mt-0.5 truncate opacity-90">
+                        <template x-if="site.region || site.country">
+                          <span>
+                            <span x-text="site.region || ''"></span>
+                            <template x-if="site.region && site.country">, </template>
+                            <span x-text="site.country || ''"></span>
+                          </span>
+                        </template>
+                      </div>
+                    </li>
+                  </template>
+                </ul>
+              </div>
 
               <!-- Optional “no results” block -->
               <div
@@ -128,7 +150,7 @@
               @click="centerMap"
               class="w-full rounded-full px-4 py-2 font-semibold
                     bg-cyan-500/90 hover:bg-cyan-500 text-white shadow-md transition">
-              Center Map
+              Find Me
             </button>
 
             <template x-if="hasActiveFilters">
@@ -205,6 +227,7 @@
 @endpush
 
 @push('scripts')
+
 <script>
 mapboxgl.accessToken = @json(config('services.mapbox.token'));
 
@@ -779,151 +802,180 @@ function diveSiteMap({ sites }) {
     }
 }
 
-function siteSearch() {
-  return {
-    sites: @json($sites),
-    query: '',
-    debouncedQuery: '',
-    open: false,
-    selectedId: null,
-    focusedIndex: 0,
-    _t: null, // debounce timer
+  function siteSearch() {
+    return {
+      service: null,
+      sites: [],
+      query: '',
+      debouncedQuery: '',
+      open: false,
+      selectedId: null,
+      focusedIndex: 0,
+      loading: false,
+      _t: null,
 
-    init() {
-      // Debounce the query so filtering isn’t done on every keypress
-      this.$watch('query', () => {
-        clearTimeout(this._t);
-        this._t = setTimeout(() => {
-          this.debouncedQuery = (this.query || '').trim();
-          this.focusedIndex = 0;
-        }, 120);
-      });
+      async init() {
+        this.service = new window.DiveSiteService();
 
-      // Close on Escape, clear if already closed
-      this.$el.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          if (this.open && this.debouncedQuery) this.query = '';
-          this.open = false;
+        this.$watch('query', () => {
+          clearTimeout(this._t);
+          this._t = setTimeout(async () => {
+            this.debouncedQuery = (this.query || '').trim();
+            this.focusedIndex = 0;
+
+            if (!this.debouncedQuery) {
+              this.sites = [];
+              return;
+            }
+
+            this.loading = true;
+
+            // pull lat/lng from map if available
+            const mapRoot = document.querySelector('[x-data^="diveSiteMap"]');
+            const mapComponent = window.Alpine && Alpine.$data(mapRoot);
+            const lat = mapComponent?.userLat || '';
+            const lng = mapComponent?.userLng || '';
+
+            // First: fetch local results
+            const localData = await this.service.fetchSites({
+              query: this.debouncedQuery,
+              lat,
+              lng,
+              worldwide: false,
+            });
+
+            this.sites = localData.results || [];
+            this.loading = false;
+
+            // Then: in background, try worldwide search and merge results
+            this.service.fetchSites({
+              query: this.debouncedQuery,
+              lat,
+              lng,
+              worldwide: true,
+            }).then((globalData) => {
+              if (!globalData?.results?.length) return;
+
+            const localIds = new Set(this.sites.map(s => s.id));
+            const newOnes = (globalData.results || []).filter(s => !localIds.has(s.id));
+
+            // merge and then sort by distance if available
+            const merged = [...this.sites, ...newOnes];
+
+            // Sort logic: prioritize known distances first (local), ordered ascending
+            merged.sort((a, b) => {
+              const da = a.distance_km ?? Infinity;
+              const db = b.distance_km ?? Infinity;
+              return da - db;
+            });
+
+            this.sites = merged;
+            });
+          }, 250);
+        });
+
+        // Close on Escape
+        this.$el.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            this.open = false;
+            this.query = '';
+          }
+        });
+      },
+
+      get filtered() {
+        return this.sites;
+      },
+
+      move(direction) {
+        if (!this.filtered.length) return;
+        this.focusedIndex = (this.focusedIndex + direction + this.filtered.length) % this.filtered.length;
+        this.$nextTick(() => {
+          const list = this.$el.querySelector('[data-search-list]');
+          const item = list?.querySelector(`[data-item="${this.focusedIndex}"]`);
+          if (item && list) {
+            const top = item.offsetTop, bottom = top + item.offsetHeight;
+            if (top < list.scrollTop) list.scrollTop = top;
+            else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+          }
+        });
+      },
+
+      async select(index) {
+        const site = this.filtered[index];
+        if (!site) return;
+
+        this.query = site.name;
+        this.selectedId = site.id;
+        this.open = false;
+
+        const root = document.querySelector('[x-data^="diveSiteMap"]');
+        const mapComponent = window.Alpine && Alpine.$data(root);
+        if (!mapComponent) return;
+
+        // Try to find full site info in map's existing dataset
+        let fullSite = mapComponent.sites.find(s => s.id == site.id);
+
+        // If not found (global search result or partial), fetch the full record
+        if (!fullSite) {
+          try {
+            const res = await fetch(`/api/dive-sites/${site.id}`);
+            if (res.ok) {
+              fullSite = await res.json();
+            } else {
+              console.warn('Could not fetch full site data for', site.id);
+              fullSite = site;
+            }
+          } catch (err) {
+            console.error('Failed to load site details:', err);
+            fullSite = site;
+          }
         }
-      });
-    },
 
-    // --- Filtering / ranking ---
-    get filtered() {
-      const q = this.normalize(this.debouncedQuery);
-      const max = 20;
-
-      // Show nothing if empty query
-      if (!q) return [];
-
-      // Try to boost by closeness to user if available
-      const mapRoot = document.querySelector('[x-data^="diveSiteMap"]');
-      const mapComponent = window.Alpine && Alpine.$data(mapRoot);
-      const hasUser = !!(mapComponent && mapComponent.userLat && mapComponent.userLng);
-
-      const results = this.sites
-        .map(site => {
-          const name = site.name || '';
-          const score = this.score(name, q)
-            + (hasUser ? this.distanceBoost(site, mapComponent.userLat, mapComponent.userLng) : 0);
-          return { site, score };
-        })
-        .filter(r => r.score > 0) // keep only meaningful matches
-        .sort((a, b) => b.score - a.score)
-        .slice(0, max)
-        .map(r => r.site);
-
-      return results;
-    },
-
-    score(name, q) {
-      const n = this.normalize(name);
-      if (!n) return 0;
-      if (n === q) return 100;                 // exact
-      if (n.startsWith(q)) return 80;          // prefix
-      if (n.split(' ').some(w => w.startsWith(q))) return 60; // word-prefix
-      if (n.includes(q)) return 40;            // substring
-      // lightweight fuzzy: all chars in order
-      let i = 0, hits = 0;
-      for (const c of n) { if (c === q[i]) { hits++; i++; if (i >= q.length) break; } }
-      return hits >= Math.max(2, Math.ceil(q.length * 0.6)) ? 25 : 0;
-    },
-
-    distanceBoost(site, userLat, userLng) {
-      if (!site.lat || !site.lng) return 0;
-      // very rough distance scaling to give a small bump to closer sites
-      const d = Math.hypot(site.lat - userLat, site.lng - userLng);
-      // closer → bigger boost, cap it
-      return Math.max(0, 12 - d * 50); // tune as you like
-    },
-
-    normalize(s) {
-      return (s || '')
-        .toString()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // strip accents
-        .trim();
-    },
-
-    // --- UI helpers ---
-    move(direction) {
-      if (!this.filtered.length) return;
-      this.focusedIndex = (this.focusedIndex + direction + this.filtered.length) % this.filtered.length;
-      // keep focused item in view
-      this.$nextTick(() => {
-        const chartId = this.isMobileView ? 'swellChart-mobile' : 'swellChart-desktop';
-        const el = document.getElementById(chartId);
-        const list = this.$el.querySelector('[data-search-list]');
-        const item = list?.querySelector(`[data-item="${this.focusedIndex}"]`);
-        if (item && list) {
-          const top = item.offsetTop, bottom = top + item.offsetHeight;
-          if (top < list.scrollTop) list.scrollTop = top;
-          else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
-        }
-      });
-    },
-
-    select(index) {
-      const site = this.filtered[index];
-      if (!site) return;
-
-      this.query = site.name;
-      this.selectedId = site.id;
-      this.open = false;
-
-      const root = document.querySelector('[x-data^="diveSiteMap"]');
-      const mapComponent = window.Alpine && Alpine.$data(root);
-
-      if (mapComponent) {
-        mapComponent.selectedSite = site;
+        // Assign full site with forecast, conditions, etc.
+        mapComponent.selectedSite = fullSite;
         mapComponent.showFilters = false;
-        mapComponent.map.flyTo({ center: [site.lng, site.lat], zoom: 12 });
 
-        if (mapComponent.map.getSource('dive-sites')) {
-          mapComponent.renderSites();
-        }
-      }
-    },
+        // Fly to it on map
+        mapComponent.map.flyTo({ center: [fullSite.lng, fullSite.lat], zoom: 12 });
 
-    setQuery(name) {
-      this.query = name;
-    },
+        // Re-render markers
+        mapComponent.renderSites();
+      },
 
-    highlight(label, q) {
-      if (!q) return label;
-      const safe = (s) => s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-      const nLabel = this.normalize(label);
-      const nq = this.normalize(q);
-      const i = nLabel.indexOf(nq);
-      if (i === -1) return safe(label);
-      return safe(label.slice(0, i)) +
-             '<mark class="bg-cyan-300/40 text-inherit rounded px-0.5">' +
-             safe(label.slice(i, i + q.length)) +
-             '</mark>' +
-             safe(label.slice(i + q.length));
-    },
-  };
-}
+      expandWorldwide() {
+        this.loading = true;
+
+        const mapRoot = document.querySelector('[x-data^="diveSiteMap"]');
+        const mapComponent = window.Alpine && Alpine.$data(mapRoot);
+        const lat = mapComponent?.userLat || '';
+        const lng = mapComponent?.userLng || '';
+
+        this.service.fetchSites({
+          query: this.debouncedQuery,
+          lat,
+          lng,
+          worldwide: true, // 🌍 override the local restriction
+        }).then((data) => {
+          this.sites = data.results || [];
+          this.loading = false;
+        });
+      },
+
+      highlight(label, q) {
+        if (!q) return label;
+        const safe = (s) => s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+        const nLabel = label.toLowerCase();
+        const nq = q.toLowerCase();
+        const i = nLabel.indexOf(nq);
+        if (i === -1) return safe(label);
+        return safe(label.slice(0, i)) +
+          '<mark class="bg-cyan-300/40 text-inherit rounded px-0.5">' +
+          safe(label.slice(i, i + q.length)) +
+          '</mark>' +
+          safe(label.slice(i + q.length));
+      },
+    };
+  }
 </script>
 @endpush
