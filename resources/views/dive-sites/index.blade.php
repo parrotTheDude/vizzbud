@@ -30,11 +30,11 @@
                 placeholder="Search dive sites..."
                 class="w-full rounded-full px-5 py-3 pr-12
                       text-slate-900 placeholder-slate-500
-                      bg-white/25 backdrop-blur-xl
+                      bg-white/25 backdrop-blur-2xl backdrop-saturate-150
                       border border-white/30 ring-1 ring-white/20
                       shadow-[0_8px_32px_rgba(31,38,135,0.25)]
-                      focus:ring-2 focus:ring-cyan-400 focus:shadow-[0_8px_40px_rgba(14,165,233,0.25)]
-                      hover:shadow-[0_8px_36px_rgba(31,38,135,0.3)]
+                      focus:ring-2 focus:ring-cyan-400 focus:shadow-[0_8px_36px_rgba(14,165,233,0.3)]
+                      hover:bg-white/30 hover:shadow-[0_8px_36px_rgba(31,38,135,0.3)]
                       transition-all duration-200 ease-out
                       placeholder:opacity-70 placeholder:not-italic"
               />
