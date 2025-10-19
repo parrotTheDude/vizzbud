@@ -120,6 +120,77 @@
   </div>
 </div>
 
+<!-- Filter Panel -->
+<div
+  x-show="showFilters"
+  x-transition.opacity.scale.80
+  class="absolute top-[4.5rem] left-1/2 -translate-x-1/2 sm:left-3 sm:translate-x-0
+         rounded-2xl border border-white/30
+         bg-white/25 backdrop-blur-2xl backdrop-saturate-150
+         ring-1 ring-white/20 divide-y divide-white/20
+         shadow-[0_8px_32px_rgba(31,38,135,0.35)]
+         p-3 space-y-3 text-sm z-30
+         w-[90%] sm:w-[410px]"
+>
+  <select
+    x-model="filterLevel"
+    @change="$dispatch('filter-changed')"
+    class="w-full rounded-lg px-3 py-2
+           bg-white/40 backdrop-blur-sm border border-white/30
+           text-slate-800 font-semibold shadow-sm
+           focus:ring-2 focus:ring-cyan-400 focus:outline-none"
+  >
+    <option value="">Certification Level</option>
+    <option value="Open Water">Open Water</option>
+    <option value="Advanced">Advanced</option>
+    <option value="Deep">Deep</option>
+  </select>
+
+  <select
+    x-model="filterType"
+    @change="$dispatch('filter-changed')"
+    class="w-full rounded-lg px-3 py-2
+           bg-white/40 backdrop-blur-sm border border-white/30
+           text-slate-800 font-semibold shadow-sm
+           focus:ring-2 focus:ring-cyan-400 focus:outline-none"
+  >
+    <option value="">Dive Type</option>
+    <option value="shore">Shore</option>
+    <option value="boat">Boat</option>
+  </select>
+
+  <div
+    class="grid gap-2"
+    :class="hasActiveFilters ? 'grid-cols-2' : 'grid-cols-1'"
+  >
+    <button
+      @click="centerMap"
+      class="w-full rounded-full px-4 py-2 font-semibold
+             transition shadow-md
+             text-white
+             bg-cyan-500/90 hover:bg-cyan-500
+             focus:ring-2 focus:ring-cyan-300"
+    >
+      Find Me
+    </button>
+
+    <button
+      x-show="hasActiveFilters"
+      x-transition.opacity
+      @click="resetFilters"
+      class="w-full rounded-full px-4 py-2 font-semibold
+             text-slate-800
+             bg-white/40 hover:bg-white/50
+             border border-white/30
+             backdrop-blur-md shadow-sm
+             focus:ring-2 focus:ring-white/40
+             transition"
+    >
+      Reset Filters
+    </button>
+  </div>
+</div>
+
     {{-- Map --}}
     <div id="map" class="w-full" style="height: calc(100vh - 64px);"></div>
 
@@ -755,180 +826,162 @@ function diveSiteMap({ sites }) {
     }
 }
 
-  function siteSearch() {
-    return {
-      service: null,
-      sites: [],
-      query: '',
-      debouncedQuery: '',
-      open: false,
-      selectedId: null,
-      focusedIndex: 0,
-      loading: false,
-      _t: null,
+function siteSearch() {
+  return {
+    service: null,
+    sites: [],
+    query: '',
+    debouncedQuery: '',
+    open: false,
+    selectedId: null,
+    focusedIndex: 0,
+    loading: false,
+    _t: null,
 
-      async init() {
-        this.service = new window.DiveSiteService();
+    async init() {
+      this.service = new window.DiveSiteService();
 
-        this.$watch('query', () => {
-          clearTimeout(this._t);
-          this._t = setTimeout(async () => {
-            this.debouncedQuery = (this.query || '').trim();
-            this.focusedIndex = 0;
+      this.$watch('query', () => {
+        // 🔹 Hide filters when typing
+        const mapRoot = document.querySelector('[x-data^="diveSiteMap"]');
+        const mapComponent = window.Alpine && Alpine.$data(mapRoot);
+        if (mapComponent) mapComponent.showFilters = false;
 
-            if (!this.debouncedQuery) {
-              this.sites = [];
-              return;
-            }
+        clearTimeout(this._t);
+        this._t = setTimeout(async () => {
+          this.debouncedQuery = (this.query || '').trim();
+          this.focusedIndex = 0;
 
-            this.loading = true;
+          if (!this.debouncedQuery) {
+            this.sites = [];
+            return;
+          }
 
-            // pull lat/lng from map if available
-            const mapRoot = document.querySelector('[x-data^="diveSiteMap"]');
-            const mapComponent = window.Alpine && Alpine.$data(mapRoot);
-            const lat = mapComponent?.userLat || '';
-            const lng = mapComponent?.userLng || '';
+          this.loading = true;
 
-            // First: fetch local results
-            const localData = await this.service.fetchSites({
-              query: this.debouncedQuery,
-              lat,
-              lng,
-              worldwide: false,
-            });
+          // pull lat/lng from map if available
+          const lat = mapComponent?.userLat || '';
+          const lng = mapComponent?.userLng || '';
 
-            this.sites = localData.results || [];
-            this.loading = false;
+          // Local search first
+          const localData = await this.service.fetchSites({
+            query: this.debouncedQuery,
+            lat,
+            lng,
+            worldwide: false,
+          });
 
-            // Then: in background, try worldwide search and merge results
-            this.service.fetchSites({
-              query: this.debouncedQuery,
-              lat,
-              lng,
-              worldwide: true,
-            }).then((globalData) => {
-              if (!globalData?.results?.length) return;
+          this.sites = localData.results || [];
+          this.loading = false;
+
+          // Background worldwide merge
+          this.service.fetchSites({
+            query: this.debouncedQuery,
+            lat,
+            lng,
+            worldwide: true,
+          }).then((globalData) => {
+            if (!globalData?.results?.length) return;
 
             const localIds = new Set(this.sites.map(s => s.id));
             const newOnes = (globalData.results || []).filter(s => !localIds.has(s.id));
-
-            // merge and then sort by distance if available
             const merged = [...this.sites, ...newOnes];
-
-            // Sort logic: prioritize known distances first (local), ordered ascending
-            merged.sort((a, b) => {
-              const da = a.distance_km ?? Infinity;
-              const db = b.distance_km ?? Infinity;
-              return da - db;
-            });
-
+            merged.sort((a, b) => (a.distance_km ?? Infinity) - (b.distance_km ?? Infinity));
             this.sites = merged;
-            });
-          }, 250);
-        });
+          });
+        }, 250);
+      });
 
-        // Close on Escape
-        this.$el.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') {
-            this.open = false;
-            this.query = '';
-          }
-        });
-      },
-
-      get filtered() {
-        return this.sites;
-      },
-
-      move(direction) {
-        if (!this.filtered.length) return;
-        this.focusedIndex = (this.focusedIndex + direction + this.filtered.length) % this.filtered.length;
-        this.$nextTick(() => {
-          const list = this.$el.querySelector('[data-search-list]');
-          const item = list?.querySelector(`[data-item="${this.focusedIndex}"]`);
-          if (item && list) {
-            const top = item.offsetTop, bottom = top + item.offsetHeight;
-            if (top < list.scrollTop) list.scrollTop = top;
-            else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
-          }
-        });
-      },
-
-      async select(index) {
-        const site = this.filtered[index];
-        if (!site) return;
-
-        this.query = site.name;
-        this.selectedId = site.id;
-        this.open = false;
-
-        const root = document.querySelector('[x-data^="diveSiteMap"]');
-        const mapComponent = window.Alpine && Alpine.$data(root);
-        if (!mapComponent) return;
-
-        // Try to find full site info in map's existing dataset
-        let fullSite = mapComponent.sites.find(s => s.id == site.id);
-
-        // If not found (global search result or partial), fetch the full record
-        if (!fullSite) {
-          try {
-            const res = await fetch(`/api/dive-sites/${site.id}`);
-            if (res.ok) {
-              fullSite = await res.json();
-            } else {
-              console.warn('Could not fetch full site data for', site.id);
-              fullSite = site;
-            }
-          } catch (err) {
-            console.error('Failed to load site details:', err);
-            fullSite = site;
-          }
+      // Close on Escape
+      this.$el.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          this.open = false;
+          this.query = '';
         }
+      });
+    },
 
-        // Assign full site with forecast, conditions, etc.
-        mapComponent.selectedSite = fullSite;
-        mapComponent.showFilters = false;
+    get filtered() {
+      return this.sites;
+    },
 
-        // Fly to it on map
-        mapComponent.map.flyTo({ center: [fullSite.lng, fullSite.lat], zoom: 12 });
+    move(direction) {
+      if (!this.filtered.length) return;
+      this.focusedIndex = (this.focusedIndex + direction + this.filtered.length) % this.filtered.length;
+      this.$nextTick(() => {
+        const list = this.$el.querySelector('[data-search-list]');
+        const item = list?.querySelector(`[data-item="${this.focusedIndex}"]`);
+        if (item && list) {
+          const top = item.offsetTop, bottom = top + item.offsetHeight;
+          if (top < list.scrollTop) list.scrollTop = top;
+          else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+        }
+      });
+    },
 
-        // Re-render markers
-        mapComponent.renderSites();
-      },
+    async select(index) {
+      const site = this.filtered[index];
+      if (!site) return;
 
-      expandWorldwide() {
-        this.loading = true;
+      const root = document.querySelector('[x-data^="diveSiteMap"]');
+      const mapComponent = window.Alpine && Alpine.$data(root);
+      if (!mapComponent) return;
 
-        const mapRoot = document.querySelector('[x-data^="diveSiteMap"]');
-        const mapComponent = window.Alpine && Alpine.$data(mapRoot);
-        const lat = mapComponent?.userLat || '';
-        const lng = mapComponent?.userLng || '';
+      // 🔹 Hide filters when selecting a site
+      mapComponent.showFilters = false;
 
-        this.service.fetchSites({
-          query: this.debouncedQuery,
-          lat,
-          lng,
-          worldwide: true, // 🌍 override the local restriction
-        }).then((data) => {
-          this.sites = data.results || [];
-          this.loading = false;
-        });
-      },
+      this.query = site.name;
+      this.selectedId = site.id;
+      this.open = false;
 
-      highlight(label, q) {
-        if (!q) return label;
-        const safe = (s) => s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-        const nLabel = label.toLowerCase();
-        const nq = q.toLowerCase();
-        const i = nLabel.indexOf(nq);
-        if (i === -1) return safe(label);
-        return safe(label.slice(0, i)) +
-          '<mark class="bg-cyan-300/40 text-inherit rounded px-0.5">' +
-          safe(label.slice(i, i + q.length)) +
-          '</mark>' +
-          safe(label.slice(i + q.length));
-      },
-    };
-  }
+      // Find or fetch full site
+      let fullSite = mapComponent.sites.find(s => s.id == site.id);
+      if (!fullSite) {
+        try {
+          const res = await fetch(`/api/dive-sites/${site.id}`);
+          fullSite = res.ok ? await res.json() : site;
+        } catch {
+          fullSite = site;
+        }
+      }
+
+      mapComponent.selectedSite = fullSite;
+      mapComponent.map.flyTo({ center: [fullSite.lng, fullSite.lat], zoom: 12 });
+      mapComponent.renderSites();
+    },
+
+    expandWorldwide() {
+      this.loading = true;
+      const mapRoot = document.querySelector('[x-data^="diveSiteMap"]');
+      const mapComponent = window.Alpine && Alpine.$data(mapRoot);
+      const lat = mapComponent?.userLat || '';
+      const lng = mapComponent?.userLng || '';
+
+      this.service.fetchSites({
+        query: this.debouncedQuery,
+        lat,
+        lng,
+        worldwide: true,
+      }).then((data) => {
+        this.sites = data.results || [];
+        this.loading = false;
+      });
+    },
+
+    highlight(label, q) {
+      if (!q) return label;
+      const safe = (s) => s.replace(/[&<>"']/g, (m) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+      const i = label.toLowerCase().indexOf(q.toLowerCase());
+      if (i === -1) return safe(label);
+      return safe(label.slice(0, i)) +
+        '<mark class="bg-cyan-300/40 text-inherit rounded px-0.5">' +
+        safe(label.slice(i, i + q.length)) +
+        '</mark>' +
+        safe(label.slice(i + q.length));
+    },
+  };
+}
 </script>
 @endpush
