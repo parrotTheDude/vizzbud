@@ -50,7 +50,6 @@
     {{-- Overlay Gradient --}}
     <div class="absolute inset-0 bg-gradient-to-t rounded-b-3xl from-slate-900/90 via-slate-900/40 to-transparent"></div>
 
-    {{-- Centered Title + Location + Credit (moved lower into the image) --}}
     <div class="absolute bottom-4 left-0 right-0 flex flex-col items-center text-center px-4">
       <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-md mb-1">
         {{ $diveSite->name }}
@@ -100,7 +99,7 @@
   </div>
 @endif
 
-{{-- 🌊 Compact Info Bar (pill style, full-width mobile, subtle margin) --}}
+{{--  Compact Info Bar --}}
 <section class="w-full flex justify-center my-4 sm:my-6 px-3 sm:px-0">
   <div class="flex flex-wrap items-center justify-center sm:inline-flex
               w-full sm:w-auto
@@ -132,7 +131,7 @@
   </div>
 </section>
 
-  {{-- 🌊 Conditions + Forecast (Stacked Layout, beginner-friendly) --}}
+  {{-- 🌊 Conditions + Forecast --}}
   <section class="max-w-5xl mx-auto mb-16 px-4 sm:px-8 space-y-10 sm:space-y-8">
 
     {{-- 🌊 Current Conditions --}}

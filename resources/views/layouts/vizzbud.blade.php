@@ -79,7 +79,7 @@
 
   <header class="fixed inset-x-0 top-0 z-50">
     <div class="relative isolate">
-      <!-- Glass panel background (sits behind the content) -->
+      <!-- Glass panel background -->
       <div
         class="absolute inset-0 -z-10 transition-all duration-300"
         :class="scrolled
@@ -89,10 +89,9 @@
         style="will-change: backdrop-filter, background-color"
       ></div>
 
-      <!-- Optional soft glow accent (can remove if you prefer cleaner look) -->
       <div class="pointer-events-none absolute -z-10 inset-x-8 -top-8 h-16 rounded-full bg-cyan-500/15 blur-2xl"></div>
 
-      <!-- Content (your original container) -->
+      <!-- Content-->
       <div class="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
         <!-- Logo -->
         <a href="{{ route('home') }}" class="flex items-center gap-2 group">
@@ -107,7 +106,7 @@
           </span>
         </a>
 
-        <!-- Desktop Nav (unchanged except for active state color) -->
+        <!-- Desktop Nav -->
         <nav class="hidden sm:flex items-center gap-6 text-sm font-medium">
           @php
             $links = [
@@ -240,7 +239,6 @@
                      active:scale-[.99] transition
                      focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
-              <!-- optional tiny bullet/icon -->
               <span class="inline-block h-2 w-2 rounded-full bg-cyan-400/80"></span>
               <span class="flex-1">{{ $link['label'] }}</span>
               <svg class="h-4 w-4 text-white/60 group-hover:text-white/80 transition"
