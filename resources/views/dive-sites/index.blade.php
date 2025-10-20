@@ -123,15 +123,24 @@
 <!-- Filter Panel -->
 <div
   x-show="showFilters"
-  x-transition.opacity.scale.80
-  class="absolute top-[4.5rem] left-1/2 -translate-x-1/2 sm:left-3 sm:translate-x-0
-         rounded-2xl border border-white/30
-         bg-white/25 backdrop-blur-2xl backdrop-saturate-150
-         ring-1 ring-white/20 divide-y divide-white/20
-         shadow-[0_8px_32px_rgba(31,38,135,0.35)]
-         p-3 space-y-3 text-sm z-30
-         w-[90%] sm:w-[410px]"
+  x-transition:enter="transition ease-out duration-200"
+  x-transition:enter-start="opacity-0 scale-90"
+  x-transition:enter-end="opacity-100 scale-100"
+  x-transition:leave="transition ease-in duration-150"
+  x-transition:leave-start="opacity-100 scale-100"
+  x-transition:leave-end="opacity-0 scale-90"
+  class="absolute top-[4.5rem] left-1/2 sm:left-3 sm:translate-x-0
+         w-[90%] sm:w-[410px] z-30"
 >
+  <!-- inner container handles glass style -->
+  <div
+    class="-translate-x-1/2 sm:translate-x-0
+           rounded-2xl border border-white/30
+           bg-white/25 backdrop-blur-2xl backdrop-saturate-150
+           ring-1 ring-white/20 divide-y divide-white/20
+           shadow-[0_8px_32px_rgba(31,38,135,0.35)]
+           p-3 space-y-3 text-sm"
+  >
   <select
     x-model="filterLevel"
     @change="$dispatch('filter-changed')"
@@ -188,6 +197,7 @@
     >
       Reset Filters
     </button>
+  </div>
   </div>
 </div>
 
