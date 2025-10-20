@@ -46,68 +46,70 @@
 @section('content')
 <section class="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
 
-  {{-- Top bar: back + edit --}}
-  <div class="mb-6 flex items-center justify-between gap-3">
-    <a href="{{ route('logbook.index') }}"
-       class="group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold
-              text-white bg-white/10 border border-white/10 ring-1 ring-white/10 backdrop-blur-md
-              hover:bg-white/15 transition">
-      <span>Back to Log</span>
-    </a>
-
-    @auth
-      <a href="{{ route('logbook.edit', $log->id) }}"
-         class="group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold
-                text-white bg-gradient-to-r from-cyan-500/90 to-teal-400/90
-                hover:from-cyan-400/90 hover:to-teal-300/90
-                border border-white/10 ring-1 ring-white/10 backdrop-blur-md shadow-lg shadow-cyan-500/20
-                hover:-translate-y-0.5 transition">
-        <span>Edit Dive</span>
+  <div class="flex justify-between items-center mb-8 text-sm">
+    <div class="flex gap-2">
+      <a href="{{ route('logbook.index') }}"
+        class="px-4 py-2 rounded-full font-semibold text-white bg-white/10 border border-white/10 ring-1 ring-white/10 
+                hover:bg-white/15 transition backdrop-blur-md">
+        Back
       </a>
-    @endauth
-  </div>
 
-  {{-- Title + date --}}
-  <div class="mb-6 sm:mb-8">
-    <h1 class="text-3xl font-extrabold tracking-tight text-white text-center sm:text-left">
-      Dive #{{ $diveNumber }} @ {{ $log->site->name ?? 'Unknown Site' }}
-    </h1>
-    @if(!empty($log->title))
-      <p class="mt-1 text-lg font-semibold text-cyan-300 text-center sm:text-left">
-        {{ $log->title }}
-      </p>
-    @endif
-
-    <p class="mt-1 text-sm text-slate-400 text-center sm:text-left">
-      {{ \Carbon\Carbon::parse($log->dive_date)->format('M j, Y') }}
-    </p>
-  </div>
-
-  {{-- Prev / Next --}}
-  @if ($prevId || $nextId)
-  <div class="mb-6 flex items-center justify-between text-sm">
-    <div>
-      @if ($prevId)
-        <a href="{{ route('logbook.show', $prevId) }}"
-           class="inline-flex items-center gap-1 text-cyan-300 hover:text-cyan-200 transition">
-          <span>Previous</span>
+      @auth
+        <a href="{{ route('logbook.edit', $log->id) }}"
+          class="px-4 py-2 rounded-full font-semibold text-white
+                  bg-gradient-to-r from-cyan-500/90 to-teal-400/90 hover:from-cyan-400 hover:to-teal-300
+                  border border-white/10 ring-1 ring-white/10 shadow-md shadow-cyan-500/30 transition">
+          Edit
         </a>
-      @else
-        <span class="opacity-0 select-none">Previous</span>
-      @endif
+      @endauth
     </div>
-    <div>
-      @if ($nextId)
-        <a href="{{ route('logbook.show', $nextId) }}"
-           class="inline-flex items-center gap-1 text-cyan-300 hover:text-cyan-2 00 transition">
-          <span>Next</span>
-        </a>
+
+    <div class="flex gap-3">
+      @if($prevId)
+        <a href="{{ route('logbook.show', $prevId) }}" class="text-cyan-300 hover:text-cyan-200 transition">← Prev</a>
       @else
-        <span class="opacity-0 select-none">Next</span>
+        <span class="opacity-30 select-none">← Prev</span>
+      @endif
+      @if($nextId)
+        <a href="{{ route('logbook.show', $nextId) }}" class="text-cyan-300 hover:text-cyan-200 transition">Next →</a>
+      @else
+        <span class="opacity-30 select-none">Next →</span>
       @endif
     </div>
   </div>
-  @endif
+
+  {{-- Dive summary header --}}
+  <div class="mb-8 rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-900/60 
+              border border-white/10 ring-1 ring-white/10 backdrop-blur-xl shadow-xl p-6 text-center sm:text-left">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex-1">
+        @if($log->title)
+          <h1 class="text-3xl font-extrabold text-white">{{ $log->title }}</h1>
+          <p class="text-cyan-300 font-semibold mt-1 tracking-wide">
+            {{ $log->site->name ?? 'Unknown Site' }} — Dive #{{ $diveNumber }}
+          </p>
+        @else
+          <h1 class="text-3xl font-extrabold text-white">
+            {{ $log->site->name ?? 'Unknown Site' }} — Dive #{{ $diveNumber }}
+          </h1>
+        @endif
+
+        <p class="text-sm text-slate-400 mt-2 tracking-wide">
+          {{ \Carbon\Carbon::parse($log->dive_date)->format('l, F j, Y') }}
+        </p>
+      </div>
+
+      <div class="flex flex-wrap justify-center sm:justify-end gap-2">
+        @foreach (['depth' => 'm', 'duration' => 'min', 'visibility' => 'm vis'] as $key => $unit)
+          @if($log->$key)
+            <span class="px-3 py-1.5 text-sm font-semibold text-white bg-white/10 border border-white/10 rounded-full backdrop-blur-md">
+              {{ $log->$key }} {{ $unit }}
+            </span>
+          @endif
+        @endforeach
+      </div>
+    </div>
+  </div>
 
   {{-- Hero + quick stats --}}
   <div class="mb-8 grid grid-cols-1 gap-6">
@@ -130,101 +132,102 @@
         @endif
       </div>
     </div>
-
-    {{-- Quick pills: depth / duration / visibility --}}
-    @if($log->depth || $log->duration || $log->visibility)
-    <div class="grid grid-cols-3 gap-2 sm:gap-3">
-        @if($log->depth)
-        <span class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full
-                    px-4 py-2 text-sm font-semibold text-white
-                    bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
-            <span>{{ $log->depth }} m</span>
-        </span>
-        @endif
-        @if($log->duration)
-        <span class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full
-                    px-4 py-2 text-sm font-semibold text-white
-                    bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
-            <span>{{ $log->duration }} min</span>
-        </span>
-        @endif
-        @if($log->visibility)
-        <span class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full
-                    px-4 py-2 text-sm font-semibold text-white
-                    bg-white/10 backdrop-blur-md border border-white/10 ring-1 ring-white/10">
-            <span>{{ $log->visibility }} m vis</span>
-        </span>
-        @endif
-    </div>
-    @endif
   </div>
 
-  {{-- Buddy / temp / suit / tank / air / weight as tidy cards --}}
-  @if ($log->buddy || $log->temperature || $log->suit_type || $log->tank_type || $log->air_start || $log->air_end || $log->weight_used)
-    <div class="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
-      {{-- Dive info --}}
-      <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-5">
-        <h3 class="text-white font-semibold mb-3">Dive Info</h3>
+  {{-- Dive Info + Gas / Weight --}}
+  @if ($log->buddy || $log->temperature || $log->suit_type || $log->tank_type || $log->air_start || $log->air_end || $log->weight_used || $log->rating)
+    <div class="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+      
+      {{-- DIVE INFO CARD --}}
+      <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-gradient-to-br from-slate-800/60 to-slate-900/60 
+                  backdrop-blur-xl shadow-xl p-6 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(0,255,255,0.05),_transparent_60%)] pointer-events-none"></div>
+
+        <h3 class="text-lg font-semibold text-cyan-300 mb-4">
+          Dive Info
+        </h3>
+
         <div class="grid grid-cols-2 gap-3 text-sm text-slate-200">
           @if($log->buddy)
-            <div class="inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 ring-1 ring-white/10">
+            <div class="flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 backdrop-blur-md">
               <span><span class="text-slate-400">Buddy:</span> {{ $log->buddy }}</span>
             </div>
           @endif
+
           @if($log->temperature)
-            <div class="inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 ring-1 ring-white/10">
+            <div class="flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 backdrop-blur-md">
               <span><span class="text-slate-400">Water:</span> {{ $log->temperature }}°C</span>
             </div>
           @endif
+
           @if($log->suit_type)
-            <div class="inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 ring-1 ring-white/10">
+            <div class="flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 backdrop-blur-md">
               <span><span class="text-slate-400">Suit:</span> {{ $log->suit_type }}</span>
             </div>
           @endif
+
           @if($log->tank_type)
-            <div class="inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 ring-1 ring-white/10">
+            <div class="flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 backdrop-blur-md">
               <span><span class="text-slate-400">Tank:</span> {{ $log->tank_type }}</span>
             </div>
           @endif
         </div>
       </div>
 
-        {{-- Gas & Weight --}}
-        <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-5">
-        <h3 class="text-white font-semibold mb-3">Gas & Weight</h3>
+      {{-- GAS + WEIGHT CARD --}}
+      <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-gradient-to-br from-slate-800/60 to-slate-900/60 
+                  backdrop-blur-xl shadow-xl p-6 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(0,255,255,0.05),_transparent_60%)] pointer-events-none"></div>
+
+        <h3 class="text-lg font-semibold text-cyan-300 mb-4">
+          Gas & Weight
+        </h3>
 
         <div class="grid grid-cols-2 gap-3 text-sm text-slate-200">
-            @if($log->air_start)
-            <div class="inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 ring-1 ring-white/10">
-                <span><span class="text-slate-400">Start:</span> {{ intval($log->air_start) }} bar</span>
+          @if($log->air_start)
+            <div class="flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 backdrop-blur-md">
+              <span><span class="text-slate-400">Start:</span> {{ intval($log->air_start) }} bar</span>
             </div>
-            @endif
-            @if($log->air_end)
-            <div class="inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 ring-1 ring-white/10">
-                <span><span class="text-slate-400">End:</span> {{ intval($log->air_end) }} bar</span>
-            </div>
-            @endif
-            @if($log->weight_used)
-            <div class="inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 ring-1 ring-white/10">
-                <span><span class="text-slate-400">Weight:</span> {{ $log->weight_used }} kg</span>
-            </div>
-            @endif
+          @endif
 
-            @if($log->rating)
-            <div class="inline-flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 ring-1 ring-white/10">
-                <span><span class="text-slate-400">Rating:</span> {{ $log->rating }}★</span>
+          @if($log->air_end)
+            <div class="flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 backdrop-blur-md">
+              <span><span class="text-slate-400">End:</span> {{ intval($log->air_end) }} bar</span>
             </div>
-            @endif
+          @endif
+
+          @if($log->weight_used)
+            <div class="flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 backdrop-blur-md">
+              <span><span class="text-slate-400">Weight:</span> {{ $log->weight_used }} kg</span>
+            </div>
+          @endif
+
+          @if($log->rating)
+            <div class="flex items-center gap-2 rounded-xl px-3 py-2 bg-white/5 border border-white/10 backdrop-blur-md">
+              <span><span class="text-slate-400">Rating:</span> {{ $log->rating }}★</span>
+            </div>
+          @endif
         </div>
-        </div>
+      </div>
     </div>
   @endif
 
   {{-- Notes --}}
   @if ($log->notes)
-    <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-6 text-slate-200">
-      <h3 class="text-white font-semibold mb-2">📝 Notes</h3>
-      <p class="whitespace-pre-line leading-relaxed">{{ $log->notes }}</p>
+    <div class="rounded-2xl border border-white/10 ring-1 ring-white/10 
+                bg-gradient-to-br from-slate-800/60 to-slate-900/60 
+                backdrop-blur-xl shadow-xl p-6 relative overflow-hidden text-slate-200">
+                
+      {{-- Radial cyan highlight for visual depth --}}
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(0,255,255,0.05),_transparent_60%)] pointer-events-none"></div>
+
+      <h3 class="text-lg font-semibold text-cyan-300 mb-3">
+        Notes
+      </h3>
+
+      <p class="whitespace-pre-line leading-relaxed text-slate-100/90">
+        {{ $log->notes }}
+      </p>
     </div>
   @endif
 
