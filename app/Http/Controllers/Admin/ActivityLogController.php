@@ -38,9 +38,12 @@ class ActivityLogController extends Controller
             $query->whereDate('created_at', '<=', $request->to);
         }
 
-        // 🔒 Exclude current user's logs by default
-        if (!$request->boolean('include_self')) {
-            $query->where('user_id', '!=', auth()->id());
+        // ✅ Hide current user's logs only when explicitly requested
+        if ($request->boolean('hide_self')) {
+            $query->where(function ($q) {
+                $q->whereNull('user_id')   // keep system logs
+                ->orWhere('user_id', '!=', auth()->id()); // include everyone else
+            });
         }
 
         $logs = $query->paginate(25);

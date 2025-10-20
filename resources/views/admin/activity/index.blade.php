@@ -108,21 +108,21 @@
                       focus:ring-cyan-400/40 focus:border-cyan-400/50 transition w-full"/>
       </div>
 
-      {{-- Include self toggle --}}
-      <div x-data="{ on: {{ request('include_self') ? 'true' : 'false' }} }"
+      {{-- Hide my logs toggle --}}
+      <div x-data="{ hideMine: {{ request('hide_self') ? 'true' : 'false' }} }"
           class="flex flex-col flex-1 min-w-[160px] text-white/80 text-sm justify-end">
-        <label for="include_self" class="mb-1">Include</label>
+        <label for="hide_self" class="mb-1">Visibility</label>
         <div class="flex items-center gap-3 h-[42px]">
-          <span class="whitespace-nowrap text-white/80">Show my logs</span>
+          <span class="whitespace-nowrap text-white/80">Hide my logs</span>
           <button type="button"
-                  @click="on = !on; $refs.input.checked = on"
-                  :class="on ? 'bg-cyan-500/90' : 'bg-white/15'"
+                  @click="hideMine = !hideMine; $refs.input.checked = hideMine"
+                  :class="hideMine ? 'bg-cyan-500/90' : 'bg-white/15'"
                   class="relative inline-flex h-6 w-11 rounded-full transition-colors duration-300 border border-white/20 flex-shrink-0 focus:outline-none">
-            <span :class="on ? 'translate-x-5 bg-white' : 'translate-x-0.5 bg-white/70'"
+            <span :class="hideMine ? 'translate-x-5 bg-white' : 'translate-x-0.5 bg-white/70'"
                   class="absolute top-0.5 left-0.5 h-5 w-5 rounded-full shadow-sm transform transition duration-300 ease-in-out"></span>
           </button>
-          <input type="checkbox" name="include_self" value="1" x-ref="input"
-                class="hidden" @checked(request('include_self'))>
+          <input type="checkbox" name="hide_self" value="1" x-ref="input"
+                class="hidden" @checked(request('hide_self'))>
         </div>
       </div>
     </div>
