@@ -151,7 +151,7 @@
 
 
         <div class="absolute inset-0 bg-cover bg-center transition group-hover:scale-105"
-            style="background-image:url('{{ asset('images/main/divemap.webp') }}')"></div>
+            style="background-image:url('{{ asset('images/main/satellite.webp') }}')"></div>
 
         <!-- Compact bottom overlay -->
         <div class="absolute inset-x-0 bottom-0 bg-slate-900/85 backdrop-blur-sm px-4 py-3 sm:px-5 sm:py-4">

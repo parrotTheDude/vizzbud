@@ -9,11 +9,35 @@ use Illuminate\Support\Str;
 
 class DiveSiteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sites = DiveSite::orderBy('name')
-            ->select(['id', 'slug', 'name', 'region', 'country', 'dive_type', 'suitability', 'is_active', 'needs_review'])
-            ->paginate(20);
+        $query = DiveSite::query();
+
+        // 🔍 Search by name, region, or country
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('region', 'like', "%{$search}%")
+                ->orWhere('country', 'like', "%{$search}%");
+            });
+        }
+
+        // 🔹 Filter by status
+        $status = $request->input('status');
+        if ($status === 'active') {
+            $query->where('is_active', true)->where('needs_review', false);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false)->where('needs_review', false);
+        } elseif ($status === 'review') {
+            $query->where('needs_review', true);
+        }
+
+        // 🏁 Sort order: Needs Review first, then Active, then Inactive
+        $query->orderByDesc('needs_review')
+            ->orderByDesc('is_active')
+            ->orderBy('name');
+
+        $sites = $query->paginate(20);
 
         return view('admin.divesites.index', compact('sites'));
     }
@@ -31,28 +55,21 @@ class DiveSiteController extends Controller
             'name' => 'required|string|max:191',
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
-            'timezone' => 'nullable|string|max:64',
-            'country' => 'nullable|string|max:191',
-            'region' => 'nullable|string|max:191',
-            'description' => 'nullable|string',
-            'dive_type' => 'nullable|in:shore,boat',
-            'suitability' => 'nullable|in:Open Water,Advanced,Deep',
-            'needs_review' => 'boolean',
+            'region' => 'required|string|max:191',
+            'country' => 'required|string|max:191',
+            'dive_type' => 'required|in:shore,boat',
+            'suitability' => 'required|in:Open Water,Advanced,Deep',
         ]);
 
-        // Generate unique slug
         $validated['slug'] = \Illuminate\Support\Str::slug($validated['name']);
-
-        // Default status values
-        $validated['is_active'] = false; // 👈 New dive sites start inactive
+        $validated['is_active'] = false; 
         $validated['needs_review'] = true;
 
-        // Create site
         $site = \App\Models\DiveSite::create($validated);
 
-        // Redirect to edit
-        return redirect()->route('admin.divesites.edit', $site->slug)
-            ->with('success', 'Dive site created and set to inactive. You can now review and activate it.');
+        return redirect()
+            ->route('admin.divesites.edit', $site->slug)
+            ->with('success', 'Dive site created successfully. You can now edit details and activate it.');
     }
 
     public function edit(DiveSite $diveSite)

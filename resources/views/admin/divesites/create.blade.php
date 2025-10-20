@@ -29,7 +29,7 @@
       <h2 class="text-lg font-semibold mb-4 text-white/90">Basic Information</h2>
       <div>
         <label class="block text-sm mb-1 text-white/70">Name</label>
-        <input type="text" name="name" value="{{ old('name') }}"
+        <input type="text" name="name" required value="{{ old('name') }}"
                class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
                       focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
       </div>
@@ -43,8 +43,8 @@
              class="w-full h-72 rounded-xl border border-white/10 ring-1 ring-white/10 overflow-hidden"></div>
 
         {{-- Hidden fields --}}
-        <input type="hidden" name="lat" id="lat" value="{{ old('lat', -33.8688) }}">
-        <input type="hidden" name="lng" id="lng" value="{{ old('lng', 151.2093) }}">
+        <input type="hidden" required name="lat" id="lat" value="{{ old('lat', -33.8688) }}">
+        <input type="hidden" required name="lng" id="lng" value="{{ old('lng', 151.2093) }}">
 
         <p class="text-sm text-white/60">
           Drag the marker or click the map to select a location.
@@ -53,14 +53,14 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm mb-1 text-white/70">Region</label>
-            <input type="text" name="region" id="region" value="{{ old('region') }}"
+            <input type="text" name="region" id="region" required value="{{ old('region') }}"
                    class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
                           focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
           </div>
 
           <div>
             <label class="block text-sm mb-1 text-white/70">Country</label>
-            <input type="text" name="country" id="country" value="{{ old('country') }}"
+            <input type="text" name="country" id="country" required value="{{ old('country') }}"
                    class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
                           focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
           </div>
@@ -74,7 +74,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm mb-1 text-white/70">Dive Type</label>
-          <select name="dive_type"
+          <select name="dive_type" required
                   class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
                          focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
             <option value="">— Select —</option>
@@ -85,7 +85,7 @@
 
         <div>
           <label class="block text-sm mb-1 text-white/70">Suitability</label>
-          <select name="suitability"
+          <select name="suitability" required
                   class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
                          focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
             <option value="">— Select —</option>
@@ -94,24 +94,6 @@
             <option value="Deep">Deep</option>
           </select>
         </div>
-      </div>
-    </div>
-
-    {{-- Status --}}
-    <div>
-      <h2 class="text-lg font-semibold mb-4 text-white/90">Status</h2>
-      <div class="flex flex-wrap gap-6">
-        <label class="flex items-center gap-2">
-          <input type="checkbox" name="is_active" value="1" checked
-                 class="rounded border-white/20 bg-white/10 text-emerald-400 focus:ring-emerald-400">
-          <span>Active</span>
-        </label>
-
-        <label class="flex items-center gap-2">
-          <input type="checkbox" name="needs_review" value="1"
-                 class="rounded border-white/20 bg-white/10 text-amber-400 focus:ring-amber-400">
-          <span>Needs Review</span>
-        </label>
       </div>
     </div>
 

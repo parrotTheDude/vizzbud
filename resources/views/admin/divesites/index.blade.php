@@ -21,28 +21,31 @@
   <form method="GET" class="mb-6 flex flex-wrap gap-3 bg-white/5 border border-white/10 ring-1 ring-white/10 rounded-xl p-4 backdrop-blur-md">
     <div class="flex-1 min-w-[200px]">
       <input type="text" name="search" value="{{ request('search') }}"
-             placeholder="Search by name, region, or country..."
-             class="w-full rounded-lg bg-white/10 text-white px-3 py-2 border border-white/10 
+            placeholder="Search by name, region, or country..."
+            class="w-full rounded-lg bg-white/10 text-white px-3 py-2 border border-white/10 
                     ring-1 ring-white/10 focus:ring-cyan-400/40 focus:border-cyan-400/50 transition"/>
     </div>
 
-    <div class="flex items-center gap-3">
-      <label class="flex items-center gap-2 text-sm text-white/80">
-        <input type="checkbox" name="include_inactive" value="1" @checked(request('include_inactive'))
-               class="rounded border-white/20 bg-white/10 text-cyan-400 focus:ring-cyan-400">
-        Include inactive
-      </label>
+    <div class="flex items-center gap-3 flex-wrap">
+      <select name="status"
+              class="rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
+                    focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
+        <option value="">All statuses</option>
+        <option value="review" @selected(request('status') === 'review')>Needs Review</option>
+        <option value="active" @selected(request('status') === 'active')>Active</option>
+        <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
+      </select>
 
       <button type="submit"
               class="rounded-lg bg-cyan-500/90 hover:bg-cyan-400/90
-                     text-white font-semibold px-5 py-2 border border-white/10
-                     ring-1 ring-white/10 shadow-md hover:shadow-lg transition">
+                    text-white font-semibold px-5 py-2 border border-white/10
+                    ring-1 ring-white/10 shadow-md hover:shadow-lg transition">
         Apply
       </button>
 
-      @if(request()->hasAny(['search','include_inactive']))
+      @if(request()->hasAny(['search','status']))
         <a href="{{ route('admin.divesites.index') }}"
-           class="rounded-lg bg-white/10 hover:bg-white/15 text-white/80 font-semibold px-5 py-2
+          class="rounded-lg bg-white/10 hover:bg-white/15 text-white/80 font-semibold px-5 py-2
                   border border-white/10 ring-1 ring-white/10 transition">
           Reset
         </a>

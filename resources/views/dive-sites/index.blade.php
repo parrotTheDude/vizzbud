@@ -135,72 +135,59 @@
   class="absolute top-[4.5rem] left-1/2 sm:left-3 sm:translate-x-0
          w-[90%] sm:w-[410px] z-30"
 >
-  <!-- inner container handles glass style -->
   <div
     class="-translate-x-1/2 sm:translate-x-0
            rounded-2xl border border-white/30
            bg-white/25 backdrop-blur-2xl backdrop-saturate-150
            ring-1 ring-white/20 divide-y divide-white/20
            shadow-[0_8px_32px_rgba(31,38,135,0.35)]
-           p-3 space-y-3 text-sm"
+           p-4 space-y-3 text-sm"
   >
-  <select
-    x-model="filterLevel"
-    @change="$dispatch('filter-changed')"
-    class="w-full rounded-lg px-3 py-2
-           bg-white/40 backdrop-blur-sm border border-white/30
-           text-slate-800 font-semibold shadow-sm
-           focus:ring-2 focus:ring-cyan-400 focus:outline-none"
-  >
-    <option value="">Certification Level</option>
-    <option value="Open Water">Open Water</option>
-    <option value="Advanced">Advanced</option>
-    <option value="Deep">Deep</option>
-  </select>
-
-  <select
-    x-model="filterType"
-    @change="$dispatch('filter-changed')"
-    class="w-full rounded-lg px-3 py-2
-           bg-white/40 backdrop-blur-sm border border-white/30
-           text-slate-800 font-semibold shadow-sm
-           focus:ring-2 focus:ring-cyan-400 focus:outline-none"
-  >
-    <option value="">Dive Type</option>
-    <option value="shore">Shore</option>
-    <option value="boat">Boat</option>
-  </select>
-
-  <div
-    class="grid gap-2"
-    :class="hasActiveFilters ? 'grid-cols-2' : 'grid-cols-1'"
-  >
-    <button
-      @click="centerMap"
-      class="w-full rounded-full px-4 py-2 font-semibold
-             transition shadow-md
-             text-white
-             bg-cyan-500/90 hover:bg-cyan-500
-             focus:ring-2 focus:ring-cyan-300"
+    <!-- Certification Level -->
+    <select
+      x-model="filterLevel"
+      @change="$dispatch('filter-changed')"
+      class="w-full rounded-lg px-3 py-2
+             bg-white/40 backdrop-blur-sm border border-white/30
+             text-slate-800 font-semibold shadow-sm
+             focus:ring-2 focus:ring-cyan-400 focus:outline-none"
     >
-      Find Me
-    </button>
+      <option value="">Certification Level</option>
+      <option value="Open Water">Open Water</option>
+      <option value="Advanced">Advanced</option>
+      <option value="Deep">Deep</option>
+    </select>
 
-    <button
-      x-show="hasActiveFilters"
-      x-transition.opacity
-      @click="resetFilters"
-      class="w-full rounded-full px-4 py-2 font-semibold
-             text-slate-800
-             bg-white/40 hover:bg-white/50
-             border border-white/30
-             backdrop-blur-md shadow-sm
-             focus:ring-2 focus:ring-white/40
-             transition"
+    <!-- Dive Type -->
+    <select
+      x-model="filterType"
+      @change="$dispatch('filter-changed')"
+      class="w-full rounded-lg px-3 py-2
+             bg-white/40 backdrop-blur-sm border border-white/30
+             text-slate-800 font-semibold shadow-sm
+             focus:ring-2 focus:ring-cyan-400 focus:outline-none"
     >
-      Reset Filters
-    </button>
-  </div>
+      <option value="">Dive Type</option>
+      <option value="shore">Shore</option>
+      <option value="boat">Boat</option>
+    </select>
+
+    <!-- Reset Button -->
+    <template x-if="hasActiveFilters">
+      <div class="pt-1">
+        <button
+          @click="resetFilters"
+          class="w-full rounded-lg py-2 font-semibold
+                 bg-gradient-to-r from-cyan-500/90 to-blue-500/90
+                 hover:from-cyan-500 hover:to-blue-500
+                 text-white shadow-md
+                 focus:ring-2 focus:ring-cyan-300 focus:outline-none
+                 transition-all duration-200"
+        >
+          Reset Filters
+        </button>
+      </div>
+    </template>
   </div>
 </div>
 
@@ -226,6 +213,46 @@
       @include('dive-sites.partials.info', ['chartId' => 'swellChart-desktop'])
     </div>
   </div>
+
+<!-- Map Style Toggle -->
+<div class="absolute bottom-4 left-4 z-20">
+  <button
+    @click="toggleMapStyle"
+    class="bg-white/30 backdrop-blur-md border border-white/40
+           hover:ring-2 hover:ring-cyan-400
+           rounded-lg w-14 h-14 overflow-hidden
+           shadow-lg flex items-center justify-center 
+           transition transform hover:scale-[1.05]"
+    :title="mapStyle === 'streets' ? 'Switch to Satellite' : 'Switch to Streets'"
+  >
+    <img
+      :src="mapStyle === 'streets'
+        ? '/images/main/satellite.webp'
+        : '/images/main/street.webp'"
+      alt="Toggle map style"
+      class="w-full h-full object-cover"
+    >
+  </button>
+</div>
+
+<!-- Find Me Toggle -->
+<div class="absolute bottom-4 right-4 z-20">
+  <button
+    @click="centerMap"
+    class="bg-white/30 backdrop-blur-md border border-white/40
+           hover:ring-2 hover:ring-cyan-400
+           rounded-lg w-14 h-14 overflow-hidden
+           shadow-lg flex items-center justify-center
+           transition transform hover:scale-[1.05]"
+    title="Center map on my location"
+  >
+    <img
+      src="/icons/compass.svg"
+      alt="Find Me"
+      class="w-full h-full object-contain p-2"
+    >
+  </button>
+</div>
 
 {{-- Backdrop --}}
 <div
@@ -309,7 +336,9 @@ function diveSiteMap({ sites }) {
 
             this.map = new mapboxgl.Map({
               container: 'map',
-              style: 'mapbox://styles/mapbox/streets-v12',
+              style: this.mapStyle === 'streets'
+                ? 'mapbox://styles/mapbox/streets-v12'
+                : 'mapbox://styles/mapbox/satellite-streets-v12',
               center: view.center,
               zoom: view.zoom
             });
@@ -716,6 +745,16 @@ function diveSiteMap({ sites }) {
                     });
                 }, 50);
             });
+        },
+
+        mapStyle: localStorage.getItem('vizzbud_map_style') || 'streets',
+
+        toggleMapStyle() {
+          this.mapStyle = this.mapStyle === 'streets' ? 'satellite' : 'streets';
+          localStorage.setItem('vizzbud_map_style', this.mapStyle);
+          
+          document.body.classList.add('opacity-0', 'transition', 'duration-300');
+          setTimeout(() => location.reload(), 300);
         },
 
         get hasActiveFilters() {

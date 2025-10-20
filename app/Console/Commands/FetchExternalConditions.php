@@ -21,7 +21,7 @@ class FetchExternalConditions extends Command
         $this->info('Fetching conditions for dive sites…');
 
         $batchSize = (int) $this->option('batch') ?: 100;
-        $total = DiveSite::count();
+        $total = DiveSite::active()->count();
         $bar = $this->output->createProgressBar($total);
         $bar->start();
 
@@ -34,7 +34,7 @@ class FetchExternalConditions extends Command
 
         // Schema::table('external_conditions', fn($t) => $t->unique(['dive_site_id','retrieved_at']));
 
-        DiveSite::query()
+        DiveSite::active()
             ->select(['id','name','lat','lng'])
             ->orderBy('id')
             ->chunkById($batchSize, function ($sites) use (&$insertBuffer, $bufferTarget, $retrievedAt, $weather, $bar) {

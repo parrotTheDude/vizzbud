@@ -144,6 +144,11 @@ class DiveSite extends Model
             ->whereBetween('local_date', [$from, $to]);
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
     /** Convenience: today's 3-part summary (null if none) */
     public function getTodaySummaryAttribute()
     {

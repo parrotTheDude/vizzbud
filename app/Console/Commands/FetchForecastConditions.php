@@ -44,6 +44,9 @@ class FetchForecastConditions extends Command
                         $qq->where('slug', $siteOpt)->orWhere('name', $siteOpt);
                     });
                 }
+            }, function ($q) {
+                // Only include active sites when no specific site is provided
+                $q->where('is_active', true);
             })
             ->select(['id', 'name', 'slug', 'lat', 'lng'])
             ->orderBy('id');

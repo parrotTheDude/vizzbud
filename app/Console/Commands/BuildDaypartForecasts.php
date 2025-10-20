@@ -53,6 +53,9 @@ class BuildDaypartForecasts extends Command
                 } else {
                     $q->where(fn($qq) => $qq->where('slug', $siteOpt)->orWhere('name', $siteOpt));
                 }
+            }, function ($q) {
+                // Only include active sites when no specific site is requested
+                $q->where('is_active', true);
             })
             ->select(['id','name','slug','lat','lng','timezone'])
             ->orderBy('id')
