@@ -236,7 +236,7 @@
 </div>
 
 <!-- Find Me Toggle -->
-<div class="absolute bottom-20 sm:bottom-4 right-4 z-20">
+<div class="absolute bottom-15 sm:bottom-4 right-4 z-20">
   <button
     @click="centerMap"
     class="bg-white/30 backdrop-blur-md border border-white/40
