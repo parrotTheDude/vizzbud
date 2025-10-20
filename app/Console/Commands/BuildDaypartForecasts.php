@@ -157,7 +157,14 @@ class BuildDaypartForecasts extends Command
                 foreach ($buckets as $b) {
                     $waveMax = empty($b['waves']) ? null : max($b['waves']);
                     $windMax = empty($b['winds']) ? null : max($b['winds']);
-                    $status  = $this->computeStatus($waveMax, $windMax);
+                    $status = compute_condition_status(
+                        $waveMax,
+                        $windMax,
+                        $this->greenMaxWaveM,
+                        $this->greenMaxWindKt,
+                        $this->yellowMaxWaveM,
+                        $this->yellowMaxWindKt
+                    );
 
                     $rows[] = [
                         'dive_site_id'   => $site->id,
@@ -214,32 +221,5 @@ class BuildDaypartForecasts extends Command
 
         // everything else (late night 22–05) => no rollup
         return null;
-    }
-
-    /** Same logic as service; returns green/yellow/red/unknown */
-    private function computeStatus(?float $waveM, ?float $windKt): string
-    {
-        // No data = safest to assume poor
-        if ($waveM === null || $windKt === null) {
-            return 'red';
-        }
-
-        // ✅ Excellent conditions (both calm)
-        if ($waveM <= $this->greenMaxWaveM && $windKt <= $this->greenMaxWindKt) {
-            return 'green';
-        }
-
-        // 🟡 Fair / borderline conditions
-        // Either waves OR wind exceed green slightly, but both within yellow range
-        if (
-            ($waveM <= $this->yellowMaxWaveM && $windKt <= $this->yellowMaxWindKt) ||
-            ($waveM <= $this->greenMaxWaveM && $windKt <= $this->yellowMaxWindKt) ||
-            ($waveM <= $this->yellowMaxWaveM && $windKt <= $this->greenMaxWindKt)
-        ) {
-            return 'yellow';
-        }
-
-        // 🔴 Rough or unsafe
-        return 'red';
     }
 }

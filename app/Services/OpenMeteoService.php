@@ -133,9 +133,13 @@ class OpenMeteoService
             $windDirDeg  = Arr::get($weatherData, "hourly.wind_direction_10m.$i");
             $airTempC    = Arr::get($weatherData, "hourly.temperature_2m.$i");
 
-            $status = $this->computeStatus(
+            $status = compute_condition_status(
                 $waveHeightM !== null ? (float)$waveHeightM : null,
-                $windSpeedKt !== null ? (float)$windSpeedKt : null
+                $windSpeedKt !== null ? (float)$windSpeedKt : null,
+                $this->greenMaxWaveM,
+                $this->greenMaxWindKt,
+                $this->yellowMaxWaveM,
+                $this->yellowMaxWindKt
             );
 
             return [
@@ -228,35 +232,6 @@ class OpenMeteoService
             ]);
             return [];
         }
-    }
-
-    // ---- helpers ----
-    private function computeStatus(?float $waveM, ?float $windKt): string
-    {
-        // 🚫 Missing data — safest to mark as poor
-        if ($waveM === null || $windKt === null) {
-            return 'red';
-        }
-
-        // ✅ Green (Good conditions)
-        // Calm seas and light winds — both below green thresholds
-        if ($waveM <= $this->greenMaxWaveM && $windKt <= $this->greenMaxWindKt) {
-            return 'green';
-        }
-
-        // 🟡 Yellow (Fair / Borderline)
-        // Either swell or wind exceeds green limit slightly but still within yellow range
-        if (
-            ($waveM <= $this->yellowMaxWaveM && $windKt <= $this->yellowMaxWindKt) ||
-            ($waveM <= $this->greenMaxWaveM && $windKt <= $this->yellowMaxWindKt) ||
-            ($waveM <= $this->yellowMaxWaveM && $windKt <= $this->greenMaxWindKt)
-        ) {
-            return 'yellow';
-        }
-
-        // 🔴 Red (Poor / Unsafe)
-        // Anything above yellow limits — too rough or windy
-        return 'red';
     }
 
     /**
