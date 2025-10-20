@@ -66,16 +66,16 @@
 
     {{-- Dropdown (matches full 430 px width) --}}
     <ul
-      x-show="open && filtered.length"
+      x-show="open && filtered.length && debouncedQuery.length >= 3"
       data-search-list
       x-transition.opacity
       class="absolute left-0 right-0 top-full mt-2
-             max-h-72 overflow-y-auto overflow-x-hidden
-             rounded-2xl border border-white/30
-             bg-white/20 backdrop-blur-xl backdrop-saturate-150
-             ring-1 ring-white/20 divide-y divide-white/20
-             shadow-[0_8px_32px_rgba(31,38,135,0.37)]
-             scrollbar-thin scrollbar-thumb-white/30 scrollbar-track-transparent"
+            max-h-72 overflow-y-auto overflow-x-hidden
+            rounded-2xl border border-white/30
+            bg-white/20 backdrop-blur-xl backdrop-saturate-150
+            ring-1 ring-white/20 divide-y divide-white/20
+            shadow-[0_8px_32px_rgba(31,38,135,0.37)]
+            scrollbar-thin scrollbar-thumb-white/30 scrollbar-track-transparent"
     >
       <template x-for="(site, index) in filtered" :key="site.id">
         <li
@@ -104,18 +104,21 @@
     </ul>
   </div>
 
-  <!-- Loading & No Results -->
+  <!-- Searching -->
   <div
-    x-show="open && loading"
+    x-show="open && loading && debouncedQuery.length >= 3"
     x-transition.opacity
-    class="mt-2 rounded-xl bg-white/30 backdrop-blur-md border border-white/30 p-3 text-sm text-slate-700 text-center">
+    class="mt-2 rounded-xl bg-white/30 backdrop-blur-md border border-white/30 p-3 text-sm text-slate-700 text-center"
+  >
     Searching...
   </div>
 
+  <!-- No Results -->
   <div
-    x-show="open && !filtered.length && debouncedQuery && !loading"
+    x-show="open && !filtered.length && debouncedQuery.length >= 3 && !loading"
     x-transition.opacity
-    class="mt-2 rounded-xl bg-white/30 backdrop-blur-md border border-white/30 p-3 text-sm text-slate-700 text-center">
+    class="mt-2 rounded-xl bg-white/30 backdrop-blur-md border border-white/30 p-3 text-sm text-slate-700 text-center"
+  >
     No results for “<span x-text="query"></span>”.
   </div>
 </div>
@@ -862,8 +865,9 @@ function siteSearch() {
           this.debouncedQuery = (this.query || '').trim();
           this.focusedIndex = 0;
 
-          if (!this.debouncedQuery) {
+          if (!this.debouncedQuery || this.debouncedQuery.length < 3) {
             this.sites = [];
+            this.loading = false;
             return;
           }
 
