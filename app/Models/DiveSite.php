@@ -19,7 +19,10 @@ class DiveSite extends Model
         'avg_depth',
         'dive_type',
         'suitability',
-        // deliberately omit 'slug' from fillable
+        'region',    
+        'country', 
+        'is_active',
+        'needs_review',
     ];
 
     protected $casts = [
@@ -27,6 +30,8 @@ class DiveSite extends Model
         'lng' => 'float',
         'max_depth' => 'float',
         'avg_depth' => 'float',
+        'is_active' => 'boolean',
+        'needs_review' => 'boolean',
     ];
 
     protected static function booted(): void

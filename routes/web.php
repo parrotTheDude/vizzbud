@@ -150,11 +150,21 @@ Route::middleware(['auth', AdminMiddleware::class])
             Route::get('/export', [ActivityLogController::class, 'export'])->name('export');
             Route::get('/user/{id}', [ActivityLogController::class, 'user'])->name('user');
         });
+
+        // Dive Site Management
+        Route::prefix('dive-sites')->name('divesites.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\DiveSiteController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Admin\DiveSiteController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Admin\DiveSiteController::class, 'store'])->name('store');
+            Route::get('/{diveSite}/edit', [\App\Http\Controllers\Admin\DiveSiteController::class, 'edit'])->name('edit');
+            Route::put('/{diveSite}',      [\App\Http\Controllers\Admin\DiveSiteController::class, 'update'])->name('update');
+            Route::delete('/{diveSite}',   [\App\Http\Controllers\Admin\DiveSiteController::class, 'destroy'])->name('destroy');
+        });
     });
 
 /*
 |--------------------------------------------------------------------------
-| 🧭 Sitemap Generator (Manual Regeneration)
+| 🧭 Sitemap Generator
 |--------------------------------------------------------------------------
 */
 

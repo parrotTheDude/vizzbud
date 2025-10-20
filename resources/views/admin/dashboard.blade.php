@@ -37,6 +37,11 @@
       View Activity Logs
     </a>
 
+    <a href="{{ route('admin.divesites.index') }}"
+      class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-cyan-600 
+              text-white text-sm font-medium hover:bg-cyan-500 transition shadow-md">
+      Manage Dive Sites
+    </a>
   </div>
 
   {{-- Dashboard Metrics --}}
