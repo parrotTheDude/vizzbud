@@ -242,17 +242,19 @@ class UserDiveLogController extends Controller
             ->where('user_id', $userId)
             ->findOrFail($id);
 
-        // order once in SQL, then find neighbors by index
+        // ✅ Order oldest → newest so newest has highest number
         $sortedIds = \App\Models\UserDiveLog::where('user_id', $userId)
-            ->orderByDesc('dive_date')
+            ->orderBy('dive_date', 'asc')
+            ->orderBy('id', 'asc')
             ->pluck('id')
             ->toArray();
 
         $index = array_search($log->id, $sortedIds, true);
-        $diveNumber = $index + 1;
+        $diveNumber = $index !== false ? $index + 1 : null;
 
-        $prevId = $sortedIds[$index + 1] ?? null;
-        $nextId = $sortedIds[$index - 1] ?? null;
+        // ✅ Find neighbors relative to this order
+        $prevId = $sortedIds[$index - 1] ?? null; // previous = older dive
+        $nextId = $sortedIds[$index + 1] ?? null; // next = newer dive
 
         log_activity('dive_log_viewed', $log, [
             'id' => $log->id,
@@ -262,20 +264,34 @@ class UserDiveLogController extends Controller
         return view('logbook.show', compact('log', 'diveNumber', 'prevId', 'nextId'));
     }
 
-
-
     public function edit($id)
     {
-        $userId = (int) auth()->id();
+        $userId = auth()->id();
 
         $log = \App\Models\UserDiveLog::where('user_id', $userId)
             ->with('site')
             ->findOrFail($id);
 
-        $sites = \App\Models\DiveSite::orderBy('name')->get(['id','name','lat','lng']);
+        $sites = \App\Models\DiveSite::orderBy('name')->get(['id', 'name', 'lat', 'lng']);
         $siteOptions = $sites->map(fn ($s) => [
-            'id' => $s->id, 'name' => $s->name, 'lat' => $s->lat, 'lng' => $s->lng,
+            'id' => $s->id,
+            'name' => $s->name,
+            'lat' => $s->lat,
+            'lng' => $s->lng,
         ]);
+
+        // ✅ Order by oldest → newest
+        $userLogs = \App\Models\UserDiveLog::where('user_id', $userId)
+            ->orderBy('dive_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->pluck('id')
+            ->toArray();
+
+        // Find position
+        $diveIndex = array_search($log->id, $userLogs, true);
+
+        // ✅ Dive #1 = oldest, highest number = newest
+        $log->dive_number = $diveIndex !== false ? $diveIndex + 1 : null;
 
         log_activity('dive_log_edit_viewed', $log, [
             'id' => $log->id,
@@ -376,6 +392,24 @@ class UserDiveLogController extends Controller
             ->orderByDesc('dive_date')
             ->pluck('id')
             ->all(); 
+    }
+
+    public function countBySiteAndDate(Request $request)
+    {
+        $userId = auth()->id();
+        $siteId = $request->query('site_id');
+        $date   = $request->query('date');
+
+        if (!$siteId || !$date) {
+            return response()->json(['count' => 0]);
+        }
+
+        $count = UserDiveLog::where('user_id', $userId)
+            ->where('dive_site_id', $siteId)
+            ->whereDate('dive_date', $date)
+            ->count();
+
+        return response()->json(['count' => $count]);
     }
     
 }

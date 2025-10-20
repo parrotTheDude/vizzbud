@@ -27,9 +27,9 @@
   </header>
 
   <form method="POST" action="{{ route('logbook.store') }}"
+        x-data="createDive()"
+        x-init="init()"
         class="rounded-2xl border border-white/10 ring-1 ring-white/10 bg-white/10 backdrop-blur-xl shadow-xl p-5 sm:p-6 space-y-6"
-        x-data="createDive({ sites: @js($siteOptions) })"
-        x-init="initDate()"
         @submit.prevent="step === 1 ? (canGoStep2() ? (step=2, focusStep2()) : (siteError = !selectedId)) : $el.submit()">
 
     @csrf
@@ -43,7 +43,6 @@
             Dive Site <span class="text-rose-300">*</span>
         </span>
 
-        <!-- add isolate + relative + z-[1] to make a local stacking context -->
         <div class="relative isolate z-[1]" @keydown.escape="open=false" @click.outside="open=false">
             <input
             x-ref="search"
@@ -63,23 +62,45 @@
 
             <input type="hidden" name="dive_site_id" :value="selectedId" />
 
-            <!-- bump z-index to guarantee it sits on top -->
             <ul
-            x-show="open && filtered.length"
-            x-transition
-            role="listbox"
-            class="absolute z-50 mt-2 w-full max-h-60 overflow-y-auto rounded-xl
-                    bg-slate-900/85 backdrop-blur-md border border-white/10 ring-1 ring-white/10 shadow-xl"
+              x-show="open"
+              x-transition
+              role="listbox"
+              class="absolute z-50 mt-2 w-full max-h-64 overflow-y-auto rounded-xl
+                    bg-slate-900/90 backdrop-blur-xl border border-white/10 ring-1 ring-white/10 shadow-2xl"
             >
-            <template x-for="(site, i) in filtered" :key="site.id">
-                <li
-                :class="['px-4 py-2 cursor-pointer text-sm',
-                        i===focusedIndex ? 'bg-white/10' : 'hover:bg-white/5']"
-                @click="select(i)"
-                @mouseover="focusedIndex=i"
-                x-html="highlight(site.name, query)"
-                ></li>
-            </template>
+              <!-- Results -->
+              <template x-if="sites.length">
+                <template x-for="(site, i) in sites" :key="site.id">
+                  <li
+                    :class="[
+                      'px-4 py-2 cursor-pointer text-sm border-b border-white/5 last:border-0 transition-colors',
+                      i===focusedIndex ? 'bg-white/10' : 'hover:bg-white/5'
+                    ]"
+                    @click="select(i)"
+                    @mouseover="focusedIndex=i"
+                  >
+                    <div class="flex flex-col">
+                      <span class="font-medium text-white" x-html="highlight(site.name, query)"></span>
+                      <span class="text-xs text-white/60" x-text="formatLocation(site)"></span>
+                    </div>
+                  </li>
+                </template>
+              </template>
+
+              <!-- No results message -->
+              <template x-if="!loading && query.length >= 3 && !sites.length">
+                <li class="px-4 py-3 text-sm text-white/70 text-center">
+                  No dive sites found for "<span x-text="query"></span>"
+                </li>
+              </template>
+
+              <!-- Loading state (optional) -->
+              <template x-if="loading">
+                <li class="px-4 py-3 text-sm text-white/70 text-center animate-pulse">
+                  Searching…
+                </li>
+              </template>
             </ul>
         </div>
         </label>
@@ -208,17 +229,17 @@
 
 @push('scripts')
 <script>
-function createDive({ sites }) {
+function createDive() {
   return {
     step: 1,
 
-    // combobox
-    raw: sites || [],
     query: '',
     selectedId: '',
+    sites: [],
     open: false,
     focusedIndex: 0,
     siteError: false,
+    loading: false,
     _t: null,
 
     // fields
@@ -229,64 +250,110 @@ function createDive({ sites }) {
     duration: '',
     visibility: '',
 
-    get filtered() {
-      const q = (this.query || '').trim().toLowerCase();
-      if (!q) return this.raw.slice(0, 20);
-      return this.raw
-        .map(s => ({ s, score: this.score(s.name, q) }))
-        .filter(r => r.score > 0)
-        .sort((a,b) => b.score - a.score)
-        .slice(0, 20)
-        .map(r => r.s);
-    },
-
-    initDate() {
+    async init() {
+      // auto-fill date
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       this.diveDate = now.toISOString().slice(0, 16);
+
+      this.$watch('query', () => {
+        clearTimeout(this._t);
+        this._t = setTimeout(() => this.searchSites(), 250);
+      });
     },
 
-    debounceFilter() { clearTimeout(this._t); this._t = setTimeout(() => { this.focusedIndex = 0; }, 100); },
-    move(d) { if (!this.filtered.length) return; this.focusedIndex = (this.focusedIndex + d + this.filtered.length) % this.filtered.length; },
-    select(i) {
-        const site = this.filtered[i];
-        if (!site) return;
-        this.query = site.name;
-        this.selectedId = site.id;
-        this.open = false;              // hard close
-        this.siteError = false;
-        if (this.autoTitle && !this.title) this.title = site.name;
-        this.$nextTick(() => {
-          this.$refs.search?.blur();
-          // ensure dropdown stays closed even if blur triggers focus handlers
-          setTimeout(() => { this.open = false }, 50);
-        });
-        },
+    async searchSites() {
+      const q = (this.query || '').trim();
+      if (q.length < 3) {
+        this.sites = [];
+        this.loading = false;
+        return;
+      }
+
+      this.loading = true;
+
+      try {
+        const res = await fetch(`/api/dive-sites/search?query=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        this.sites = data.results || [];
+      } catch (e) {
+        console.error('Search failed:', e);
+        this.sites = [];
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    move(d) {
+      if (!this.sites.length) return;
+      this.focusedIndex = (this.focusedIndex + d + this.sites.length) % this.sites.length;
+    },
+
+    async select(i) {
+      const site = this.sites[i];
+      if (!site) return;
+
+      this.query = site.name;
+      this.selectedId = site.id;
+      this.open = false;
+      this.siteError = false;
+
+      // Auto-title smarter: include increment if repeats today
+      if (this.autoTitle) {
+        const today = this.diveDate?.split('T')[0];
+        let title = site.name;
+
+        if (today && site.id) {
+          try {
+            const res = await fetch(`/logbook/count?site_id=${site.id}&date=${today}`, {
+              headers: { 'Accept': 'application/json' },
+            });
+            const data = await res.json();
+            const nextNum = (data.count || 0) + 1;
+            title = `${site.name} Dive ${nextNum}`;
+          } catch (err) {
+            console.warn('Count fetch failed', err);
+          }
+        }
+
+        this.title = title;
+      }
+
+      this.$nextTick(() => {
+        this.$refs.search?.blur();
+        setTimeout(() => { this.open = false }, 50);
+      });
+    },
+
     canGoStep2() {
-      return !!this.selectedId && (this.title||'').trim() !== '' &&
-             !!this.diveDate && this.depth !== '' && this.duration !== '' && this.visibility !== '';
+      return !!this.selectedId &&
+             (this.title||'').trim() !== '' &&
+             !!this.diveDate && this.depth !== '' &&
+             this.duration !== '' && this.visibility !== '';
     },
-    focusStep2() { this.$nextTick(() => this.$refs?.buddy?.focus?.()); },
 
-    // fuzzy-ish scoring + highlight
-    score(name, q) {
-      const n = (name||'').toLowerCase();
-      if (n === q) return 100;
-      if (n.startsWith(q)) return 80;
-      if (n.includes(q)) return 50;
-      let i=0,h=0; for (const c of n){ if (c===q[i]){ h++; i++; if(i>=q.length) break; } }
-      return h >= Math.max(2, Math.ceil(q.length*0.6)) ? 25 : 0;
+    focusStep2() {
+      this.$nextTick(() => this.$refs?.buddy?.focus?.());
     },
+
     highlight(label, q) {
-      if (!q) return this.escape(label);
-      const L = (label||'').toString(), i = L.toLowerCase().indexOf(q.toLowerCase());
-      if (i === -1) return this.escape(L);
-      return this.escape(L.slice(0,i)) +
+      if (!q) return label;
+      const safe = (s) => s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+      const i = label.toLowerCase().indexOf(q.toLowerCase());
+      if (i === -1) return safe(label);
+      return safe(label.slice(0, i)) +
              '<mark class="bg-cyan-300/40 text-inherit rounded px-0.5">' +
-             this.escape(L.slice(i, i+q.length)) + '</mark>' +
-             this.escape(L.slice(i+q.length));
+             safe(label.slice(i, i + q.length)) +
+             '</mark>' +
+             safe(label.slice(i + q.length));
     },
-    escape(s){ return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    formatLocation(site) {
+      const region = site.region || '';
+      const country = site.country || '';
+      if (region && country) return `${region}, ${country}`;
+      return region || country || '';
+    }
   };
 }
 </script>

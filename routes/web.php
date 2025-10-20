@@ -104,9 +104,12 @@ Route::middleware(['auth', 'verified'])
         Route::post('/', [UserDiveLogController::class, 'store'])->name('store');
         Route::get('/chart', [UserDiveLogController::class, 'chart'])->name('chart');
         Route::get('/table', [UserDiveLogController::class, 'table'])->name('table');
+        Route::get('/count', [UserDiveLogController::class, 'countBySiteAndDate'])
+            ->name('count');
         Route::get('/{log}', [UserDiveLogController::class, 'show'])->name('show');
         Route::get('/{log}/edit', [UserDiveLogController::class, 'edit'])->name('edit');
         Route::put('/{log}', [UserDiveLogController::class, 'update'])->name('update');
+
     });
 
 /*

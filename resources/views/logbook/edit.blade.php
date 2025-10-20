@@ -1,7 +1,7 @@
 @extends('layouts.vizzbud')
 
 @php
-  $displayNum = $log->dive_number ?? $log->id;
+  $displayNum = $log->dive_number;
   $siteName   = $log->site->name ?? 'Unknown Site';
   $returnTo   = request('return', url()->previous());
 @endphp
@@ -42,7 +42,6 @@
         class="space-y-6 rounded-2xl border border-white/10 ring-1 ring-white/10
                bg-white/10 backdrop-blur-xl shadow-xl p-5 sm:p-6"
         x-data="editDive({
-          sites: @js($siteOptions),
           initialId: {{ $log->dive_site_id ?? 'null' }},
           initialName: @js($log->site->name ?? ''),
         })"
@@ -56,12 +55,15 @@
     <label class="block">
       <span class="block mb-1 text-[0.8rem] tracking-wide text-white/80">Dive Site <span class="text-rose-300">*</span></span>
 
-      <div class="relative" @keydown.escape="open=false">
+      <div class="relative" @click.outside="open = false" @keydown.escape="open=false">
         <input
           type="text"
           x-model="query"
-          @focus="open = true"
-          @input="debounceFilter"
+          @focus="if (query !== initialName && query.length >= 3) open = true"
+          @input="
+            debounceFilter();
+            if (query !== initialName && query.length >= 3) open = true;
+          "
           @keydown.arrow-down.prevent="move(1)"
           @keydown.arrow-up.prevent="move(-1)"
           @keydown.enter.prevent="select(focusedIndex)"
@@ -72,18 +74,42 @@
 
         <input type="hidden" name="dive_site_id" :value="selectedId">
 
-        <ul x-show="open && filtered.length"
+        <ul x-show="open && query !== initialName"
             x-transition
-            class="absolute z-20 mt-2 w-full max-h-60 overflow-y-auto rounded-xl
-                   bg-slate-900/85 backdrop-blur-md border border-white/10 ring-1 ring-white/10 shadow-xl">
-          <template x-for="(site, index) in filtered" :key="site.id">
-            <li
-              :class="['px-4 py-2 cursor-pointer text-sm',
-                       index === focusedIndex ? 'bg-white/10' : 'hover:bg-white/5']"
-              @click="select(index)"
-              @mouseover="focusedIndex = index"
-              x-html="highlight(site.name, query)"
-            ></li>
+            class="absolute z-50 mt-2 w-full max-h-64 overflow-y-auto rounded-xl
+                  bg-slate-900/90 backdrop-blur-xl border border-white/10 ring-1 ring-white/10 shadow-2xl">
+
+          <!-- Results -->
+          <template x-if="sites.length">
+            <template x-for="(site, i) in sites" :key="site.id">
+              <li
+                :class="[
+                  'px-4 py-2 cursor-pointer text-sm border-b border-white/5 last:border-0 transition-colors',
+                  i===focusedIndex ? 'bg-white/10' : 'hover:bg-white/5'
+                ]"
+                @click="select(i)"
+                @mouseover="focusedIndex=i"
+              >
+                <div class="flex flex-col">
+                  <span class="font-medium text-white" x-html="highlight(site.name, query)"></span>
+                  <span class="text-xs text-white/60" x-text="formatLocation(site)"></span>
+                </div>
+              </li>
+            </template>
+          </template>
+
+          <!-- No results -->
+          <template x-if="!loading && query.length >= 3 && !sites.length">
+            <li class="px-4 py-3 text-sm text-white/70 text-center">
+              No dive sites found for "<span x-text="query"></span>"
+            </li>
+          </template>
+
+          <!-- Loading -->
+          <template x-if="loading">
+            <li class="px-4 py-3 text-sm text-white/70 text-center animate-pulse">
+              Searching…
+            </li>
           </template>
         </ul>
       </div>
@@ -216,82 +242,93 @@
 
 @push('scripts')
 <script>
-function editDive({ sites, initialId = null, initialName = '' }) {
+function editDive({ initialId = null, initialName = '' }) {
   return {
-    // state
-    raw: sites || [],
+    initialName,
     selectedId: initialId,
     query: initialName,
+    sites: [],
     open: false,
     focusedIndex: 0,
     diveSiteError: false,
+    loading: false,
     _t: null,
 
-    // derived
-    get filtered() {
-      const q = (this.query || '').trim().toLowerCase();
-      if (!q) return this.raw.slice(0, 20);
-      return this.raw
-        .map(s => ({ s, score: this.score(s.name, q) }))
-        .filter(r => r.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 20)
-        .map(r => r.s);
+    async searchSites() {
+      const q = (this.query || '').trim();
+      if (q.length < 3) {
+        this.sites = [];
+        this.open = false;
+        this.loading = false;
+        return;
+      }
+
+      this.loading = true;
+      try {
+        const res = await fetch(`/api/dive-sites/search?query=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        this.sites = data.results || [];
+      } catch (e) {
+        console.error('Search failed:', e);
+        this.sites = [];
+      } finally {
+        this.loading = false;
+      }
     },
 
-    // behaviors
     debounceFilter() {
       clearTimeout(this._t);
-      this._t = setTimeout(() => { this.focusedIndex = 0; }, 120);
+      this._t = setTimeout(() => this.searchSites(), 250);
     },
+
     move(dir) {
-      if (!this.filtered.length) return;
-      this.focusedIndex = (this.focusedIndex + dir + this.filtered.length) % this.filtered.length;
+      if (!this.sites.length) return;
+      this.focusedIndex = (this.focusedIndex + dir + this.sites.length) % this.sites.length;
     },
+
     select(index) {
-      const site = this.filtered[index];
+      const site = this.sites[index];
       if (!site) return;
+
       this.query = site.name;
       this.selectedId = site.id;
-      this.open = false;
       this.diveSiteError = false;
 
+      // Close dropdown cleanly
+      this.open = false;
+      this.sites = [];
+
+      // Force blur to prevent immediate reopen
       this.$nextTick(() => {
-        this.$root.querySelector('input[type="text"]')?.blur();
-        setTimeout(() => { this.open = false }, 50); // ensures it stays closed
+        const input = this.$root.querySelector('input[type=text]');
+        input?.blur();
       });
     },
+
+    highlight(label, q) {
+      if (!q) return label;
+      const safe = (s) => s.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+      const i = label.toLowerCase().indexOf(q.toLowerCase());
+      if (i === -1) return safe(label);
+      return safe(label.slice(0, i)) +
+             '<mark class="bg-cyan-300/40 text-inherit rounded px-0.5">' +
+             safe(label.slice(i, i + q.length)) +
+             '</mark>' +
+             safe(label.slice(i + q.length));
+    },
+
+    formatLocation(site) {
+      const region = site.region || '';
+      const country = site.country || '';
+      if (region && country) return `${region}, ${country}`;
+      return region || country || '';
+    },
+
     validateDiveSite() {
       const ok = !!this.selectedId;
       this.diveSiteError = !ok;
       return ok;
-    },
-
-    // utils
-    score(name, q) {
-      const n = (name || '').toLowerCase();
-      if (n === q) return 100;
-      if (n.startsWith(q)) return 80;
-      if (n.includes(q)) return 50;
-      // lightweight subsequence
-      let i = 0, hits = 0;
-      for (const c of n) { if (c === q[i]) { hits++; i++; if (i >= q.length) break; } }
-      return hits >= Math.max(2, Math.ceil(q.length * 0.6)) ? 25 : 0;
-    },
-    highlight(label, q) {
-      if (!q) return this.escape(label);
-      const L = (label || '').toString();
-      const i = L.toLowerCase().indexOf(q.toLowerCase());
-      if (i === -1) return this.escape(L);
-      return this.escape(L.slice(0, i)) +
-             '<mark class="bg-cyan-300/40 text-inherit rounded px-0.5">' +
-             this.escape(L.slice(i, i + q.length)) +
-             '</mark>' +
-             this.escape(L.slice(i + q.length));
-    },
-    escape(s) {
-      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-    },
+    }
   };
 }
 </script>
