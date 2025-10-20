@@ -215,14 +215,14 @@
   </div>
 
 <!-- Map Style Toggle -->
-<div class="absolute bottom-4 left-4 z-20">
+<div class="absolute bottom-20 sm:bottom-4 left-4 z-20">
   <button
     @click="toggleMapStyle"
     class="bg-white/30 backdrop-blur-md border border-white/40
            hover:ring-2 hover:ring-cyan-400
-           rounded-lg w-14 h-14 overflow-hidden
+           rounded-full w-14 h-14 overflow-hidden
            shadow-lg flex items-center justify-center 
-           transition transform hover:scale-[1.05]"
+           transition transform hover:scale-[1.08]"
     :title="mapStyle === 'streets' ? 'Switch to Satellite' : 'Switch to Streets'"
   >
     <img
@@ -236,20 +236,20 @@
 </div>
 
 <!-- Find Me Toggle -->
-<div class="absolute bottom-4 right-4 z-20">
+<div class="absolute bottom-20 sm:bottom-4 right-4 z-20">
   <button
     @click="centerMap"
     class="bg-white/30 backdrop-blur-md border border-white/40
            hover:ring-2 hover:ring-cyan-400
-           rounded-lg w-14 h-14 overflow-hidden
+           rounded-full w-14 h-14 overflow-hidden
            shadow-lg flex items-center justify-center
-           transition transform hover:scale-[1.05]"
+           transition transform hover:scale-[1.08]"
     title="Center map on my location"
   >
     <img
       src="/icons/compass.svg"
       alt="Find Me"
-      class="w-full h-full object-contain p-2"
+      class="w-[75%] h-[75%] object-contain"
     >
   </button>
 </div>
