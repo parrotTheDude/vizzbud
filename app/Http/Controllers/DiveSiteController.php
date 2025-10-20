@@ -23,7 +23,7 @@ class DiveSiteController extends Controller
 
         $cacheKey = 'sites:index:' . md5(implode(',', [$minLng, $minLat, $maxLng, $maxLat]));
 
-        $payload = Cache::remember($cacheKey, 60, function () use ($minLng, $minLat, $maxLng, $maxLat) {
+        $payload = Cache::remember($cacheKey, 60, function () use ($minLng, $minLat, $maxLng, $maxLat, $request) {
             $sitesQuery = DiveSite::query()
                 ->select([
                     'id','slug','name','description','lat','lng',
@@ -71,6 +71,10 @@ class DiveSiteController extends Controller
                 $sitesQuery
                     ->whereBetween('lng', [(float)$minLng, (float)$maxLng])
                     ->whereBetween('lat', [(float)$minLat, (float)$maxLat]);
+            }
+
+            if (! $request->boolean('include_inactive')) {
+                $sitesQuery->where('is_active', true);
             }
 
             $sites = $sitesQuery->get();
