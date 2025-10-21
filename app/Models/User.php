@@ -22,6 +22,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role',
+        'avatar_url',
+        'bio',
+        'certification',
     ];
 
     /**
@@ -48,6 +51,34 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Relationship: all dive logs created by this user.
+     */
+    public function diveLogs()
+    {
+        return $this->hasMany(UserDiveLog::class);
+    }
+
+    /**
+     * Derived: get initials (useful for avatars without images)
+     */
+    public function getInitialsAttribute(): string
+    {
+        return collect(explode(' ', $this->name))
+            ->map(fn($part) => strtoupper(substr($part, 0, 1)))
+            ->join('');
+    }
+
+    /**
+     * Derived: quick profile completeness percentage
+     */
+    public function getProfileCompletionAttribute(): int
+    {
+        $fields = ['avatar_url', 'bio', 'certification'];
+        $filled = collect($fields)->filter(fn($f) => !empty($this->$f))->count();
+        return round(($filled / count($fields)) * 100);
+    }
+
+    /**
      * Send password reset email using Postmark.
      */
     public function sendPasswordResetNotification($token): void
@@ -61,18 +92,18 @@ class User extends Authenticatable implements MustVerifyEmail
 
         $postmark->sendEmail(
             templateId: (int) config('services.postmark.reset_template_id'),
-                to: $this->email,
-                variables: [
-                    'name'          => $this->name,
-                    'action_url'    => $resetUrl,
-                    'support_email' => config('mail.from.address'),
-                    'year'          => now()->year,
-                ],
-                tag: 'password-reset',
-                options: [
-                    'replyTo'  => config('mail.from.address'),
-                    'metadata' => ['user_id' => (string) $this->id],
-                ]
+            to: $this->email,
+            variables: [
+                'name'          => $this->name,
+                'action_url'    => $resetUrl,
+                'support_email' => config('mail.from.address'),
+                'year'          => now()->year,
+            ],
+            tag: 'password-reset',
+            options: [
+                'replyTo'  => config('mail.from.address'),
+                'metadata' => ['user_id' => (string) $this->id],
+            ]
         );
     }
 

@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/UserDiveLog.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +13,13 @@ class UserDiveLog extends Model
         'title',
     ];
 
+    protected $casts = [
+        'dive_date' => 'datetime',
+        'depth' => 'float',
+        'duration' => 'integer',
+        'rating' => 'integer',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -23,5 +28,13 @@ class UserDiveLog extends Model
     public function site()
     {
         return $this->belongsTo(DiveSite::class, 'dive_site_id');
+    }
+
+    /**
+     * Quick accessor: full site name or "Unknown"
+     */
+    public function getSiteNameAttribute(): string
+    {
+        return $this->site?->name ?? 'Unknown Site';
     }
 }

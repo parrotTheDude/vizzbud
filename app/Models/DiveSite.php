@@ -210,4 +210,10 @@ class DiveSite extends Model
             ->limit($limit)
             ->get();
     }
+
+    /** All user dive logs recorded at this site */
+    public function diveLogs()
+    {
+        return $this->hasMany(UserDiveLog::class, 'dive_site_id');
+    }
 }

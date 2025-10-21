@@ -112,8 +112,14 @@
             $links = [
               ['label' => 'Dive Sites', 'route' => 'dive-sites.index'],
               ['label' => 'Dive Log', 'route' => 'logbook.index'],
-              ['label' => 'How it Works', 'route' => 'how_it_works'],
             ];
+          @endphp
+
+          @php
+            // Only show “How it Works” if the user is not logged in
+            if (!auth()->check()) {
+                $links[] = ['label' => 'How it Works', 'route' => 'how_it_works'];
+            }
           @endphp
 
           @php

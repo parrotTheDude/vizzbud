@@ -9,6 +9,7 @@ use App\Http\Controllers\{
     SitemapController,
     AdminController,
     SuggestionController,
+    ProfileController,
     Admin\ActivityLogController,
     Admin\DiveSiteSearchController,
     Auth\ForgotPasswordController,
@@ -68,8 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::view('/verify-email', 'auth.verify-email')->name('verification.notice'); // Step 1
     Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verify.email'); // Step 2
     Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-        ->middleware('throttle:6,1') // Max 6 per minute
-        ->name('verification.send'); // Step 3
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
 });
 
 // 📖 Static Pages
@@ -77,16 +78,16 @@ Route::view('/how-it-works', 'pages.how-vizzbud-works')->name('how_it_works');
 
 // 💬 Suggestions (Public)
 Route::post('/suggestions', [SuggestionController::class, 'store'])
-    ->middleware('throttle:3,1') // Max 3 submissions per minute per IP
+    ->middleware('throttle:3,1')
     ->name('suggestions.store');
 
 Route::get('/api/dive-sites/search', [DiveSiteSearchController::class, 'search'])->name('api.dive-sites.search');
 
+// 🔍 Admin Utility (Search Test)
 Route::middleware(['auth', AdminMiddleware::class])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        // Test search page
         Route::get('/dive-sites/search-test', [DiveSiteSearchController::class, 'index'])->name('dive-sites.search-test');
     });
 
@@ -96,6 +97,7 @@ Route::middleware(['auth', AdminMiddleware::class])
 |--------------------------------------------------------------------------
 */
 
+// ✏️ Dive Log Management
 Route::middleware(['auth', 'verified'])
     ->prefix('logbook')
     ->name('logbook.')
@@ -104,12 +106,25 @@ Route::middleware(['auth', 'verified'])
         Route::post('/', [UserDiveLogController::class, 'store'])->name('store');
         Route::get('/chart', [UserDiveLogController::class, 'chart'])->name('chart');
         Route::get('/table', [UserDiveLogController::class, 'table'])->name('table');
-        Route::get('/count', [UserDiveLogController::class, 'countBySiteAndDate'])
-            ->name('count');
+        Route::get('/count', [UserDiveLogController::class, 'countBySiteAndDate'])->name('count');
         Route::get('/{log}', [UserDiveLogController::class, 'show'])->name('show');
         Route::get('/{log}/edit', [UserDiveLogController::class, 'edit'])->name('edit');
         Route::put('/{log}', [UserDiveLogController::class, 'update'])->name('update');
+    });
 
+/*
+|--------------------------------------------------------------------------
+| 👤 User Profile Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'verified'])
+    ->prefix('profile')
+    ->name('profile.')
+    ->group(function () {
+        Route::get('/', [ProfileController::class, 'show'])->name('show');
+        Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
+        Route::post('/', [ProfileController::class, 'update'])->name('update');
     });
 
 /*
@@ -157,8 +172,8 @@ Route::middleware(['auth', AdminMiddleware::class])
             Route::get('/create', [\App\Http\Controllers\Admin\DiveSiteController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Admin\DiveSiteController::class, 'store'])->name('store');
             Route::get('/{diveSite}/edit', [\App\Http\Controllers\Admin\DiveSiteController::class, 'edit'])->name('edit');
-            Route::put('/{diveSite}',      [\App\Http\Controllers\Admin\DiveSiteController::class, 'update'])->name('update');
-            Route::delete('/{diveSite}',   [\App\Http\Controllers\Admin\DiveSiteController::class, 'destroy'])->name('destroy');
+            Route::put('/{diveSite}', [\App\Http\Controllers\Admin\DiveSiteController::class, 'update'])->name('update');
+            Route::delete('/{diveSite}', [\App\Http\Controllers\Admin\DiveSiteController::class, 'destroy'])->name('destroy');
         });
     });
 
@@ -171,7 +186,6 @@ Route::middleware(['auth', AdminMiddleware::class])
 Route::get('/sitemap.xml', function () {
     $path = public_path('sitemap.xml');
     SitemapGenerator::create(config('app.url'))->writeToFile($path);
-
     return response()->file($path, ['Content-Type' => 'application/xml']);
 });
 
