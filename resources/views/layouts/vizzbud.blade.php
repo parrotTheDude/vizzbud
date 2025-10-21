@@ -9,7 +9,7 @@
     <title>@yield('title', 'Vizzbud | Scuba Dive Sites & Conditions')</title>
 
     {{-- Canonical: let your web server enforce www/non-www and HTTPS --}}
-    <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="canonical" href="https://vizzbud.com{{ request()->getPathInfo() }}">
 
     {{-- Meta description --}}
     <meta name="description" content="@yield('meta_description', 'View personal dive logs, track stats, and explore dive sites on Vizzbud.')">
