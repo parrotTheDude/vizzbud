@@ -183,10 +183,7 @@ Route::middleware(['auth', AdminMiddleware::class])
 |--------------------------------------------------------------------------
 */
 
-Route::get('/sitemap.xml', function () {
-    $path = public_path('sitemap.xml');
-    SitemapGenerator::create(config('app.url'))->writeToFile($path);
-    return response()->file($path, ['Content-Type' => 'application/xml']);
-});
+Route::get('/sitemap.xml', [App\Http\Controllers\SitemapController::class, 'index'])
+    ->name('sitemap');
 
 require __DIR__.'/auth.php';

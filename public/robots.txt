@@ -1,4 +1,7 @@
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /logbook
 
 Sitemap: https://vizzbud.com/sitemap.xml
