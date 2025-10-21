@@ -5,13 +5,32 @@
 
 @push('head')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+    {{-- ✅ [1] Add CSS fallback and scroll improvements --}}
+    <style>
+      #map {
+        height: calc(100vh - 64px);
+        height: calc(100dvh - 64px); 
+      }
+      .bg-white\/25 { background-color: rgba(255, 255, 255, 0.35) !important; }
+      .bg-white\/30 { background-color: rgba(255, 255, 255, 0.45) !important; }
+
+      #mobileInfoPanel .overflow-y-auto {
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #mobileInfoPanel, #mobileInfoPanel * {
+        color: #1e293b; /* slate-800 */
+        line-height: 1.6;
+      }
+    </style>
 @endpush
 
 @section('content')
+
 <img id="arrow-icon" src="/icons/right-arrow.svg" style="display:none;" />
 <div
   class="relative w-full bg-white"
-  style="height: calc(100vh - 64px);"
   x-data="diveSiteMap({ sites: @js($sites) })"
 >
   {{-- Search and Controls --}}
@@ -29,14 +48,13 @@
         @keydown.enter.prevent="select(focusedIndex)"
         placeholder="Search dive sites..."
         class="w-full rounded-full px-5 py-3 pr-12
-               text-slate-900 placeholder-slate-500
-               bg-white/25 backdrop-blur-2xl backdrop-saturate-150
-               border border-white/30 ring-1 ring-white/20
-               shadow-[0_8px_32px_rgba(31,38,135,0.25)]
-               focus:ring-2 focus:ring-cyan-400 focus:shadow-[0_8px_36px_rgba(14,165,233,0.3)]
-               hover:bg-white/30 hover:shadow-[0_8px_36px_rgba(31,38,135,0.3)]
-               transition-all duration-200 ease-out
-               placeholder:opacity-70 placeholder:not-italic"
+                text-slate-900 placeholder-slate-500
+                bg-white/90 backdrop-blur-xl
+                border border-white/30 ring-1 ring-white/20
+                shadow-[0_8px_24px_rgba(31,38,135,0.15)]
+                focus:ring-2 focus:ring-cyan-400
+                transition-all duration-200 ease-out
+                placeholder:opacity-70 placeholder:not-italic"
       />
 
       {{-- Clear button --}}
@@ -192,7 +210,7 @@
 </div>
 
     {{-- Map --}}
-    <div id="map" class="w-full" style="height: calc(100vh - 64px);"></div>
+      <div id="map" class="w-full"></div>
 
   {{-- Info Sidebar for Desktop (glassy, capped to screen height) --}}
   <div
@@ -214,45 +232,45 @@
     </div>
   </div>
 
-<!-- Map Style Toggle -->
-<div class="absolute bottom-20 sm:bottom-4 left-4 z-20">
-  <button
-    @click="toggleMapStyle"
-    class="bg-white/30 backdrop-blur-md border border-white/40
-           hover:ring-2 hover:ring-cyan-400
-           rounded-full w-14 h-14 overflow-hidden
-           shadow-lg flex items-center justify-center 
-           transition transform hover:scale-[1.08]"
-    :title="mapStyle === 'streets' ? 'Switch to Satellite' : 'Switch to Streets'"
-  >
-    <img
-      :src="mapStyle === 'streets'
-        ? '/images/main/satellite.webp'
-        : '/images/main/street.webp'"
-      alt="Toggle map style"
-      class="w-full h-full object-cover"
+  <!-- Map Style Toggle -->
+  <div x-show="!selectedSite || !isMobileView"
+       class="absolute bottom-20 sm:bottom-4 left-4 z-20">
+    <button
+      @click="toggleMapStyle"
+      class="bg-white/40 backdrop-blur-md border border-white/40
+             rounded-full w-16 h-16 overflow-hidden
+             shadow-lg flex items-center justify-center
+             transition"
+      :title="mapStyle === 'streets' ? 'Switch to Satellite' : 'Switch to Streets'"
     >
-  </button>
-</div>
+      <img
+        :src="mapStyle === 'streets'
+          ? '/images/main/satellite.webp'
+          : '/images/main/street.webp'"
+        alt="Toggle map style"
+        class="w-full h-full object-cover"
+      >
+    </button>
+  </div>
 
-<!-- Find Me Toggle -->
-<div class="absolute bottom-20 sm:bottom-4 right-4 z-20">
-  <button
-    @click="centerMap"
-    class="bg-white/30 backdrop-blur-md border border-white/40
-           hover:ring-2 hover:ring-cyan-400
-           rounded-full w-14 h-14 overflow-hidden
-           shadow-lg flex items-center justify-center
-           transition transform hover:scale-[1.08]"
-    title="Center map on my location"
-  >
-    <img
-      src="/icons/compass.svg"
-      alt="Find Me"
-      class="w-[75%] h-[75%] object-contain"
+  <!-- Find Me Toggle -->
+  <div x-show="!selectedSite || !isMobileView"
+       class="absolute bottom-20 sm:bottom-4 right-4 z-20">
+    <button
+      @click="centerMap"
+      class="bg-white/40 backdrop-blur-md border border-white/40
+             rounded-full w-16 h-16 overflow-hidden
+             shadow-lg flex items-center justify-center
+             transition"
+      title="Center map on my location"
     >
-  </button>
-</div>
+      <img
+        src="/icons/compass.svg"
+        alt="Find Me"
+        class="w-[70%] h-[70%] object-contain"
+      >
+    </button>
+  </div>
 
 {{-- Backdrop --}}
 <div
@@ -263,27 +281,26 @@
 ></div>
 
 {{-- Info Bottom Sheet for Mobile --}}
-<div
-  x-show="isMobileView"
-  id="mobileInfoPanel"
-  :class="selectedSite && isMobileView ? 'translate-y-0' : 'translate-y-full'"
-  class="fixed bottom-0 left-0 right-0 z-50
-         w-full max-h-[80vh]
-         bg-white/30 backdrop-blur-xl border-t border-white/30
-         ring-1 ring-white/20 shadow-2xl
-         text-slate-900 rounded-t-2xl
-         transition-transform duration-300 ease-out overflow-hidden"
->
-  <!-- drag handle -->
-  <div class="flex justify-center pt-3">
-    <div class="h-1.5 w-12 rounded-full bg-white/60"></div>
-  </div>
+  <div
+    x-show="isMobileView"
+    id="mobileInfoPanel"
+    :class="selectedSite && isMobileView ? 'translate-y-0' : 'translate-y-full'"
+    class="fixed bottom-0 left-0 right-0 z-50
+           w-full max-h-[80dvh] sm:max-h-[80vh]
+           bg-white/40 backdrop-blur-xl border-t border-white/30
+           ring-1 ring-white/20 shadow-2xl
+           text-slate-900 rounded-t-2xl
+           transition-transform duration-300 ease-out overflow-hidden"
+  >
+    <div class="flex justify-center pt-3">
+      <div class="h-1.5 w-12 rounded-full bg-white/60"></div>
+    </div>
 
-  <!-- scrollable content -->
-  <div class="px-5 pt-4 pb-[max(env(safe-area-inset-bottom),1rem)] overflow-y-auto max-h-[calc(80vh-3rem)]">
-    @include('dive-sites.partials.info', ['chartId' => 'swellChart-mobile'])
+    <div class="px-5 pt-4 pb-[max(env(safe-area-inset-bottom),1rem)]
+                overflow-y-auto max-h-[calc(80dvh-3rem)] sm:max-h-[calc(80vh-3rem)]">
+      @include('dive-sites.partials.info', ['chartId' => 'swellChart-mobile'])
+    </div>
   </div>
-</div>
 @endsection
 
 @push('head')
