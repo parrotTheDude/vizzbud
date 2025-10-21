@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use App\Models\ExternalCondition;
+use App\Models\ExternalConditionForecast;
 use App\Models\ExternalConditionDaypart;
 use App\Models\DiveSitePhoto;
 
@@ -12,17 +14,26 @@ class DiveSite extends Model
 {
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'lat',
         'lng',
+        'timezone',
+        'country',
+        'region',
         'max_depth',
         'avg_depth',
         'dive_type',
         'suitability',
-        'region',    
-        'country', 
+        'hazards',
+        'pro_tips',
+        'entry_notes',
+        'parking_notes',
+        'marine_life',
+        'source',
         'is_active',
         'needs_review',
+        'last_condition_sync_at',
     ];
 
     protected $casts = [
@@ -32,6 +43,7 @@ class DiveSite extends Model
         'avg_depth' => 'float',
         'is_active' => 'boolean',
         'needs_review' => 'boolean',
+        'last_condition_sync_at' => 'datetime',
     ];
 
     protected static function booted(): void
