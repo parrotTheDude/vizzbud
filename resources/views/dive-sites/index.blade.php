@@ -22,6 +22,16 @@
       #mobileInfoPanel, #mobileInfoPanel * {
         line-height: 1.6;
       }
+
+      @keyframes pulseRing {
+        0% { r: 7; opacity: 0.8; }
+        70% { r: 14; opacity: 0; }
+        100% { r: 7; opacity: 0; }
+      }
+      .mapboxgl-marker-pulse circle {
+        animation: pulseRing 1.8s ease-out infinite;
+        transform-origin: center;
+      }
     </style>
 @endpush
 
@@ -33,7 +43,7 @@
   x-data="diveSiteMap({ sites: @js($sites) })"
 >
   {{-- Search and Controls --}}
-<div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-[90%] sm:left-2 sm:translate-x-0 sm:w-[410px]" x-data="siteSearch()">
+<div class="absolute top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] sm:left-2 sm:translate-x-0 sm:w-[410px]" x-data="siteSearch()">
   <div class="flex items-start gap-2 relative w-full">
     {{-- Search Bar --}}
     <div class="relative flex-1">
@@ -218,7 +228,7 @@
     class="absolute top-0 left-0 h-screen max-w-[430px] w-full
           bg-white/40 backdrop-blur-2xl
           border border-white/30 ring-1 ring-white/20 shadow-2xl
-          z-10 text-slate-900
+          z-40 text-slate-900
           transition-transform transform flex flex-col">
 
     <!-- glow accent -->
@@ -275,7 +285,7 @@
 <div
   x-show="isMobileView && selectedSite"
   x-transition.opacity
-  class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+  class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm"
   @click="selectedSite = null"
 ></div>
 
@@ -324,6 +334,8 @@ function diveSiteMap({ sites }) {
         isMobileView: window.innerWidth < 640,
         dragStartY: 0,
         dragging: false,
+        pulseTime: 0,
+        pulseInterval: null,
 
 
         initialDesktop: { center: [151.3553, -33.8568], zoom: 11 },
@@ -374,6 +386,28 @@ function diveSiteMap({ sites }) {
                 this.map.setZoom(zoom);
             }
 
+            // Animate pulse effect
+            this.pulseInterval = setInterval(() => {
+              this.pulseTime += 0.05;
+              if (this.map.getSource('dive-sites')) {
+                // Update "timePhase" dynamically for the selected site(s)
+                const data = this.filteredSites.map(site => ({
+                  type: 'Feature',
+                  geometry: { type: 'Point', coordinates: [site.lng, site.lat] },
+                  properties: {
+                    id: site.id,
+                    color: this.getStatusColor(site.status || site.latestCondition?.status),
+                    selected: this.selectedSite && this.selectedSite.id === site.id,
+                    timePhase: this.pulseTime
+                  }
+                }));
+                this.map.getSource('dive-sites').setData({
+                  type: 'FeatureCollection',
+                  features: data
+                });
+              }
+            }, 50);
+
             // 🔁 Restore last selected site (from localStorage)
             const lastSlug = localStorage.getItem('vizzbud_last_site');
             if (lastSlug) {
@@ -392,13 +426,92 @@ function diveSiteMap({ sites }) {
                 // Add source for dive sites
                 this.map.addSource('dive-sites', {
                     type: 'geojson',
-                    data: { type: 'FeatureCollection', features: [] }
+                    data: { type: 'FeatureCollection', features: [] },
+                    cluster: true,                
+                    clusterRadius: 20,            
+                    clusterMaxZoom: 10,
+                    clusterProperties: {
+                      greenCount: ['+', ['case', ['==', ['get', 'color'], 'green'], 1, 0]],
+                      yellowCount: ['+', ['case', ['==', ['get', 'color'], 'yellow'], 1, 0]],
+                      redCount: ['+', ['case', ['==', ['get', 'color'], 'red'], 1, 0]],
+                    },
                 });
+
+                this.map.addLayer({
+                  id: 'clusters',
+                  type: 'circle',
+                  source: 'dive-sites',
+                  filter: ['has', 'point_count'],
+                  paint: {
+                    // 🟦 Deep Vizzbud blue gradient, stronger opacity
+                    'circle-color': [
+                      'interpolate',
+                      ['linear'],
+                      ['get', 'point_count'],
+                      0,   'rgba(30, 64, 175, 0.7)',   // blue-800
+                      10,  'rgba(37, 99, 235, 0.75)',  // blue-600
+                      30,  'rgba(59, 130, 246, 0.8)',  // blue-500
+                      100, 'rgba(96, 165, 250, 0.85)'  // blue-400 highlight
+                    ],
+
+                    // ⚙️ Dynamic radius scaling (slightly larger look)
+                    'circle-radius': [
+                      'step', ['get', 'point_count'],
+                      18,   // base
+                      10, 24,
+                      30, 30,
+                      100, 36
+                    ],
+
+                    // ✨ Crisp frosted edge
+                    'circle-stroke-color': 'rgba(255,255,255,0.9)',
+                    'circle-stroke-width': 2.5,
+
+                    // 🔮 Slightly stronger opacity for rich glass look
+                    'circle-opacity': 0.95
+                  }
+                });
+
+                this.map.addLayer({
+                  id: 'cluster-count',
+                  type: 'symbol',
+                  source: 'dive-sites',
+                  filter: ['has', 'point_count'],
+                  layout: {
+                    'text-field': ['get', 'point_count_abbreviated'],
+                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 13
+                  },
+                  paint: {
+                    'text-color': '#e0f2fe', // light cyan/white
+                    'text-halo-color': 'rgba(0,0,0,0.3)',
+                    'text-halo-width': 1.3
+                  }
+                });
+
+                // Zoom into cluster when clicked
+                this.map.on('click', 'clusters', (e) => {
+                  const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+                  const clusterId = features[0].properties.cluster_id;
+
+                  this.map.getSource('dive-sites').getClusterExpansionZoom(clusterId, (err, zoom) => {
+                    if (err) return;
+                    this.map.easeTo({
+                      center: features[0].geometry.coordinates,
+                      zoom
+                    });
+                  });
+                });
+
+                // Change cursor on hover
+                this.map.on('mouseenter', 'clusters', () => this.map.getCanvas().style.cursor = 'pointer');
+                this.map.on('mouseleave', 'clusters', () => this.map.getCanvas().style.cursor = '');
 
                 this.map.addLayer({
                   id: 'site-layer',
                   type: 'circle',
                   source: 'dive-sites',
+                  filter: ['!', ['has', 'point_count']],
                   paint: {
                     // solid inner dot (match your nav color)
                     'circle-color': '#0e7490', // Tailwind cyan-700
@@ -415,6 +528,29 @@ function diveSiteMap({ sites }) {
                       'case', ['boolean', ['get', 'selected'], false],
                       10,
                       7
+                    ]
+                  }
+                });
+
+                this.map.addLayer({
+                  id: 'site-pulse',
+                  type: 'circle',
+                  source: 'dive-sites',
+                  filter: ['==', ['get', 'selected'], true],
+                  paint: {
+                    'circle-radius': [
+                      '+',
+                      ['case', ['boolean', ['get', 'selected'], false], 10, 0],
+                      ['*', 2, ['abs', ['sin', ['*', ['number', ['get', 'timePhase']], Math.PI]]]]
+                    ],
+                    'circle-color': 'transparent',
+                    'circle-stroke-color': ['get', 'color'],
+                    'circle-stroke-width': 4,
+                    'circle-stroke-opacity': [
+                      'interpolate', ['linear'], ['sin', ['*', ['number', ['get', 'timePhase']], Math.PI]],
+                      -1, 0.2,
+                      0, 0.8,
+                      1, 0.2
                     ]
                   }
                 });
@@ -814,7 +950,7 @@ function diveSiteMap({ sites }) {
             geometry: { type: 'Point', coordinates: [site.lng, site.lat] },
             properties: {
               id: site.id,
-              color: this.getStatusColor(site.status || site.latestCondition?.status),
+              color: (site.status || site.latestCondition?.status || '').toLowerCase(),
               selected: this.selectedSite && this.selectedSite.id === site.id
             }
           }));
