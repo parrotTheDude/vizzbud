@@ -20,7 +20,6 @@
       }
 
       #mobileInfoPanel, #mobileInfoPanel * {
-        color: #1e293b; /* slate-800 */
         line-height: 1.6;
       }
     </style>
