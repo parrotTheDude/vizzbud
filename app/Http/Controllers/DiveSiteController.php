@@ -165,9 +165,12 @@ class DiveSiteController extends Controller
             return compact('formattedSites', 'siteOptions');
         });
 
+        $hasMapParams = $request->has(['lat', 'lng', 'zoom']) || $request->has('bbox');
+
         return view('dive-sites.index', [
             'sites'       => $payload['formattedSites'],
             'siteOptions' => $payload['siteOptions'],
+            'hasMapParams' => $hasMapParams,
         ]);
     }
 

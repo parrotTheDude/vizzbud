@@ -3,36 +3,49 @@
 @section('title', 'Dive Site Map | Vizzbud')
 @section('meta_description', 'Explore live scuba dive site conditions on an interactive map. Filter by dive level, type, and get wave, wind, and tide data for each location.')
 
+{{-- ✅ Canonical + conditional SEO tags --}}
+@section('head')
+  <link rel="canonical" href="{{ url('/dive-sites') }}">
+  @if (!empty($hasMapParams) && $hasMapParams)
+    <meta name="robots" content="noindex,follow">
+    <script>
+      // Clean up query params from the URL after load
+      window.addEventListener('load', () => {
+        const baseUrl = window.location.origin + '/dive-sites';
+        if (window.location.search.length > 0) {
+          window.history.replaceState({}, '', baseUrl);
+        }
+      });
+    </script>
+  @endif
+@endsection
+
 @push('head')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  {{-- Chart.js (optional; only if used on this page) --}}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
 
-    {{-- ✅ [1] Add CSS fallback and scroll improvements --}}
-    <style>
-      #map {
-        height: calc(100vh - 64px);
-        height: calc(100dvh - 64px); 
-      }
-      .bg-white\/25 { background-color: rgba(255, 255, 255, 0.35) !important; }
-      .bg-white\/30 { background-color: rgba(255, 255, 255, 0.45) !important; }
+  {{-- ✅ Inline CSS tweaks for the map --}}
+  <style>
+    #map {
+      height: calc(100vh - 64px);
+      height: calc(100dvh - 64px);
+    }
+    .bg-white\/25 { background-color: rgba(255, 255, 255, 0.35) !important; }
+    .bg-white\/30 { background-color: rgba(255, 255, 255, 0.45) !important; }
 
-      #mobileInfoPanel .overflow-y-auto {
-        -webkit-overflow-scrolling: touch;
-      }
+    #mobileInfoPanel .overflow-y-auto { -webkit-overflow-scrolling: touch; }
+    #mobileInfoPanel, #mobileInfoPanel * { line-height: 1.6; }
 
-      #mobileInfoPanel, #mobileInfoPanel * {
-        line-height: 1.6;
-      }
-
-      @keyframes pulseRing {
-        0% { r: 7; opacity: 0.8; }
-        70% { r: 14; opacity: 0; }
-        100% { r: 7; opacity: 0; }
-      }
-      .mapboxgl-marker-pulse circle {
-        animation: pulseRing 1.8s ease-out infinite;
-        transform-origin: center;
-      }
-    </style>
+    @keyframes pulseRing {
+      0% { r: 7; opacity: 0.8; }
+      70% { r: 14; opacity: 0; }
+      100% { r: 7; opacity: 0; }
+    }
+    .mapboxgl-marker-pulse circle {
+      animation: pulseRing 1.8s ease-out infinite;
+      transform-origin: center;
+    }
+  </style>
 @endpush
 
 @section('content')
