@@ -17,8 +17,15 @@ class DiveSiteController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                ->orWhere('region', 'like', "%{$search}%")
-                ->orWhere('country', 'like', "%{$search}%");
+                ->orWhereHas('region', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhereHas('state', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%")
+                            ->orWhereHas('country', function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%");
+                            });
+                        });
+                });
             });
         }
 
@@ -46,6 +53,7 @@ class DiveSiteController extends Controller
     {
         return view('admin.divesites.create', [
             'mapboxToken' => config('services.mapbox.token'),
+            'regions' => \App\Models\Region::orderBy('name')->get(),
         ]);
     }
 
@@ -55,17 +63,16 @@ class DiveSiteController extends Controller
             'name' => 'required|string|max:191',
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
-            'region' => 'required|string|max:191',
-            'country' => 'required|string|max:191',
+            'region_id' => 'required|exists:regions,id',
             'dive_type' => 'required|in:shore,boat',
             'suitability' => 'required|in:Open Water,Advanced,Deep',
         ]);
 
-        $validated['slug'] = \Illuminate\Support\Str::slug($validated['name']);
-        $validated['is_active'] = false; 
+        $validated['slug'] = Str::slug($validated['name']);
+        $validated['is_active'] = false;
         $validated['needs_review'] = true;
 
-        $site = \App\Models\DiveSite::create($validated);
+        $site = DiveSite::create($validated);
 
         return redirect()
             ->route('admin.divesites.edit', $site->slug)
@@ -75,7 +82,8 @@ class DiveSiteController extends Controller
     public function edit(DiveSite $diveSite)
     {
         return view('admin.divesites.edit', [
-            'site' => $diveSite, 
+            'site' => $diveSite,
+            'regions' => \App\Models\Region::orderBy('name')->get(),
             'mapboxToken' => config('services.mapbox.token'),
         ]);
     }
@@ -86,8 +94,7 @@ class DiveSiteController extends Controller
             'name' => 'required|string|max:191',
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
-            'region' => 'nullable|string|max:191',
-            'country' => 'nullable|string|max:191',
+            'region_id' => 'nullable|exists:regions,id',
             'timezone' => 'nullable|string|max:64',
             'dive_type' => 'nullable|in:shore,boat',
             'suitability' => 'nullable|in:Open Water,Advanced,Deep',

@@ -72,20 +72,25 @@
         Drag or click on the map to reposition the dive site. Region and country will auto-fill.
         </p>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-            <label class="block text-sm mb-1 text-white/70">Region</label>
-            <input type="text" name="region" id="region" value="{{ old('region', $site->region) }}"
-                class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
+          <select name="region_id" id="region_id"
+                  class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
                         focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
-        </div>
+            <option value="">— Select Region —</option>
+            @foreach($regions as $region)
+              <option value="{{ $region->id }}"
+                      data-region="{{ strtolower($region->name) }}"
+                      data-state="{{ strtolower($region->state->name) }}"
+                      data-country="{{ strtolower($region->state->country->name) }}"
+                      @selected(old('region_id', $site->region_id) == $region->id)>
+                {{ $region->name }} ({{ $region->state->name }}, {{ $region->state->country->name }})
+              </option>
+            @endforeach
+          </select>
 
-        <div>
-            <label class="block text-sm mb-1 text-white/70">Country</label>
-            <input type="text" name="country" id="country" value="{{ old('country', $site->country) }}"
-                class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
-                        focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
-        </div>
+          <p id="regionSuggestion" class="text-xs text-amber-300 mt-2 hidden">
+            Suggested region: <span class="font-semibold"></span>
+          </p>
         </div>
     </div>
     </div>
@@ -289,20 +294,57 @@ document.addEventListener('DOMContentLoaded', () => {
         latInput.value = lat.toFixed(6);
         lngInput.value = lng.toFixed(6);
 
-        // 🔄 Reverse geocode region & country
         const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`;
 
         fetch(url)
           .then(res => res.json())
           .then(data => {
               const context = data.features[0]?.context || [];
-              const region = context.find(c => c.id.startsWith('region'))?.text || '';
-              const country = context.find(c => c.id.startsWith('country'))?.text || '';
+              const place = data.features[0];
 
-              if (region) regionInput.value = region;
-              if (country) countryInput.value = country;
+              const regionName =
+                  context.find(c => c.id.startsWith('region'))?.text ||
+                  place?.text || '';
+              const stateName =
+                  context.find(c => c.id.startsWith('province'))?.text ||
+                  context.find(c => c.id.startsWith('state'))?.text || '';
+              const countryName =
+                  context.find(c => c.id.startsWith('country'))?.text || '';
+
+              console.log('Detected:', { regionName, stateName, countryName });
+
+              const regionSelect = document.getElementById('region_id');
+              const suggestionEl = document.getElementById('regionSuggestion');
+              const options = Array.from(regionSelect.options);
+
+              // Try exact match: region + state + country
+              const match = options.find(opt =>
+                  opt.dataset.region === regionName.toLowerCase() &&
+                  opt.dataset.state === stateName.toLowerCase() &&
+                  opt.dataset.country === countryName.toLowerCase()
+              );
+
+              if (match) {
+                  regionSelect.value = match.value;
+                  suggestionEl.classList.add('hidden');
+              } else {
+                  // Try fallback: partial match (region only)
+                  const partial = options.find(opt =>
+                      opt.dataset.region === regionName.toLowerCase()
+                  );
+
+                  if (partial) {
+                      regionSelect.value = partial.value;
+                      suggestionEl.classList.add('hidden');
+                  } else {
+                      // No direct match — suggest one visually
+                      suggestionEl.querySelector('span').textContent =
+                          `${regionName} (${stateName}, ${countryName})`;
+                      suggestionEl.classList.remove('hidden');
+                  }
+              }
           })
-          .catch(err => console.error('Geocoding failed', err));
+          .catch(err => console.error('Geocoding failed:', err));
     }
 
     // Drag marker

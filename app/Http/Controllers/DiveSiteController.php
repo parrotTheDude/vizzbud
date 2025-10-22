@@ -27,9 +27,11 @@ class DiveSiteController extends Controller
             $sitesQuery = DiveSite::query()
                 ->select([
                     'id','slug','name','description','lat','lng',
+                    'region_id',
                     'max_depth','avg_depth','dive_type','suitability','timezone',
                 ])
                 ->with([
+                    'region.state.country',
                     // Latest snapshot
                     'latestCondition' => function ($q) {
                         $q->select([

@@ -1,7 +1,7 @@
 @extends('layouts.vizzbud')
 
 @section('title', "{$diveSite->name} Dive Guide | Conditions, Entry, Depth & Marine Life")
-@section('meta_description', "How to dive {$diveSite->name}: entry points, depth, hazards, marine life, and live dive conditions. Updated forecasts and local tips for divers in {$diveSite->region}.")
+@section('meta_description', "How to dive {$diveSite->name}: entry points, depth, hazards, marine life, and live dive conditions. Updated forecasts and local tips for divers in {$diveSite->region->name}, {$diveSite->region->state->name}, {$diveSite->region->state->country->name}.")
 
 @php
   use App\Helpers\CompassHelper;
@@ -54,7 +54,11 @@
       <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-2">
         {{ $diveSite->name }} Dive Guide
       </h1>
-      <p class="text-slate-300 text-sm">{{ $diveSite->region }}, {{ $diveSite->country }}</p>
+      <p class="text-slate-300 text-sm">
+        {{ optional($diveSite->region)->name ?? 'Unknown Region' }},
+        {{ optional($diveSite->region?->state)->abbreviation ?? optional($diveSite->region?->state)->name ?? 'Unknown State' }},
+        {{ optional($diveSite->region?->state?->country)->name ?? 'Unknown Country' }}
+      </p>
 
       {{-- 📸 Image Credit --}}
       @if($featuredPhoto && ($photoArtist || $photoCreditLink))
@@ -433,8 +437,10 @@
                 <div class="absolute bottom-3 left-3 right-3 text-white drop-shadow-sm">
                   <h3 class="text-base font-semibold leading-tight">{{ $site->name }}</h3>
                   <p class="text-xs text-white/70 mt-0.5">
-                    @if($site->region || $site->country)
-                      {{ $site->region ? $site->region . ', ' : '' }}{{ $site->country }}
+                    @if($site->region || $site->region?->state)
+                      {{ optional($site->region)->name }},
+                      {{ optional($site->region?->state)->abbreviation ?? optional($site->region?->state)->name }},
+                      {{ optional($site->region?->state?->country)->name }}
                       <span class="opacity-50 mx-1">•</span>
                     @endif
                     {{ number_format($site->distance, 1) }} km away
@@ -445,7 +451,11 @@
           @endforeach
         </div>
         <p class="text-slate-400 text-sm mt-8">
-          Looking for more? See other <a href="{{ route('dive-sites.index', ['region' => $diveSite->region]) }}" class="text-cyan-400 hover:underline">dive sites in {{ $diveSite->region }}</a>
+          Looking for more? See other 
+          @php $regionName = optional($diveSite->region)->name ?? 'this region'; @endphp
+          <a href="{{ route('dive-sites.index', ['region' => optional($diveSite->region)->slug]) }}" class="text-cyan-400 hover:underline">
+            dive sites in {{ $regionName }}
+          </a>
         </p>
       </div>
     @endif

@@ -21,7 +21,6 @@ class DiveSiteSearchController extends Controller
         $worldwide = filter_var($request->input('worldwide'), FILTER_VALIDATE_BOOLEAN);
         $radiusKm = $request->input('radius', 200);
 
-        // 🧩 Early exit guard
         if (!$query && !$lat && !$lng) {
             return response()->json([
                 'results' => [],
@@ -30,18 +29,19 @@ class DiveSiteSearchController extends Controller
             ]);
         }
 
-        // 🌏 Detect user country (if coords provided)
         $userCountry = $request->input('country') ?: $this->getCountryFromCoords($lat, $lng);
 
         // --- 1️⃣ Local search attempt ---
-        $sites = DiveSite::query();
+        $sites = DiveSite::query()->with('region.state.country');
 
         if ($query) {
             $sites->where(function ($q) use ($query) {
                 $q->whereRaw('SOUNDEX(name) = SOUNDEX(?)', [$query])
                 ->orWhere('name', 'like', "%{$query}%")
-                ->orWhere('region', 'like', "%{$query}%")
-                ->orWhere('country', 'like', "%{$query}%");
+                // Search by region/state/country names via relationships
+                ->orWhereHas('region', fn($r) => $r->where('name', 'like', "%{$query}%"))
+                ->orWhereHas('region.state', fn($s) => $s->where('name', 'like', "%{$query}%"))
+                ->orWhereHas('region.state.country', fn($c) => $c->where('name', 'like', "%{$query}%"));
             });
         }
 
@@ -59,23 +59,25 @@ class DiveSiteSearchController extends Controller
         }
 
         if (!$worldwide && $userCountry) {
-            $sites->where('country', 'like', "%{$userCountry}%");
+            $sites->whereHas('region.state.country', fn($q) =>
+                $q->where('name', 'like', "%{$userCountry}%")
+            );
         }
 
         $results = $sites->limit(50)->get();
 
-        // --- 2️⃣ If no results locally, retry with expanded search ---
+        // --- 2️⃣ Expanded / worldwide fallback ---
         if ($results->isEmpty() && !$worldwide) {
-
-            // First try expanding the radius a few times
             if ($lat && $lng) {
                 foreach ([500, 1000] as $expandedRadius) {
                     $expanded = DiveSite::query()
+                        ->with('region.state.country')
                         ->when($query, function ($q) use ($query) {
                             $q->whereRaw('SOUNDEX(name) = SOUNDEX(?)', [$query])
                             ->orWhere('name', 'like', "%{$query}%")
-                            ->orWhere('region', 'like', "%{$query}%")
-                            ->orWhere('country', 'like', "%{$query}%");
+                            ->orWhereHas('region', fn($r) => $r->where('name', 'like', "%{$query}%"))
+                            ->orWhereHas('region.state', fn($s) => $s->where('name', 'like', "%{$query}%"))
+                            ->orWhereHas('region.state.country', fn($c) => $c->where('name', 'like', "%{$query}%"));
                         })
                         ->selectRaw("
                             dive_sites.*,
@@ -97,14 +99,15 @@ class DiveSiteSearchController extends Controller
                 }
             }
 
-            // If still empty, fallback to worldwide
             if ($results->isEmpty()) {
                 $results = DiveSite::query()
+                    ->with('region.state.country')
                     ->when($query, function ($q) use ($query) {
                         $q->whereRaw('SOUNDEX(name) = SOUNDEX(?)', [$query])
                         ->orWhere('name', 'like', "%{$query}%")
-                        ->orWhere('region', 'like', "%{$query}%")
-                        ->orWhere('country', 'like', "%{$query}%");
+                        ->orWhereHas('region', fn($r) => $r->where('name', 'like', "%{$query}%"))
+                        ->orWhereHas('region.state', fn($s) => $s->where('name', 'like', "%{$query}%"))
+                        ->orWhereHas('region.state.country', fn($c) => $c->where('name', 'like', "%{$query}%"));
                     })
                     ->limit(50)
                     ->get();
@@ -116,8 +119,9 @@ class DiveSiteSearchController extends Controller
             return [
                 'id' => $site->id,
                 'name' => trim($site->name),
-                'region' => $site->region,
-                'country' => $site->country,
+                'region' => optional($site->region)->name,
+                'state' => optional($site->region?->state)->abbreviation ?? optional($site->region?->state)->name,
+                'country' => optional($site->region?->state?->country)->name,
                 'lat' => $site->lat,
                 'lng' => $site->lng,
                 'distance_km' => isset($site->distance_km)

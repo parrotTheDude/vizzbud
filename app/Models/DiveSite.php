@@ -19,8 +19,7 @@ class DiveSite extends Model
         'lat',
         'lng',
         'timezone',
-        'country',
-        'region',
+        'region_id',
         'max_depth',
         'avg_depth',
         'dive_type',
@@ -198,16 +197,19 @@ class DiveSite extends Model
     public function nearbySites($limit = 3)
     {
         return static::query()
-            ->with(['photos' => function ($q) {
-                $q->where('is_featured', true)->limit(1);
-            }])
+            ->with([
+                'photos' => fn($q) => $q->where('is_featured', true)->limit(1),
+                'region.state.country'
+            ])
             ->where('id', '!=', $this->id)
-            ->select('id', 'name', 'slug', 'lat', 'lng', 'region', 'country')
+            ->select('id', 'name', 'slug', 'lat', 'lng', 'region_id')
             ->selectRaw('
                 (6371 * acos(
                     cos(radians(?)) * cos(radians(lat)) * cos(radians(lng) - radians(?)) +
                     sin(radians(?)) * sin(radians(lat))
-                )) AS distance', [$this->lat, $this->lng, $this->lat])
+                )) AS distance',
+                [$this->lat, $this->lng, $this->lat]
+            )
             ->orderBy('distance')
             ->limit($limit)
             ->get();
@@ -217,5 +219,9 @@ class DiveSite extends Model
     public function diveLogs()
     {
         return $this->hasMany(UserDiveLog::class, 'dive_site_id');
+    }
+
+    public function region() {
+        return $this->belongsTo(Region::class);
     }
 }
