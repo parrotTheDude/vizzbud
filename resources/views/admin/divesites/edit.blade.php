@@ -134,45 +134,99 @@
       </div>
     </div>
 
-    {{-- Notes & Description --}}
+    {{-- 📝 Description & Notes --}}
     <div>
       <h2 class="text-lg font-semibold mb-4 text-white/90">Description & Notes</h2>
 
+      <div class="space-y-6">
+        {{-- Description --}}
+        <div>
+          <label class="block text-base mb-2 text-white/80">Description</label>
+          <textarea name="description" rows="5"
+            class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
+                  focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
+                  placeholder-white/30">{{ old('description', $site->description) }}</textarea>
+        </div>
+
+        {{-- Hazards --}}
+        <div>
+          <label class="block text-base mb-2 text-white/80">Hazards</label>
+          <textarea name="hazards" rows="4"
+            class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
+                  focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
+                  placeholder-white/30">{{ old('hazards', $site->hazards) }}</textarea>
+        </div>
+
+        {{-- Pro Tips --}}
+        <div>
+          <label class="block text-base mb-2 text-white/80">Pro Tips</label>
+          <textarea name="pro_tips" rows="4"
+            class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
+                  focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
+                  placeholder-white/30">{{ old('pro_tips', $site->pro_tips) }}</textarea>
+        </div>
+
+        {{-- Entry Notes --}}
+        <div>
+          <label class="block text-base mb-2 text-white/80">Entry Notes</label>
+          <textarea name="entry_notes" rows="4"
+            class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
+                  focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
+                  placeholder-white/30">{{ old('entry_notes', $site->entry_notes) }}</textarea>
+        </div>
+
+        {{-- Parking Notes --}}
+        <div>
+          <label class="block text-base mb-2 text-white/80">Parking Notes</label>
+          <textarea name="parking_notes" rows="4"
+            class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
+                  focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
+                  placeholder-white/30">{{ old('parking_notes', $site->parking_notes) }}</textarea>
+        </div>
+
+        {{-- Marine Life --}}
+        <div>
+          <label class="block text-base mb-2 text-white/80">Marine Life</label>
+          <textarea name="marine_life" rows="4"
+            class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
+                  focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
+                  placeholder-white/30">{{ old('marine_life', $site->marine_life) }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    {{-- 🗺️ Dive Map --}}
+    <div>
+      <h2 class="text-lg font-semibold mb-4 text-white/90">Dive Map</h2>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="sm:col-span-2">
-          <label class="block text-sm mb-1 text-white/70">Description</label>
-          <textarea name="description" rows="4"
-                    class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
-                           focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">{{ old('description', $site->description) }}</textarea>
+          <label class="block text-sm mb-1 text-white/70">Map Image Path</label>
+          <input type="text" name="map_image_path" value="{{ old('map_image_path', $site->map_image_path) }}"
+                placeholder="e.g. images/divesites/3-gordons-bay/gordons-bay-site-map.webp"
+                class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
+                        focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
+          <p class="text-xs text-white/50 mt-1">
+            Use a relative path from <code>public/</code>. Example: <code>images/divesites/3-gordons-bay/map.webp</code>
+          </p>
         </div>
 
-        <div>
-          <label class="block text-sm mb-1 text-white/70">Hazards</label>
-          <textarea name="hazards" rows="3"
-                    class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
-                           focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">{{ old('hazards', $site->hazards) }}</textarea>
+        <div class="sm:col-span-2">
+          <label class="block text-sm mb-1 text-white/70">Map Caption</label>
+          <input type="text" name="map_caption" value="{{ old('map_caption', $site->map_caption) }}"
+                placeholder="e.g. Gordon’s Bay dive route with key points marked"
+                class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
+                        focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
         </div>
 
-        <div>
-          <label class="block text-sm mb-1 text-white/70">Pro Tips</label>
-          <textarea name="pro_tips" rows="3"
-                    class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
-                           focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">{{ old('pro_tips', $site->pro_tips) }}</textarea>
-        </div>
-
-        <div>
-          <label class="block text-sm mb-1 text-white/70">Entry Notes</label>
-          <textarea name="entry_notes" rows="3"
-                    class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
-                           focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">{{ old('entry_notes', $site->entry_notes) }}</textarea>
-        </div>
-
-        <div>
-          <label class="block text-sm mb-1 text-white/70">Parking Notes</label>
-          <textarea name="parking_notes" rows="3"
-                    class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
-                           focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">{{ old('parking_notes', $site->parking_notes) }}</textarea>
-        </div>
+        @if($site->map_image_path)
+          <div class="sm:col-span-2">
+            <p class="text-sm text-white/70 mb-2">Current Map Preview</p>
+            <img src="{{ asset($site->map_image_path) }}" 
+                alt="Current dive map"
+                class="w-full max-h-96 object-contain rounded-xl border border-white/10 shadow-md">
+          </div>
+        @endif
       </div>
     </div>
 

@@ -30,6 +30,8 @@ class DiveSite extends Model
         'entry_notes',
         'parking_notes',
         'marine_life',
+        'map_image_path',   
+        'map_caption', 
         'source',
         'is_active',
         'needs_review',
