@@ -1,7 +1,7 @@
 @extends('layouts.vizzbud')
 
-@section('title', $diveSite->name . ' | Dive Site Info')
-@section('meta_description', Str::limit(strip_tags($diveSite->description), 160))
+@section('title', "{$diveSite->name} Dive Guide | Conditions, Entry, Depth & Marine Life")
+@section('meta_description', "How to dive {$diveSite->name}: entry points, depth, hazards, marine life, and live dive conditions. Updated forecasts and local tips for divers in {$diveSite->region}.")
 
 @php
   use App\Helpers\CompassHelper;
@@ -16,7 +16,7 @@
 @endphp
 
 @push('head')
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">  
 @endpush
 
 @section('content')
@@ -51,13 +51,10 @@
     <div class="absolute inset-0 bg-gradient-to-t rounded-b-3xl from-slate-900/90 via-slate-900/40 to-transparent"></div>
 
     <div class="absolute bottom-4 left-0 right-0 flex flex-col items-center text-center px-4">
-      <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-md mb-1">
-        {{ $diveSite->name }}
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-2">
+        {{ $diveSite->name }} Dive Guide
       </h1>
-
-      <p class="text-slate-300 text-xs sm:text-sm font-medium mb-0.5">
-        {{ $diveSite->region }}, {{ $diveSite->country }}
-      </p>
+      <p class="text-slate-300 text-sm">{{ $diveSite->region }}, {{ $diveSite->country }}</p>
 
       {{-- 📸 Image Credit --}}
       @if($featuredPhoto && ($photoArtist || $photoCreditLink))
@@ -297,93 +294,139 @@
       </div>
     @endif
 
-    {{-- 🌏 Local Intel --}}
-    @if($diveSite->hazards || $diveSite->entry_notes || $diveSite->parking_notes || $diveSite->marine_life || $diveSite->pro_tips)
-      <div class="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-2xl 
+@php
+  $hasDiveInfo = $diveSite->description || $diveSite->entry_notes || $diveSite->parking_notes ||
+                $diveSite->hazards || $diveSite->marine_life || $diveSite->pro_tips ||
+                $diveSite->suitability || $diveSite->dive_type || $diveSite->max_depth || $diveSite->avg_depth;
+@endphp
+
+@if($hasDiveInfo)
+  <section class="rounded-3xl p-6 sm:p-10 bg-white/10 backdrop-blur-2xl 
                   border border-white/15 ring-1 ring-white/10 shadow-xl w-full text-center mb-16">
-        <h2 class="text-white font-semibold text-lg sm:text-xl mb-6">
-          Local Intel
-        </h2>
+    
+    <h2 class="text-white font-semibold text-xl sm:text-2xl mb-10 tracking-tight">
+      How to Dive {{ $diveSite->name }}
+    </h2>
 
-        <div class="space-y-3 text-sm text-slate-300 text-left sm:text-center sm:mx-auto sm:max-w-3xl">
-          @if($diveSite->hazards)
-            <p><strong class="text-white">Hazards:</strong> {{ $diveSite->hazards }}</p>
-          @endif
+    <div class="space-y-10 text-slate-300 leading-relaxed text-[15px] text-left sm:text-center sm:max-w-3xl mx-auto">
+{{-- 🗺️ Dive Map --}}
+@if($diveSite->map_image_path)
+  <div 
+    x-data="{ open: false }" 
+    class="p-5 rounded-2xl bg-white/5 border border-white/10 overflow-hidden shadow-md"
+  >
+    <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-4">
+      Dive Map
+    </h3>
 
-          @if($diveSite->entry_notes)
-            <p><strong class="text-white">Entry Notes:</strong> {{ $diveSite->entry_notes }}</p>
-          @endif
+    {{-- Thumbnail preview --}}
+    <div 
+      @click="open = true"
+      class="relative cursor-zoom-in group"
+    >
+      <img 
+        src="{{ asset($diveSite->map_image_path) }}" 
+        alt="Dive map for {{ $diveSite->name }}"
+        class="w-full h-64 sm:h-80 object-cover rounded-xl border border-white/10 shadow-lg 
+               transition-transform duration-300 group-hover:scale-[1.02]"
+        loading="lazy"
+      >
+      <div class="absolute inset-0 bg-slate-900/20 group-hover:bg-slate-900/30 
+                  transition-colors duration-300 rounded-xl flex items-center justify-center">
+        <span class="hidden group-hover:flex text-xs text-white/80 bg-slate-800/70 
+                     px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
+          Click to view full map
+        </span>
+      </div>
+    </div>
 
-          @if($diveSite->parking_notes)
-            <p><strong class="text-white">Parking Info:</strong> {{ $diveSite->parking_notes }}</p>
-          @endif
+    {{-- Caption --}}
+    @if($diveSite->map_caption)
+      <p class="text-xs text-white/60 mt-2 text-center italic">
+        {{ $diveSite->map_caption }}
+      </p>
+    @endif
 
-          @if($diveSite->marine_life)
-            <p><strong class="text-white">Marine Life:</strong> {{ $diveSite->marine_life }}</p>
-          @endif
+    {{-- Fullscreen lightbox --}}
+    <template x-if="open">
+      <div 
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        x-show="open"
+        x-transition.opacity
+        @click.self="open = false"
+      >
+        <div class="relative max-w-6xl w-full p-4">
+          <button 
+            @click="open = false"
+            class="absolute top-4 right-4 text-white/80 hover:text-white bg-slate-800/70 
+                   rounded-full p-2 backdrop-blur-md border border-white/10"
+            title="Close"
+          >
+            ✕
+          </button>
+          <img 
+            src="{{ asset($diveSite->map_image_path) }}" 
+            alt="Full dive map for {{ $diveSite->name }}"
+            class="w-full h-auto max-h-[90vh] object-contain rounded-2xl border border-white/10 shadow-2xl"
+          >
         </div>
+      </div>
+    </template>
+  </div>
+@endif
 
-        @if($diveSite->pro_tips)
-          <div class="mt-6 rounded-xl bg-amber-500/10 border border-amber-400/30 p-4 sm:mx-auto sm:max-w-3xl">
-            <p class="text-amber-100 text-sm leading-relaxed">
-              <strong class="text-amber-300">Pro Tip:</strong> {{ $diveSite->pro_tips }}
-            </p>
+      {{-- ✏️ Overview --}}
+      @if($diveSite->description)
+        <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+          <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Overview</h3>
+          <p class="text-white/90 text-base sm:text-[17px] leading-relaxed">
+            {{ $diveSite->description }}
+          </p>
+        </div>
+      @endif
+
+      {{-- 🚪 Entry & Access --}}
+      @if($diveSite->entry_notes || $diveSite->parking_notes)
+        <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+          <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Entry & Access</h3>
+          <div class="space-y-2">
+            @if($diveSite->entry_notes)
+              <p><strong class="text-white">Entry:</strong> {{ $diveSite->entry_notes }}</p>
+            @endif
+            @if($diveSite->parking_notes)
+              <p><strong class="text-white">Parking:</strong> {{ $diveSite->parking_notes }}</p>
+            @endif
           </div>
-        @endif
-      </div>
-    @endif
-
-    {{-- 📖 About Section --}}
-    @php
-      $hasAboutContent = $diveSite->description || $diveSite->history || $diveSite->what_to_see || $diveSite->recommended_level;
-    @endphp
-
-    @if ($hasAboutContent)
-      <div class="rounded-3xl p-6 sm:p-8 bg-white/10 backdrop-blur-2xl 
-                  border border-white/15 ring-1 ring-white/10 shadow-xl w-full text-center">
-        
-        {{-- Centered Title --}}
-        <h2 class="text-white font-semibold text-lg sm:text-xl mb-6">
-          About This Site
-        </h2>
-
-        {{-- Content --}}
-        <div class="space-y-6 text-slate-300 leading-relaxed text-[15px] text-left sm:text-center sm:mx-auto sm:max-w-3xl">
-          @if($diveSite->description)
-            <p class="text-white/90 text-base sm:text-[17px] leading-relaxed">
-              {{ $diveSite->description }}
-            </p>
-          @endif
-
-          @if($diveSite->history)
-            <div>
-              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">
-                History
-              </h4>
-              <p>{{ $diveSite->history }}</p>
-            </div>
-          @endif
-
-          @if($diveSite->what_to_see)
-            <div>
-              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">
-                What to See
-              </h4>
-              <p>{{ $diveSite->what_to_see }}</p>
-            </div>
-          @endif
-
-          @if($diveSite->recommended_level)
-            <div>
-              <h4 class="text-white font-semibold text-sm uppercase tracking-wide mb-1">
-                Recommended Level
-              </h4>
-              <p>{{ ucfirst($diveSite->recommended_level) }}</p>
-            </div>
-          @endif
         </div>
-      </div>
-    @endif
+      @endif
+
+      {{-- ⚠️ Hazards --}}
+      @if($diveSite->hazards)
+        <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+          <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Hazards</h3>
+          <p>{{ $diveSite->hazards }}</p>
+        </div>
+      @endif
+
+      {{-- 🐠 Marine Life --}}
+      @if($diveSite->marine_life)
+        <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+          <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Marine Life</h3>
+          <p>{{ $diveSite->marine_life }}</p>
+        </div>
+      @endif
+
+      {{-- 💡 Pro Tips --}}
+      @if($diveSite->pro_tips)
+        <div class="p-6 rounded-2xl bg-amber-500/10 border border-amber-400/30">
+          <h3 class="text-amber-300 font-semibold text-base uppercase tracking-wide mb-3">Pro Tip</h3>
+          <p class="text-amber-100 text-sm leading-relaxed">{{ $diveSite->pro_tips }}</p>
+        </div>
+      @endif
+
+    </div>
+  </section>
+@endif
 
     {{-- 📍 Nearby Dive Sites --}}
     @if(isset($nearbySites) && $nearbySites->isNotEmpty())
@@ -429,6 +472,9 @@
             </a>
           @endforeach
         </div>
+        <p class="text-slate-400 text-sm mt-8">
+          Looking for more? See other <a href="{{ route('dive-sites.index', ['region' => $diveSite->region]) }}" class="text-cyan-400 hover:underline">dive sites in {{ $diveSite->region }}</a>
+        </p>
       </div>
     @endif
 
