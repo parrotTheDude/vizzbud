@@ -3,7 +3,6 @@
 @section('title', 'Dive Site Map | Vizzbud')
 @section('meta_description', 'Explore live scuba dive site conditions on an interactive map. Filter by dive level, type, and get wave, wind, and tide data for each location.')
 
-{{-- ✅ Canonical + conditional SEO tags --}}
 @section('head')
   <link rel="canonical" href="{{ url('/dive-sites') }}">
   @if (!empty($hasMapParams) && $hasMapParams)
@@ -323,6 +322,59 @@
       @include('dive-sites.partials.info', ['chartId' => 'swellChart-mobile'])
     </div>
   </div>
+
+<!-- Location Permission Popup -->
+<div
+  x-cloak
+  x-show="showLocationPrompt"
+  x-transition.opacity
+  style="display:none;"
+  class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
+>
+  <div
+    class="relative max-w-sm w-[90%] p-6 rounded-2xl text-center
+           border border-white/20 ring-1 ring-cyan-500/20
+           bg-gradient-to-br from-slate-800/90 via-blue-900/80 to-slate-800/90
+           backdrop-blur-xl backdrop-saturate-150
+           shadow-[0_8px_32px_rgba(14,165,233,0.35)]
+           text-white"
+  >
+    <!-- Subtle cyan glow accent -->
+    <div class="pointer-events-none absolute inset-x-6 top-2 h-10 rounded-full bg-cyan-400/30 blur-2xl"></div>
+
+    <h3 class="text-xl font-semibold mb-3 tracking-tight text-white">Use your location?</h3>
+    <p class="text-sm text-slate-100/90 leading-relaxed mb-6">
+      Vizzbud can use your device’s location to center the map on nearby dive sites.<br>
+      This is optional — no data is stored.
+    </p>
+
+    <div class="flex justify-center gap-3">
+      <!-- Confirm button -->
+      <button
+        @click="requestLocation(); showLocationPrompt = false;"
+        class="px-5 py-2.5 rounded-xl font-semibold text-white
+               bg-gradient-to-r from-cyan-500 to-blue-500
+               hover:from-cyan-400 hover:to-blue-400
+               shadow-md hover:shadow-lg hover:scale-[1.03]
+               focus:outline-none focus:ring-2 focus:ring-cyan-300 transition-all duration-200"
+      >
+        Yes, use it
+      </button>
+
+      <!-- Decline button -->
+      <button
+        @click="localStorage.setItem('vizzbud_seen_location_prompt', 'true'); showLocationPrompt = false;"
+        class="px-5 py-2.5 rounded-xl font-semibold text-white/80
+               bg-white/10 hover:bg-white/20
+               border border-white/30 shadow-sm
+               focus:outline-none focus:ring-2 focus:ring-slate-200/50
+               transition-all duration-200"
+      >
+        No, thanks
+      </button>
+    </div>
+  </div>
+</div>
 @endsection
 
 @push('head')
@@ -349,6 +401,9 @@ function diveSiteMap({ sites }) {
         dragging: false,
         pulseTime: 0,
         pulseInterval: null,
+        showLocationPrompt: false,
+        hasSeenLocationPrompt: false,
+        locationPromptAccepted: false,
 
 
         initialDesktop: { center: [151.3553, -33.8568], zoom: 11 },
@@ -595,19 +650,6 @@ function diveSiteMap({ sites }) {
 
             this.map.on('click', () => {
                 this.selectedSite = null;
-            });
-
-            navigator.geolocation.getCurrentPosition(position => {
-                this.userLat = position.coords.latitude;
-                this.userLng = position.coords.longitude;
-
-                if (!this.hasInteracted && !this.selectedSite) {
-                    this.map.flyTo({
-                        center: [this.userLng, this.userLat],
-                        zoom: 11,
-                        speed: 0.8
-                    });
-                }
             });
 
             this.$watch('filterLevel', () => this.renderSites());
@@ -910,6 +952,40 @@ function diveSiteMap({ sites }) {
                     });
                 }, 50);
             });
+            // 🧠 Show location popup on first visit only
+            this.hasSeenLocationPrompt = localStorage.getItem('vizzbud_seen_location_prompt') === 'true';
+            if (!this.hasSeenLocationPrompt) {
+              setTimeout(() => {
+                this.showLocationPrompt = true;
+              }, 1200); // wait a bit so it’s not instant on load
+            }
+        },
+
+        requestLocation() {
+          localStorage.setItem('vizzbud_seen_location_prompt', 'true');
+
+          if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser.');
+            return;
+          }
+
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              this.userLat = position.coords.latitude;
+              this.userLng = position.coords.longitude;
+              this.locationPromptAccepted = true;
+
+              this.map.flyTo({
+                center: [this.userLng, this.userLat],
+                zoom: 11,
+                speed: 0.8
+              });
+            },
+            (error) => {
+              console.warn('Location access denied or unavailable:', error);
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+          );
         },
 
         mapStyle: localStorage.getItem('vizzbud_map_style') || 'streets',
