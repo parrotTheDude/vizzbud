@@ -129,15 +129,20 @@
           ]"
         >
           <div class="font-semibold text-slate-900 truncate tracking-wide" x-text="site.name"></div>
-          <div class="text-xs text-slate-700 mt-0.5 truncate opacity-90">
-            <template x-if="site.region || site.country">
-              <span>
-                <span x-text="site.region || ''"></span>
-                <template x-if="site.region && site.country">, </template>
-                <span x-text="site.country || ''"></span>
-              </span>
-            </template>
-          </div>
+<div class="text-xs text-slate-700 mt-0.5 truncate opacity-90">
+  <template x-if="site.region || site.country">
+    <span>
+      <template x-if="site.region">
+        <span>
+          <span x-text="site.region"></span><span x-show="site.country">,</span>
+        </span>
+      </template>
+      <template x-if="site.country">
+        <span x-text="' ' + site.country"></span>
+      </template>
+    </span>
+  </template>
+</div>
         </li>
       </template>
     </ul>
