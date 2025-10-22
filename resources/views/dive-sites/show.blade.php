@@ -304,77 +304,48 @@
   <section class="rounded-3xl p-6 sm:p-10 bg-white/10 backdrop-blur-2xl 
                   border border-white/15 ring-1 ring-white/10 shadow-xl w-full text-center mb-16">
     
-    <h2 class="text-white font-semibold text-xl sm:text-2xl mb-10 tracking-tight">
+    <h2 class="text-white font-semibold text-xl sm:text-2xl mb-6 tracking-tight">
       How to Dive {{ $diveSite->name }}
     </h2>
 
-    <div class="space-y-10 text-slate-300 leading-relaxed text-[15px] text-left sm:text-center sm:max-w-3xl mx-auto">
-{{-- 🗺️ Dive Map --}}
-@if($diveSite->map_image_path)
-  <div 
-    x-data="{ open: false }" 
-    class="p-5 rounded-2xl bg-white/5 border border-white/10 overflow-hidden shadow-md"
-  >
-    <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-4">
-      Dive Map
-    </h3>
-
-    {{-- Thumbnail preview --}}
-    <div 
-      @click="open = true"
-      class="relative cursor-zoom-in group"
-    >
-      <img 
-        src="{{ asset($diveSite->map_image_path) }}" 
-        alt="Dive map for {{ $diveSite->name }}"
-        class="w-full h-64 sm:h-80 object-cover rounded-xl border border-white/10 shadow-lg 
-               transition-transform duration-300 group-hover:scale-[1.02]"
-        loading="lazy"
-      >
-      <div class="absolute inset-0 bg-slate-900/20 group-hover:bg-slate-900/30 
-                  transition-colors duration-300 rounded-xl flex items-center justify-center">
-        <span class="hidden group-hover:flex text-xs text-white/80 bg-slate-800/70 
-                     px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
-          Click to view full map
-        </span>
-      </div>
-    </div>
-
-    {{-- Caption --}}
-    @if($diveSite->map_caption)
-      <p class="text-xs text-white/60 mt-2 text-center italic">
-        {{ $diveSite->map_caption }}
-      </p>
-    @endif
-
-    {{-- Fullscreen lightbox --}}
-    <template x-if="open">
-      <div 
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-        x-show="open"
-        x-transition.opacity
-        @click.self="open = false"
-      >
-        <div class="relative max-w-6xl w-full p-4">
-          <button 
-            @click="open = false"
-            class="absolute top-4 right-4 text-white/80 hover:text-white bg-slate-800/70 
-                   rounded-full p-2 backdrop-blur-md border border-white/10"
-            title="Close"
-          >
-            ✕
-          </button>
+    {{-- 🗺️ Dive Map --}}
+    @if($diveSite->map_image_path)
+      <div class="w-full mb-6">
+        <div class="relative w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
           <img 
             src="{{ asset($diveSite->map_image_path) }}" 
-            alt="Full dive map for {{ $diveSite->name }}"
-            class="w-full h-auto max-h-[90vh] object-contain rounded-2xl border border-white/10 shadow-2xl"
+            alt="Dive map for {{ $diveSite->name }}"
+            class="w-full h-auto max-h-[80vh] object-contain bg-slate-900/40"
+            loading="lazy"
+            decoding="async"
           >
         </div>
-      </div>
-    </template>
-  </div>
-@endif
 
+        @if($diveSite->map_caption)
+          <p class="text-xs text-white/60 mt-3 text-center italic">
+            {{ $diveSite->map_caption }}
+          </p>
+        @endif
+
+        <div class="mt-4 text-center">
+          <a 
+            href="{{ asset($diveSite->map_image_path) }}" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-[13px] text-cyan-300 hover:text-cyan-200 font-medium transition"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M14 3h7m0 0v7m0-7L10 14m-1 7H5a2 2 0 01-2-2v-4" />
+            </svg>
+            Open full map in new tab
+          </a>
+        </div>
+      </div>
+    @endif
+
+    <div class="space-y-10 mt-6 text-slate-300 leading-relaxed text-[15px] 
+            text-left sm:text-center sm:max-w-3xl mx-auto">
       {{-- ✏️ Overview --}}
       @if($diveSite->description)
         <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
@@ -425,6 +396,7 @@
       @endif
 
     </div>
+   </div>
   </section>
 @endif
 
