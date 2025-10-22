@@ -189,14 +189,26 @@
         </div>
       @endif
 
-      {{-- Quick Action: Dive Map (compact bottom overlay). Always visible, stacks on mobile --}}
+      {{-- Quick Action: Dive Map (desktop LCP prioritized) --}}
       <a href="{{ route('dive-sites.index') }}"
         class="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition
-                min-h-[220px] sm:min-h-[260px]"> 
+                min-h-[220px] sm:min-h-[260px]">
 
-
-        <div class="absolute inset-0 bg-cover bg-center transition group-hover:scale-105"
-            style="background-image:url('{{ asset('images/main/satellite.webp') }}')"></div>
+        <picture>
+          <!-- Desktop: fetchpriority=high -->
+          <source
+            srcset="{{ asset('images/main/satellite.webp') }}"
+            media="(min-width: 1024px)"
+            fetchpriority="high"
+            type="image/webp">
+          <!-- Mobile fallback -->
+          <img
+            src="{{ asset('images/main/satellite.webp') }}"
+            alt="Dive map preview background"
+            class="absolute inset-0 w-full h-full object-cover transition group-hover:scale-105"
+            loading="lazy"
+            decoding="async">
+        </picture>
 
         <!-- Compact bottom overlay -->
         <div class="absolute inset-x-0 bottom-0 bg-slate-900/85 backdrop-blur-sm px-4 py-3 sm:px-5 sm:py-4">

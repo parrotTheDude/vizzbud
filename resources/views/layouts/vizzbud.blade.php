@@ -1,101 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Basic Meta -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+  <!-- Basic Meta -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- Title & Description -->
-    <title>@yield('title', 'Vizzbud | Scuba Dive Sites & Conditions')</title>
-    <meta name="description" content="@yield('meta_description', 'Track dives, view conditions, and explore global dive sites on Vizzbud.')">
+  <!-- Title & Description -->
+  <title>@yield('title', 'Vizzbud | Scuba Dive Sites & Conditions')</title>
+  <meta name="description" content="@yield('meta_description', 'Track dives, view conditions, and explore global dive sites on Vizzbud.')">
 
-    <!-- Canonical -->
-    <link rel="canonical" href="https://vizzbud.com{{ request()->getPathInfo() }}">
+  <!-- Canonical -->
+  <link rel="canonical" href="https://vizzbud.com{{ request()->getPathInfo() }}">
 
-    <!-- Robots -->
-    @hasSection('noindex')
-      <meta name="robots" content="noindex,follow">
-    @else
-      <meta name="robots" content="index,follow">
-    @endif
+  <!-- Robots -->
+  @hasSection('noindex')
+    <meta name="robots" content="noindex,follow">
+  @else
+    <meta name="robots" content="index,follow">
+  @endif
 
-    <!-- Theme -->
-    <meta name="theme-color" content="#0f172a">
-    <meta name="color-scheme" content="dark light">
+  <!-- Theme -->
+  <meta name="theme-color" content="#0f172a">
+  <meta name="color-scheme" content="dark light">
 
-    <!-- Open Graph / Twitter -->
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Vizzbud">
-    <meta property="og:title" content="@yield('og_title', 'Vizzbud')">
-    <meta property="og:description" content="@yield('og_description', 'Dive sites, live conditions, and dive logs.')">
-    <meta property="og:url" content="https://vizzbud.com{{ request()->getPathInfo() }}">
-    <meta property="og:image" content="@yield('og_image', asset('og-image.webp'))">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="@yield('twitter_title', 'Vizzbud')">
-    <meta name="twitter:description" content="@yield('twitter_description', 'Track dives, see live conditions, and plan your next dive.')">
-    <meta name="twitter:image" content="@yield('twitter_image', asset('og-image.webp'))">
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Vizzbud">
+  <meta property="og:title" content="@yield('og_title', 'Vizzbud')">
+  <meta property="og:description" content="@yield('og_description', 'Dive sites, live conditions, and dive logs.')">
+  <meta property="og:url" content="https://vizzbud.com{{ request()->getPathInfo() }}">
+  <meta property="og:image" content="@yield('og_image', asset('og-image.webp'))">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="@yield('twitter_title', 'Vizzbud')">
+  <meta name="twitter:description" content="@yield('twitter_description', 'Track dives, see live conditions, and plan your next dive.')">
+  <meta name="twitter:image" content="@yield('twitter_image', asset('og-image.webp'))">
 
-    <!-- Favicons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
-    <meta name="msapplication-TileColor" content="#0f172a">
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+  <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+  <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+  <meta name="msapplication-TileColor" content="#0f172a">
 
-    <!-- Performance Preloads -->
-    <link rel="preload" as="image" href="{{ asset('vizzbudLogo.webp') }}" fetchpriority="high" imagesrcset="{{ asset('vizzbudLogo.webp') }}" imagesizes="32px">
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://api.mapbox.com">
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <!-- Preconnects (reduce network handshake latency) -->
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://api.mapbox.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://scripts.simpleanalyticscdn.com" crossorigin>
+  <link rel="preconnect" href="https://queue.simpleanalyticscdn.com" crossorigin>
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+  <!-- Preloads (key visual and font assets) -->
+  <link rel="preload" as="image" href="{{ asset('vizzbudLogo.webp') }}" fetchpriority="high" imagesrcset="{{ asset('vizzbudLogo.webp') }}" imagesizes="32px">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <link rel="preload" as="script" href="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" importance="low">
 
-    <!-- Vite Assets -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 
-    <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- Vite Assets -->
+  @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Chart.js (when pushed) -->
-    @stack('charts-head')
+  <!-- Alpine.js -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    <!-- Mapbox CSS -->
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
-    @stack('map')
+  <!-- Chart.js (when pushed) -->
+  @stack('charts-head')
 
-    <!-- Simple Analytics -->
-    <script async data-collect-dnt="true" src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
-    <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif?collect-dnt=true" alt=""></noscript>
+  <!-- Mapbox CSS -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+  @stack('map')
 
-    <!-- JSON-LD Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "Vizzbud",
-      "url": "https://vizzbud.com/",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://vizzbud.com/dive-sites?query={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
+  <!-- Simple Analytics -->
+  <script async data-collect-dnt="true" src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+  <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif?collect-dnt=true" alt=""></noscript>
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Vizzbud",
+    "url": "https://vizzbud.com/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://vizzbud.com/dive-sites?query={search_term_string}",
+      "query-input": "required name=search_term_string"
     }
-    </script>
+  }
+  </script>
 
-    <!-- 📱 iOS Safe Area Support -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- iOS Safe Area Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- 🎯 Core Web Vitals tuning -->
-    <link rel="preload" as="script" href="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" importance="low">
-    <meta http-equiv="Accept-CH" content="DPR, Viewport-Width, Width">
+  <!-- Core Web Vitals -->
+  <meta http-equiv="Accept-CH" content="DPR, Viewport-Width, Width">
 
-    <!-- 📦 Page-specific additions -->
-    @stack('head')
+  <!-- Page-specific additions -->
+  @stack('head')
 </head>
 
 <body class="bg-slate-900 text-white font-sans"
@@ -128,7 +134,7 @@
         <!-- Logo -->
         <a href="{{ route('home') }}" class="flex items-center gap-2 group">
           <img
-            src="{{ asset('vizzbudLogo.png') }}"
+            src="{{ asset('vizzbudLogo.webp') }}"
             alt="Vizzbud Logo"
             class="w-8 h-8 transition-transform group-hover:scale-105"
             width="32" height="32" loading="eager" decoding="async"
@@ -241,7 +247,7 @@
     <!-- Drawer header -->
     <div class="relative flex items-center justify-between px-5 pt-5 pb-3">
       <div class="flex items-center gap-2">
-        <img src="{{ asset('vizzbudLogo.png') }}" alt="Vizzbud" class="w-7 h-7 rounded-md">
+        <img src="{{ asset('vizzbudLogo.webp') }}" alt="Vizzbud" class="w-7 h-7 rounded-md">
         <span class="text-lg font-semibold">Vizzbud</span>
       </div>
       <button
@@ -343,27 +349,26 @@
     @yield('content')
   </main>
 
-  <!-- Footer -->
-  <footer class="relative border-t border-slate-800 bg-slate-900/60 backdrop-blur-xl backdrop-saturate-150 z-10">
-    <div class="mx-auto max-w-7xl px-6 py-10 flex flex-col items-center text-center text-slate-400 text-sm space-y-3">
+ <footer class="relative border-t border-slate-800 bg-slate-900/80 backdrop-blur-xl backdrop-saturate-150 z-10">
+  <div class="mx-auto max-w-7xl px-6 py-10 flex flex-col items-center text-center text-slate-300 text-sm space-y-3">
 
-      <!-- Logo -->
-      <img src="{{ asset('vizzbudLogo.png') }}" alt="Vizzbud Logo" class="w-10 h-10 mb-1">
+    <!-- Logo -->
+    <img src="{{ asset('vizzbudLogo.webp') }}" alt="Vizzbud Logo" class="w-10 h-10 mb-1">
 
-      <!-- Brand -->
-      <span class="text-white font-semibold text-lg">Vizzbud</span>
-      <span class="text-slate-400 text-sm">Dive smarter. Made for divers worldwide.</span>
+    <!-- Brand -->
+    <span class="text-white font-semibold text-lg">Vizzbud</span>
+    <span class="text-slate-300 text-sm">Dive smarter. Made for divers worldwide.</span>
 
-      <!-- Disclaimer -->
-      <p class="max-w-xl text-xs text-slate-500 leading-relaxed mt-3">
-        <strong class="text-slate-400">Disclaimer:</strong> Dive conditions shown on Vizzbud are based on external data sources 
-        and forecasts. Always use your own experience, training, and local knowledge to assess dive safety before entering the water.
-      </p>
+    <!-- Disclaimer -->
+    <p class="max-w-xl text-[13px] text-slate-400 leading-relaxed mt-3">
+      <strong class="text-slate-200">Disclaimer:</strong> Dive conditions shown on Vizzbud are based on external data sources 
+      and forecasts. Always use your own experience, training, and local knowledge to assess dive safety before entering the water.
+    </p>
 
-      <!-- Copyright -->
-      <span class="mt-2 text-[11px] text-slate-600">© 2025 Vizzbud · Made for divers</span>
-    </div>
-  </footer>
+    <!-- Copyright -->
+    <span class="mt-2 text-[12px] text-slate-400">© 2025 Vizzbud · Made for divers</span>
+  </div>
+</footer>
 
   @stack('scripts')
 </body>
