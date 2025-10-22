@@ -109,7 +109,7 @@
                 $featuredPhoto = $featured->photos()->where('is_featured', true)->first();
                 $heroImage = $featuredPhoto 
                     ? asset($featuredPhoto->image_path) 
-                    : asset('images/divesites/default.webp');
+                    : asset('images/divesites/default-home.webp');
               @endphp
 
               {{-- Optimized image with preload + alt + fetchpriority --}}
