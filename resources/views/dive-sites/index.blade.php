@@ -386,6 +386,17 @@
 <script>
 mapboxgl.accessToken = @json(config('services.mapbox.token'));
 
+// 🔇 Silence noisy WebGL warnings (Firefox dev tools spam)
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  const msg = args[0];
+  if (typeof msg === 'string' && (
+    msg.includes('WEBGL_debug_renderer_info') ||
+    msg.includes('Alpha-premult and y-flip')
+  )) return;
+  originalWarn.apply(console, args);
+};
+
 function diveSiteMap({ sites }) {
     return {
         map: null,

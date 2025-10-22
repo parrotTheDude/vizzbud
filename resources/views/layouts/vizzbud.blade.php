@@ -75,7 +75,9 @@
   @stack('map')
 
   <!-- Simple Analytics -->
-  <script async data-collect-dnt="true" src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+  <script async data-collect-dnt="true"
+        src="https://scripts.simpleanalyticscdn.com/latest.js"
+        onerror="console.debug('SimpleAnalytics blocked or offline')"></script>
   <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif?collect-dnt=true" alt=""></noscript>
 
   <!-- JSON-LD Structured Data -->
