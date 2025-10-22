@@ -74,7 +74,7 @@
           $featuredPhoto = $featured->photos()->where('is_featured', true)->first();
           $heroImage = $featuredPhoto
               ? asset($featuredPhoto->image_path)
-              : asset('images/divesites/default.webp');
+              : asset('images/divesites/default-home.webp');
         @endphp
 
         <a href="{{ route('dive-sites.show', $featured) }}"
@@ -189,26 +189,17 @@
         </div>
       @endif
 
-      {{-- Quick Action: Dive Map (desktop LCP prioritized) --}}
+      {{-- Quick Action: Dive Map (optimized for LCP) --}}
       <a href="{{ route('dive-sites.index') }}"
         class="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition
                 min-h-[220px] sm:min-h-[260px]">
 
-        <picture>
-          <!-- Desktop: fetchpriority=high -->
-          <source
-            srcset="{{ asset('images/main/satellite.webp') }}"
-            media="(min-width: 1024px)"
-            fetchpriority="high"
-            type="image/webp">
-          <!-- Mobile fallback -->
-          <img
-            src="{{ asset('images/main/satellite.webp') }}"
-            alt="Dive map preview background"
-            class="absolute inset-0 w-full h-full object-cover transition group-hover:scale-105"
-            loading="lazy"
-            decoding="async">
-        </picture>
+        <img
+          src="{{ asset('images/main/satellite.webp') }}"
+          alt="Dive map preview background"
+          class="absolute inset-0 w-full h-full object-cover transition group-hover:scale-105"
+          fetchpriority="high"
+          decoding="async">
 
         <!-- Compact bottom overlay -->
         <div class="absolute inset-x-0 bottom-0 bg-slate-900/85 backdrop-blur-sm px-4 py-3 sm:px-5 sm:py-4">
