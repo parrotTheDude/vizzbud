@@ -1,12 +1,45 @@
 @extends('layouts.vizzbud')
 
-@section('title', 'Vizzbud | Real-Time Dive Conditions, Logs & Stats')
-@section('meta_description', 'Explore live scuba dive site conditions and log your underwater adventures with Vizzbud.')
+@section('title', 'Real-Time Dive Conditions, Site Map & More | Vizzbud')
+@section('meta_description', 'Explore live scuba dive site conditions and log your underwater adventures with Vizzbud. Plan your dives smarter with real-time updates.')
+
+@section('head')
+  {{-- Structured data for Google --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Vizzbud",
+    "url": "https://vizzbud.com/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://vizzbud.com/dive-sites?query={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
+  {{-- Open Graph / Twitter meta tags --}}
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Vizzbud | Real-Time Dive Conditions, Logs & Stats">
+  <meta property="og:description" content="Explore live scuba dive site conditions and log your underwater adventures with Vizzbud.">
+  <meta property="og:image" content="{{ asset('og-image.webp') }}">
+  <meta property="og:url" content="https://vizzbud.com/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Vizzbud | Real-Time Dive Conditions, Logs & Stats">
+  <meta name="twitter:description" content="Explore live scuba dive site conditions and log your underwater adventures with Vizzbud.">
+  <meta name="twitter:image" content="{{ asset('og-image.webp') }}">
+
+  {{-- Preload key visual assets for LCP --}}
+  <link rel="preload" as="image" href="{{ asset('vizzbudLogo.webp') }}">
+  @if(!empty($featured) && $featured->photos()->where('is_featured', true)->exists())
+    <link rel="preload" as="image" href="{{ asset($featured->photos()->where('is_featured', true)->first()->image_path) }}" fetchpriority="high">
+  @endif
+@endsection
 
 @section('content')
 
 @php
-  // Helpers for status chip style
   $status = optional($featured?->latestCondition)->status;
   $chip = match($status) {
       'green'  => 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30',
@@ -38,6 +71,10 @@
             'yellow' => 'bg-amber-500/15 text-amber-300 ring-amber-500/30',
             default  => 'bg-rose-500/15 text-rose-300 ring-rose-500/30',
           };
+          $featuredPhoto = $featured->photos()->where('is_featured', true)->first();
+          $heroImage = $featuredPhoto
+              ? asset($featuredPhoto->image_path)
+              : asset('images/divesites/default.webp');
         @endphp
 
         <a href="{{ route('dive-sites.show', $featured) }}"
@@ -75,9 +112,17 @@
                     : asset('images/divesites/default.webp');
               @endphp
 
+              {{-- Optimized image with preload + alt + fetchpriority --}}
               <div class="relative overflow-hidden rounded-xl border border-white/10 md:order-1">
-                <div class="h-48 sm:h-56 md:h-full bg-cover bg-center transition group-hover:scale-[1.02]"
-                    style="background-image:url('{{ $heroImage }}')"></div>
+                <img
+                  src="{{ $heroImage }}"
+                  alt="Featured dive site: {{ $featured->name }}"
+                  width="600" height="400"
+                  class="object-cover w-full h-full transition group-hover:scale-[1.02]"
+                  loading="eager"
+                  fetchpriority="high"
+                  decoding="async"
+                >
               </div>
 
               {{-- Details block --}}

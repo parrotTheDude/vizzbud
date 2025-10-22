@@ -1,68 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Basic Meta -->
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <!-- Title & Description -->
     <title>@yield('title', 'Vizzbud | Scuba Dive Sites & Conditions')</title>
+    <meta name="description" content="@yield('meta_description', 'Track dives, view conditions, and explore global dive sites on Vizzbud.')">
 
-    {{-- Canonical: let your web server enforce www/non-www and HTTPS --}}
+    <!-- Canonical -->
     <link rel="canonical" href="https://vizzbud.com{{ request()->getPathInfo() }}">
 
-    {{-- Meta description --}}
-    <meta name="description" content="@yield('meta_description', 'View personal dive logs, track stats, and explore dive sites on Vizzbud.')">
+    <!-- Robots -->
+    @hasSection('noindex')
+      <meta name="robots" content="noindex,follow">
+    @else
+      <meta name="robots" content="index,follow">
+    @endif
 
-    {{-- Robots + Theme --}}
-    <meta name="robots" content="index,follow">
+    <!-- Theme -->
     <meta name="theme-color" content="#0f172a">
+    <meta name="color-scheme" content="dark light">
 
-    {{-- Favicons / PWA  --}}
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="theme-color" content="#ffffff">
-
-    {{-- Social cards --}}
+    <!-- Open Graph / Twitter -->
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Vizzbud">
     <meta property="og:title" content="@yield('og_title', 'Vizzbud')">
-    <meta property="og:description" content="@yield('og_description', 'Dive sites, live conditions, and logs.')">
-    <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="@yield('og_image', asset('og-image.jpg'))">
+    <meta property="og:description" content="@yield('og_description', 'Dive sites, live conditions, and dive logs.')">
+    <meta property="og:url" content="https://vizzbud.com{{ request()->getPathInfo() }}">
+    <meta property="og:image" content="@yield('og_image', asset('og-image.webp'))">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('twitter_title', 'Vizzbud')">
-    <meta name="twitter:description" content="@yield('twitter_description', 'Dive sites, live conditions, and logs.')">
-    <meta name="twitter:image" content="@yield('twitter_image', asset('og-image.jpg'))">
+    <meta name="twitter:description" content="@yield('twitter_description', 'Track dives, see live conditions, and plan your next dive.')">
+    <meta name="twitter:image" content="@yield('twitter_image', asset('og-image.webp'))">
 
-    {{-- Fonts: preconnect + stylesheet preload --}}
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <meta name="msapplication-TileColor" content="#0f172a">
+
+    <!-- Performance Preloads -->
+    <link rel="preload" as="image" href="{{ asset('vizzbudLogo.webp') }}" fetchpriority="high" imagesrcset="{{ asset('vizzbudLogo.webp') }}" imagesizes="32px">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://api.mapbox.com">
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-    {{-- Vite assets (CSS first, JS modules will be deferred) --}}
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+
+    <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    {{-- Third-party JS: defer to avoid blocking --}}
-    {{-- Alpine (CDN). Prefer npm package if possible. --}}
+    <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-    {{-- Chart.js (only include on pages that chart; otherwise push via @stack) --}}
+    <!-- Chart.js (when pushed) -->
     @stack('charts-head')
-    {{-- Example fallback: --}}
-    {{-- <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script> --}}
 
-    {{-- Mapbox CSS always safe, JS only when needed --}}
+    <!-- Mapbox CSS -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
-    @stack('map') {{-- push the JS only on pages that need maps --}}
+    @stack('map')
 
-    {{-- Simple Analytics --}}
+    <!-- Simple Analytics -->
     <script async data-collect-dnt="true" src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
-    <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif?collect-dnt=true" alt="" referrerpolicy="no-referrer-when-downgrade"></noscript>
+    <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif?collect-dnt=true" alt=""></noscript>
 
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://vizzbud.com/dive-sites?query={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- 📱 iOS Safe Area Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- 🎯 Core Web Vitals tuning -->
+    <link rel="preload" as="script" href="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" importance="low">
+    <meta http-equiv="Accept-CH" content="DPR, Viewport-Width, Width">
+
+    <!-- 📦 Page-specific additions -->
     @stack('head')
 </head>
 
@@ -97,7 +129,7 @@
         <a href="{{ route('home') }}" class="flex items-center gap-2 group">
           <img
             src="{{ asset('vizzbudLogo.png') }}"
-            alt="Vizzbud"
+            alt="Vizzbud Logo"
             class="w-8 h-8 transition-transform group-hover:scale-105"
             width="32" height="32" loading="eager" decoding="async"
           >
