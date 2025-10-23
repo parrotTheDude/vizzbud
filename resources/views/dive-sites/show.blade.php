@@ -7,6 +7,15 @@
 @section('og_title', "{$diveSite->name} Dive Guide | {$diveSite->region->name}")
 @section('og_description', "Explore {$diveSite->name}: live dive conditions, depth info, marine life, and local dive tips.")
 @section('og_image', asset(optional($diveSite->photos()->where('is_featured', true)->first())->image_path ?? 'og-image.webp'))
+@section('og_type', 'article')
+@section('og_locale', 'en_AU')
+@section('twitter_card', 'summary_large_image')
+
+@push('head')
+  <meta property="article:section" content="Dive Guides">
+  <meta property="article:published_time" content="{{ $diveSite->created_at->toIso8601String() }}">
+  <meta property="article:modified_time" content="{{ $diveSite->updated_at->toIso8601String() }}">
+@endpush
 
 @section('twitter_title', "{$diveSite->name} Dive Guide | {$diveSite->region->name}")
 @section('twitter_description', "How to dive {$diveSite->name}: entry, hazards & current conditions in {$diveSite->region->state->name}.")
@@ -32,6 +41,27 @@
     "addressRegion": "{{ $diveSite->region->state->name ?? '' }}",
     "addressCountry": "{{ $diveSite->region->state->country->name ?? '' }}"
   }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Dive Sites",
+      "item": "https://vizzbud.com/dive-sites"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "{{ $diveSite->name }}",
+      "item": "{{ url()->current() }}"
+    }
+  ]
 }
 </script>
 @endpush
@@ -87,6 +117,10 @@
       <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-2">
         {{ $diveSite->name }} Dive Guide
       </h1>
+      <div itemprop="geo" itemscope itemtype="https://schema.org/GeoCoordinates" class="hidden">
+        <meta itemprop="latitude" content="{{ $diveSite->lat }}">
+        <meta itemprop="longitude" content="{{ $diveSite->lng }}">
+      </div>
       <p class="text-slate-300 text-sm">
         {{ optional($diveSite->region)->name ?? 'Unknown Region' }},
         {{ optional($diveSite->region?->state)->abbreviation ?? optional($diveSite->region?->state)->name ?? 'Unknown State' }},
@@ -338,7 +372,7 @@
 @endphp
 
 @if($hasDiveInfo)
-  <section class="rounded-3xl p-6 sm:p-10 bg-white/10 backdrop-blur-2xl 
+  <article itemscope itemtype="https://schema.org/Article" class="rounded-3xl p-6 sm:p-10 bg-white/10 backdrop-blur-2xl 
                   border border-white/15 ring-1 ring-white/10 shadow-xl w-full text-center mb-16">
     
     <h2 class="text-white font-semibold text-xl sm:text-2xl mb-6 tracking-tight">
@@ -433,8 +467,7 @@
       @endif
 
     </div>
-   </div>
-  </section>
+</article>
 @endif
 
     {{-- 📍 Nearby Dive Sites --}}
