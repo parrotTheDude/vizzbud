@@ -68,6 +68,7 @@ class DiveSiteController extends Controller
             'suitability' => 'required|in:Open Water,Advanced,Deep',
             'map_image_path' => 'nullable|string|max:255',
             'map_caption' => 'nullable|string|max:255',
+            'marine_life' => 'nullable|string',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);
@@ -107,6 +108,7 @@ class DiveSiteController extends Controller
             'pro_tips' => 'nullable|string',
             'entry_notes' => 'nullable|string',
             'parking_notes' => 'nullable|string',
+            'marine_life' => 'nullable|string', 
             'is_active' => 'boolean',
             'needs_review' => 'boolean',
             'map_image_path' => 'nullable|string|max:255',
