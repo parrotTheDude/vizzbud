@@ -47,23 +47,28 @@
         <input type="hidden" required name="lng" id="lng" value="{{ old('lng', 151.2093) }}">
 
         <p class="text-sm text-white/60">
-          Drag the marker or click the map to select a location.
+          Drag or click on the map to reposition the dive site. Region and country will auto-fill.
         </p>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm mb-1 text-white/70">Region</label>
-            <input type="text" name="region" id="region" required value="{{ old('region') }}"
-                   class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
-                          focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
-          </div>
+        <div>
+          <select name="region_id" id="region_id"
+                  class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
+                        focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
+            <option value="">— Select Region —</option>
+            @foreach($regions as $region)
+              <option value="{{ $region->id }}"
+                      data-region="{{ strtolower($region->name) }}"
+                      data-state="{{ strtolower($region->state->name) }}"
+                      data-country="{{ strtolower($region->state->country->name) }}"
+                      @selected(old('region_id') == $region->id)>
+                {{ $region->name }} ({{ $region->state->name }}, {{ $region->state->country->name }})
+              </option>
+            @endforeach
+          </select>
 
-          <div>
-            <label class="block text-sm mb-1 text-white/70">Country</label>
-            <input type="text" name="country" id="country" required value="{{ old('country') }}"
-                   class="w-full rounded-lg bg-white/10 border border-white/10 text-white px-3 py-2
-                          focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition">
-          </div>
+          <p id="regionSuggestion" class="text-xs text-amber-300 mt-2 hidden">
+            Suggested region: <span class="font-semibold"></span>
+          </p>
         </div>
       </div>
     </div>
@@ -117,9 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const latInput = document.getElementById('lat');
   const lngInput = document.getElementById('lng');
-  const regionInput = document.getElementById('region');
-  const countryInput = document.getElementById('country');
-
   const lat = parseFloat(latInput.value) || -33.8688;
   const lng = parseFloat(lngInput.value) || 151.2093;
 
@@ -134,53 +136,67 @@ document.addEventListener('DOMContentLoaded', () => {
     .setLngLat([lng, lat])
     .addTo(map);
 
-  // 🔹 Shared function to update hidden fields and fetch reverse geocode
-  function updateLocation(lat, lng, doFetch = true) {
+  function updateLocation(lat, lng) {
     latInput.value = lat.toFixed(6);
     lngInput.value = lng.toFixed(6);
 
-    if (!doFetch) return;
-
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`;
+
     fetch(url)
       .then(res => res.json())
       .then(data => {
-        if (!data.features || !data.features.length) return;
+        const context = data.features[0]?.context || [];
+        const place = data.features[0];
 
-        const contexts = [
-          ...(data.features[0].context || []),
-          data.features[0]
-        ];
+        const regionName =
+            context.find(c => c.id.startsWith('region'))?.text ||
+            place?.text || '';
+        const stateName =
+            context.find(c => c.id.startsWith('province'))?.text ||
+            context.find(c => c.id.startsWith('state'))?.text || '';
+        const countryName =
+            context.find(c => c.id.startsWith('country'))?.text || '';
 
-        const region = contexts.find(f =>
-          f.id.startsWith('region') ||
-          f.id.startsWith('province') ||
-          f.id.startsWith('state')
-        )?.text;
+        const regionSelect = document.getElementById('region_id');
+        const suggestionEl = document.getElementById('regionSuggestion');
+        const options = Array.from(regionSelect.options);
 
-        const country = contexts.find(f => f.id.startsWith('country'))?.text;
+        // Try exact match: region + state + country
+        const match = options.find(opt =>
+          opt.dataset.region === regionName.toLowerCase() &&
+          opt.dataset.state === stateName.toLowerCase() &&
+          opt.dataset.country === countryName.toLowerCase()
+        );
 
-        if (region && !regionInput.value) regionInput.value = region;
-        if (country && !countryInput.value) countryInput.value = country;
+        if (match) {
+          regionSelect.value = match.value;
+          suggestionEl.classList.add('hidden');
+        } else {
+          const partial = options.find(opt =>
+            opt.dataset.region === regionName.toLowerCase()
+          );
+
+          if (partial) {
+            regionSelect.value = partial.value;
+            suggestionEl.classList.add('hidden');
+          } else {
+            suggestionEl.querySelector('span').textContent =
+              `${regionName} (${stateName}, ${countryName})`;
+            suggestionEl.classList.remove('hidden');
+          }
+        }
       })
-      .catch(err => console.error('Geocoding failed', err));
+      .catch(err => console.error('Geocoding failed:', err));
   }
 
-  // 🔹 Run once on map load to prefill region/country
-  map.on('load', () => {
-    updateLocation(lat, lng, true);
-  });
-
-  // 🔹 Update when marker is dragged
   marker.on('dragend', () => {
     const pos = marker.getLngLat();
-    updateLocation(pos.lat, pos.lng, true);
+    updateLocation(pos.lat, pos.lng);
   });
 
-  // 🔹 Update when clicking map
   map.on('click', (e) => {
     marker.setLngLat(e.lngLat);
-    updateLocation(e.lngLat.lat, e.lngLat.lng, true);
+    updateLocation(e.lngLat.lat, e.lngLat.lng);
   });
 });
 </script>
