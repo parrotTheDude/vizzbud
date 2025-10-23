@@ -152,25 +152,7 @@
                   focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
                   placeholder-white/30">{{ old('description', $site->description) }}</textarea>
         </div>
-
-        {{-- Hazards --}}
-        <div>
-          <label class="block text-base mb-2 text-white/80">Hazards</label>
-          <textarea name="hazards" rows="4"
-            class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
-                  focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
-                  placeholder-white/30">{{ old('hazards', $site->hazards) }}</textarea>
-        </div>
-
-        {{-- Pro Tips --}}
-        <div>
-          <label class="block text-base mb-2 text-white/80">Pro Tips</label>
-          <textarea name="pro_tips" rows="4"
-            class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
-                  focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
-                  placeholder-white/30">{{ old('pro_tips', $site->pro_tips) }}</textarea>
-        </div>
-
+                
         {{-- Entry Notes --}}
         <div>
           <label class="block text-base mb-2 text-white/80">Entry Notes</label>
@@ -189,6 +171,15 @@
                   placeholder-white/30">{{ old('parking_notes', $site->parking_notes) }}</textarea>
         </div>
 
+        {{-- Hazards --}}
+        <div>
+          <label class="block text-base mb-2 text-white/80">Hazards</label>
+          <textarea name="hazards" rows="4"
+            class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
+                  focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
+                  placeholder-white/30">{{ old('hazards', $site->hazards) }}</textarea>
+        </div>
+
         {{-- Marine Life --}}
         <div>
           <label class="block text-base mb-2 text-white/80">Marine Life</label>
@@ -196,6 +187,15 @@
             class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
                   focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
                   placeholder-white/30">{{ old('marine_life', $site->marine_life) }}</textarea>
+        </div>
+
+        {{-- Pro Tips --}}
+        <div>
+          <label class="block text-base mb-2 text-white/80">Pro Tips</label>
+          <textarea name="pro_tips" rows="4"
+            class="w-full rounded-xl bg-white/10 border border-white/15 text-white px-4 py-3 text-[15px]
+                  focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition
+                  placeholder-white/30">{{ old('pro_tips', $site->pro_tips) }}</textarea>
         </div>
       </div>
     </div>
