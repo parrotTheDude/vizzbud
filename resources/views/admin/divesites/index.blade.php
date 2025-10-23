@@ -5,6 +5,25 @@
   @section('content')
   <section class="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
 
+  {{-- ✅ Success Message --}}
+  @if(session('success'))
+    <div 
+      x-data="{ show: true }"
+      x-show="show"
+      x-transition:enter="transition ease-out duration-500"
+      x-transition:enter-start="opacity-0 -translate-y-4"
+      x-transition:enter-end="opacity-100 translate-y-0"
+      x-transition:leave="transition ease-in duration-500"
+      x-transition:leave-start="opacity-100 translate-y-0"
+      x-transition:leave-end="opacity-0 -translate-y-4"
+      x-init="setTimeout(() => show = false, 4000)" {{-- fades after 4s --}}
+      class="mb-6 px-5 py-3 rounded-full bg-emerald-500/20 border border-emerald-400/30 
+            text-emerald-200 text-sm font-medium text-center shadow-lg backdrop-blur-md"
+    >
+      {{ session('success') }}
+    </div>
+  @endif
+
     {{-- Header --}}
     <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
       <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
