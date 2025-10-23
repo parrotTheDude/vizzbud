@@ -66,6 +66,8 @@ class DiveSiteController extends Controller
             'region_id' => 'required|exists:regions,id',
             'dive_type' => 'required|in:shore,boat',
             'suitability' => 'required|in:Open Water,Advanced,Deep',
+            'map_image_path' => 'nullable|string|max:255',
+            'map_caption' => 'nullable|string|max:255',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);
@@ -107,6 +109,8 @@ class DiveSiteController extends Controller
             'parking_notes' => 'nullable|string',
             'is_active' => 'boolean',
             'needs_review' => 'boolean',
+            'map_image_path' => 'nullable|string|max:255',
+            'map_caption' => 'nullable|string|max:255',
         ]);
 
         // Auto-generate unique slug if name changed
