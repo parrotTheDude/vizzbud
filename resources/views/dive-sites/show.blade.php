@@ -1,7 +1,40 @@
 @extends('layouts.vizzbud')
 
-@section('title', "{$diveSite->name} Dive Guide | Conditions, Entry, Depth & Marine Life")
-@section('meta_description', "How to dive {$diveSite->name}: entry points, depth, hazards, marine life, and live dive conditions. Updated forecasts and local tips for divers in {$diveSite->region->name}, {$diveSite->region->state->name}, {$diveSite->region->state->country->name}.")
+@section('title', "{$diveSite->name} Dive Guide | Conditions, Entry & Marine Life")
+@section('meta_description', "How to dive {$diveSite->name}: entry points, depth, hazards, marine life, and live dive conditions in {$diveSite->region->name}, {$diveSite->region->state->name}, {$diveSite->region->state->country->name}.")
+
+{{-- 🌍 Open Graph / Twitter --}}
+@section('og_title', "{$diveSite->name} Dive Guide | {$diveSite->region->name}")
+@section('og_description', "Explore {$diveSite->name}: live dive conditions, depth info, marine life, and local dive tips.")
+@section('og_image', asset(optional($diveSite->photos()->where('is_featured', true)->first())->image_path ?? 'og-image.webp'))
+
+@section('twitter_title', "{$diveSite->name} Dive Guide | {$diveSite->region->name}")
+@section('twitter_description', "How to dive {$diveSite->name}: entry, hazards & current conditions in {$diveSite->region->state->name}.")
+@section('twitter_image', asset(optional($diveSite->photos()->where('is_featured', true)->first())->image_path ?? 'og-image.webp'))
+
+{{-- 🧭 Structured Data --}}
+@push('head')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Place",
+  "name": "{{ $diveSite->name }}",
+  "description": "{{ Str::limit(strip_tags($diveSite->description ?? 'Dive site details and conditions.'), 160) }}",
+  "url": "{{ url()->current() }}",
+  "image": "{{ asset(optional($diveSite->photos()->where('is_featured', true)->first())->image_path ?? 'og-image.webp') }}",
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": {{ $diveSite->lat }},
+    "longitude": {{ $diveSite->lng }}
+  },
+  "address": {
+    "@type": "PostalAddress",
+    "addressRegion": "{{ $diveSite->region->state->name ?? '' }}",
+    "addressCountry": "{{ $diveSite->region->state->country->name ?? '' }}"
+  }
+}
+</script>
+@endpush
 
 @php
   use App\Helpers\CompassHelper;
