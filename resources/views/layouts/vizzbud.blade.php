@@ -99,6 +99,7 @@
   <!-- iOS Safe Area Support -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Vizzbud">
 
   <!-- Core Web Vitals -->
   <meta http-equiv="Accept-CH" content="DPR, Viewport-Width, Width">
@@ -115,7 +116,7 @@
   @stack('head')
 </head>
 
-<body class="bg-slate-900 text-white font-sans"
+<body class="bg-slate-900 text-white font-sans @yield('body_classes')"
       x-data="{ open:false, scrolled:false }"
       x-init="
         const onScroll = () => scrolled = window.scrollY > 8;
@@ -382,4 +383,15 @@
 </footer>
 
   @stack('scripts')
+
+<script>
+  (function () {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true; // old iOS
+    if (isStandalone) {
+      document.body.classList.add('pwa-standalone');
+    }
+  })();
+</script>
 </body>
