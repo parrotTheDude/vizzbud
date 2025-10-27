@@ -116,7 +116,7 @@
   @stack('head')
 </head>
 
-<body class="bg-slate-900 text-white font-sans @yield('body_classes')"
+<body class="bg-slate-900 text-white font-sans"
       x-data="{ open:false, scrolled:false }"
       x-init="
         const onScroll = () => scrolled = window.scrollY > 8;
@@ -142,7 +142,7 @@
       <div class="pointer-events-none absolute -z-10 inset-x-8 -top-8 h-16 rounded-full bg-cyan-500/15 blur-2xl"></div>
 
       <!-- Content-->
-      <div class="mx-auto max-w-7xl px-6 h-16 safe-top header-height flex items-center justify-between">
+      <div class="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
         <!-- Logo -->
         <a href="{{ route('home') }}" class="flex items-center gap-2 group">
           <img
@@ -244,7 +244,7 @@
   <!-- Drawer -->
   <nav
     class="absolute right-0 top-0 z-20 h-full w-[86%] max-w-sm
-           bg-white/10 backdrop-blur-2xl border-l border-white/10 safe-top-ios  
+           bg-white/10 backdrop-blur-2xl border-l border-white/10
            ring-1 ring-white/10 shadow-2xl rounded-l-2xl overflow-y-auto
            will-change-transform"
     :class="open ? 'translate-x-0' : 'translate-x-full'"
@@ -357,11 +357,11 @@
 </div>
 
   <!-- Main -->
-  <main id="main" class="relative z-0 main-offset">
+  <main id="main" class="relative z-0 pt-16">
     @yield('content')
   </main>
 
- <footer class="relative border-t border-slate-800 bg-slate-900/80 backdrop-blur-xl backdrop-saturate-150 z-10 safe-bottom">
+ <footer class="relative border-t border-slate-800 bg-slate-900/80 backdrop-blur-xl backdrop-saturate-150 z-10">
   <div class="mx-auto max-w-7xl px-6 py-10 flex flex-col items-center text-center text-slate-300 text-sm space-y-3">
 
     <!-- Logo -->
@@ -383,24 +383,4 @@
 </footer>
 
   @stack('scripts')
-
-<script>
-(function () {
-  const isStandalone =
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true; // old iOS Safari
-
-  // iOS detection (covers iPadOS that reports as Mac)
-  const ua = navigator.userAgent;
-  const isIOS =
-    /iPad|iPhone|iPod/.test(ua) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-  if (isStandalone && isIOS) {
-    document.body.classList.add('ios-pwa');
-  } else {
-    document.body.classList.remove('ios-pwa');
-  }
-})();
-</script>
 </body>
