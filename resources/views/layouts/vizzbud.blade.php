@@ -112,6 +112,13 @@
   }
   </script>
 
+  <script>
+    (function () {
+      var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (standalone) document.documentElement.classList.add('pwa-standalone');
+    })();
+  </script>
+
   <!-- Page-specific additions -->
   @stack('head')
 </head>
@@ -127,7 +134,7 @@
     Skip to content
   </a>
 
-  <header class="fixed inset-x-0 top-0 z-50">
+  <header class="fixed inset-x-0 top-0 z-50 safe-top header-height">
     <div class="relative isolate">
       <!-- Glass panel background -->
       <div
@@ -243,7 +250,7 @@
 
   <!-- Drawer -->
   <nav
-    class="absolute right-0 top-0 z-20 h-full w-[86%] max-w-sm
+    class="absolute right-0 top-0 z-20 h-full w-[86%] max-w-sm safe-top
            bg-white/10 backdrop-blur-2xl border-l border-white/10
            ring-1 ring-white/10 shadow-2xl rounded-l-2xl overflow-y-auto
            will-change-transform"
@@ -357,11 +364,11 @@
 </div>
 
   <!-- Main -->
-  <main id="main" class="relative z-0 pt-16">
+  <main id="main" class="relative z-0 pt-16 main-offset">
     @yield('content')
   </main>
 
- <footer class="relative border-t border-slate-800 bg-slate-900/80 backdrop-blur-xl backdrop-saturate-150 z-10">
+ <footer class="relative border-t border-slate-800 bg-slate-900/80 backdrop-blur-xl backdrop-saturate-150 z-10 safe-bottom">
   <div class="mx-auto max-w-7xl px-6 py-10 flex flex-col items-center text-center text-slate-300 text-sm space-y-3">
 
     <!-- Logo -->
