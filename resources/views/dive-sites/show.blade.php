@@ -115,7 +115,7 @@
 
     <div class="absolute bottom-4 left-0 right-0 flex flex-col items-center text-center px-4">
       <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-2">
-        {{ $diveSite->name }} Dive Guide
+        {{ $diveSite->name }}
       </h1>
       <div itemprop="geo" itemscope itemtype="https://schema.org/GeoCoordinates" class="hidden">
         <meta itemprop="latitude" content="{{ $diveSite->lat }}">
@@ -343,21 +343,21 @@
             <div class="flex flex-col items-center text-center gap-1.5">
               <span class="w-3 h-3 bg-emerald-400 rounded-full shadow-sm"></span>
               <p class="font-semibold text-white text-sm">Great diving</p>
-              <p class="text-xs text-white/70 max-w-[220px]">Calm water, clear visibility, and easy conditions.</p>
+              <p class="text-xs text-white/70 max-w-[220px]">Low swell and wind. Ideal for diving.</p>
             </div>
 
             {{-- Yellow --}}
             <div class="flex flex-col items-center text-center gap-1.5">
               <span class="w-3 h-3 bg-amber-400 rounded-full shadow-sm"></span>
               <p class="font-semibold text-white text-sm">Dive with caution</p>
-              <p class="text-xs text-white/70 max-w-[220px]">Moderate swell or shifting visibility, check before diving.</p>
+              <p class="text-xs text-white/70 max-w-[220px]">Moderate swell or shifting wind, check before diving.</p>
             </div>
 
             {{-- Red --}}
             <div class="flex flex-col items-center text-center gap-1.5">
               <span class="w-3 h-3 bg-rose-400 rounded-full shadow-sm"></span>
               <p class="font-semibold text-white text-sm">Not ideal</p>
-              <p class="text-xs text-white/70 max-w-[220px]">Strong currents, poor visibility, or unsafe surf.</p>
+              <p class="text-xs text-white/70 max-w-[220px]">Strong wind and big swell, check condtitions at the site but diving is not recommended.</p>
             </div>
 
           </div>
