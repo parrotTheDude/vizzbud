@@ -244,7 +244,7 @@
   <!-- Drawer -->
   <nav
     class="absolute right-0 top-0 z-20 h-full w-[86%] max-w-sm
-           bg-white/10 backdrop-blur-2xl border-l border-white/10 safe-top
+           bg-white/10 backdrop-blur-2xl border-l border-white/10 safe-top-ios
            ring-1 ring-white/10 shadow-2xl rounded-l-2xl overflow-y-auto
            will-change-transform"
     :class="open ? 'translate-x-0' : 'translate-x-full'"
@@ -385,13 +385,22 @@
   @stack('scripts')
 
 <script>
-  (function () {
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      window.navigator.standalone === true; // old iOS
-    if (isStandalone) {
-      document.body.classList.add('pwa-standalone');
-    }
-  })();
+(function () {
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true; // old iOS Safari
+
+  // iOS detection (covers iPadOS that reports as Mac)
+  const ua = navigator.userAgent;
+  const isIOS =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  if (isStandalone && isIOS) {
+    document.body.classList.add('ios-pwa');
+  } else {
+    document.body.classList.remove('ios-pwa');
+  }
+})();
 </script>
 </body>

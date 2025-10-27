@@ -56,12 +56,20 @@
 
 /* Safe-area utilities (apply only when PWA is standalone) */
 @supports (padding: max(0px)) {
-  :root{
+  :root {
     --safe-top: env(safe-area-inset-top);
     --safe-bottom: env(safe-area-inset-bottom);
   }
+
+  /* 🌐 Generic standalone padding (Android + iOS) */
   .pwa-standalone .safe-top        { padding-top: max(var(--safe-top), 0px); }
   .pwa-standalone .safe-bottom     { padding-bottom: max(var(--safe-bottom), 0px); }
   .pwa-standalone .header-height   { min-height: calc(64px + var(--safe-top)); } /* 64px = h-16 */
   .pwa-standalone .main-offset     { padding-top: calc(64px + var(--safe-top)); } /* match header */
+
+  /* 🍎 iOS PWA-only safe area (used for mobile drawer) */
+  .ios-pwa .safe-top-ios {
+    padding-top: env(safe-area-inset-top);
+    padding-top: constant(safe-area-inset-top); /* legacy iOS fallback */
+  }
 }
