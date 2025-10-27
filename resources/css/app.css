@@ -38,3 +38,18 @@
   height: 100vh;
   touch-action: none;
 }
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.6s ease-out;
+}

@@ -380,6 +380,62 @@
     </div>
   </div>
 </div>
+
+<!-- 🌊 Vizzbud Install Banner -->
+<div
+  id="installAppBanner"
+  x-data
+  x-cloak
+  class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999]
+         w-[92%] sm:w-auto max-w-lg
+         bg-white/30 backdrop-blur-xl backdrop-saturate-150
+         border border-white/20 ring-1 ring-white/10
+         rounded-2xl px-5 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.35)]
+         flex items-center justify-between gap-4
+         animate-slideUp"
+>
+  <!-- Icon + Text -->
+  <div class="flex items-center gap-3">
+    <img src="/vizzbudLogo.webp" alt="Vizzbud logo"
+         class="w-10 h-10 rounded-xl shadow-sm ring-1 ring-white/20 bg-white/20">
+    <div class="flex flex-col leading-snug">
+      <strong id="installTitle" class="text-base font-semibold text-slate-900">Install Vizzbud</strong>
+      <span id="installSubtitle" class="text-sm text-slate-800/80">
+        Add to your home screen for quick access.
+      </span>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="flex items-center gap-2">
+    <!-- Android Install Button -->
+    <button
+      data-install-app
+      id="installBtn"
+      class="px-4 py-2.5 rounded-xl font-semibold
+             text-white bg-gradient-to-r from-cyan-500 to-blue-500
+             hover:from-cyan-400 hover:to-blue-400
+             shadow-md hover:shadow-lg hover:scale-[1.03]
+             focus:outline-none focus:ring-2 focus:ring-cyan-300
+             transition-all duration-200"
+    >
+      Install
+    </button>
+
+    <!-- Dismiss -->
+    <button
+      id="dismissInstallBanner"
+      class="p-2 rounded-lg text-slate-700/70 hover:text-slate-900
+             hover:bg-white/40 transition"
+      title="Dismiss"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+</div>
 @endsection
 
 @push('head')
@@ -1293,5 +1349,62 @@ function siteSearch() {
     },
   };
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  let deferredPrompt;
+  const banner = document.getElementById('installAppBanner');
+  const title = document.getElementById('installTitle');
+  const subtitle = document.getElementById('installSubtitle');
+  const installBtn = document.getElementById('installBtn');
+  const dismissBtn = document.getElementById('dismissInstallBanner');
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isInStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+  // Track visits
+  const visits = Number(localStorage.getItem('vizzbud_visit_count') || 0) + 1;
+  localStorage.setItem('vizzbud_visit_count', visits);
+
+  const dismissed = localStorage.getItem('vizzbud_dismissed_install') === 'true';
+  if (dismissed && visits % 5 === 0) {
+    localStorage.removeItem('vizzbud_dismissed_install');
+  }
+
+  // iOS custom logic (no beforeinstallprompt)
+  if (isIOS && !isInStandalone && !dismissed) {
+    banner.classList.remove('hidden');
+    title.textContent = 'Add Vizzbud to Home Screen';
+    subtitle.innerHTML = `Tap <img src="/icons/share.svg" class="inline w-4 h-4 align-text-bottom"> 
+      then <strong>Add to Home Screen</strong> to install.`;
+    installBtn.classList.add('hidden'); // hide real install button
+  }
+
+  // Android / Chrome logic
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    if (!localStorage.getItem('vizzbud_dismissed_install')) {
+      banner.classList.remove('hidden');
+    }
+  });
+
+  // Handle install click
+  installBtn?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response: ${outcome}`);
+    banner.classList.add('hidden');
+    localStorage.setItem('vizzbud_dismissed_install', 'true');
+    deferredPrompt = null;
+  });
+
+  // Handle dismiss
+  dismissBtn?.addEventListener('click', () => {
+    banner.classList.add('hidden');
+    localStorage.setItem('vizzbud_dismissed_install', 'true');
+  });
+});
 </script>
 @endpush

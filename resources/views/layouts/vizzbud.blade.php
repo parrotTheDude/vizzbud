@@ -40,10 +40,11 @@
   <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
   <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
   <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-  <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+  <link rel="manifest" href="{{ asset('manifest.json') }}">
+  <meta name="theme-color" content="#06b6d4">
   <meta name="msapplication-TileColor" content="#0f172a">
 
-  <!-- Preconnects (reduce network handshake latency) -->
+  <!-- Preconnects -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link rel="preconnect" href="https://api.mapbox.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,7 +52,7 @@
   <link rel="preconnect" href="https://scripts.simpleanalyticscdn.com" crossorigin>
   <link rel="preconnect" href="https://queue.simpleanalyticscdn.com" crossorigin>
 
-  <!-- Preloads (key visual and font assets) -->
+  <!-- Preloads -->
   <link rel="preload" as="image" href="{{ asset('vizzbudLogo.webp') }}" fetchpriority="high" imagesrcset="{{ asset('vizzbudLogo.webp') }}" imagesizes="32px">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
   <link rel="preload" as="script" href="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" importance="low">
@@ -101,6 +102,14 @@
 
   <!-- Core Web Vitals -->
   <meta http-equiv="Accept-CH" content="DPR, Viewport-Width, Width">
+
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(() => console.log('✅ Service Worker registered'))
+      .catch((err) => console.warn('Service Worker failed:', err));
+  }
+  </script>
 
   <!-- Page-specific additions -->
   @stack('head')
