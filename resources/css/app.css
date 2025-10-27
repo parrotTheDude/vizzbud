@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* --- Input field overrides (Vizzbud form readability fix) --- */
+/* --- Input field overrides --- */
 @layer components {
   /* Default (dark mode first) */
   input,
@@ -54,14 +54,15 @@
   animation: slideUp 0.6s ease-out;
 }
 
-/* Only when the app is installed (we add .pwa-standalone on <html>) */
+/* Only when installed PWA is open */
 @supports (padding: max(0px)) {
-  .pwa-standalone :root {
+  :root.pwa-standalone {
     --safe-top: env(safe-area-inset-top);
     --safe-bottom: env(safe-area-inset-bottom);
   }
+
   .pwa-standalone .safe-top      { padding-top: max(var(--safe-top), 0px); }
   .pwa-standalone .safe-bottom   { padding-bottom: max(var(--safe-bottom), 0px); }
   .pwa-standalone .header-height { min-height: calc(64px + var(--safe-top)); } /* 64px = h-16 */
-  .pwa-standalone .main-offset   { padding-top: calc(64px + var(--safe-top)); } /* match header */
+  .pwa-standalone .main-offset   { padding-top: calc(64px + var(--safe-top)); }
 }

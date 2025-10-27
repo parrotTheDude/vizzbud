@@ -149,7 +149,7 @@
       <div class="pointer-events-none absolute -z-10 inset-x-8 -top-8 h-16 rounded-full bg-cyan-500/15 blur-2xl"></div>
 
       <!-- Content-->
-      <div class="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+      <div class="mx-auto max-w-7xl px-6 min-h-16 flex items-center justify-between">
         <!-- Logo -->
         <a href="{{ route('home') }}" class="flex items-center gap-2 group">
           <img
@@ -364,7 +364,7 @@
 </div>
 
   <!-- Main -->
-  <main id="main" class="relative z-0 pt-16 main-offset">
+  <main id="main" class="relative z-0 main-offset">
     @yield('content')
   </main>
 
