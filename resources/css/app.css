@@ -54,21 +54,14 @@
   animation: slideUp 0.6s ease-out;
 }
 
-/* Apply safe area in standalone (PWA) only */
-@supports(padding: max(0px)) {
-  /* iOS Safari: env() works in and out of standalone, but we gate via display-mode */
-  body.pwa-standalone {
-    padding-top: max(env(safe-area-inset-top), 0px);
-    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+/* Safe-area utilities (apply only when PWA is standalone) */
+@supports (padding: max(0px)) {
+  :root{
+    --safe-top: env(safe-area-inset-top);
+    --safe-bottom: env(safe-area-inset-bottom);
   }
-
-  /* If you have a fixed header/nav, offset it as well */
-  .pwa-standalone .safe-top {
-    padding-top: max(env(safe-area-inset-top), 0px);
-  }
-
-  /* If you have a fixed bottom bar / FAB, give it breathing room */
-  .pwa-standalone .safe-bottom {
-    padding-bottom: max(env(safe-area-inset-bottom), 0px);
-  }
+  .pwa-standalone .safe-top        { padding-top: max(var(--safe-top), 0px); }
+  .pwa-standalone .safe-bottom     { padding-bottom: max(var(--safe-bottom), 0px); }
+  .pwa-standalone .header-height   { min-height: calc(64px + var(--safe-top)); } /* 64px = h-16 */
+  .pwa-standalone .main-offset     { padding-top: calc(64px + var(--safe-top)); } /* match header */
 }
