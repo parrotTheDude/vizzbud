@@ -17,6 +17,11 @@ class State extends Model
         return $this->hasMany(Region::class);
     }
 
+    public function diveSites()
+    {
+        return $this->hasManyThrough(DiveSite::class, Region::class);
+    }
+
     protected static function booted() {
         static::saving(fn ($state) => $state->slug = Str::slug($state->name));
     }
