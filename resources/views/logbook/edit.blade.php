@@ -9,6 +9,40 @@
 @section('title', "Edit Dive #{$displayNum} | {$siteName} | Vizzbud")
 @section('meta_description', "Update details for Dive #{$displayNum} at {$siteName}. Edit depth, duration, gear, notes, and more in your dive log.")
 
+{{-- 🚫 Noindex to keep edit forms private --}}
+@section('noindex')
+  <meta name="robots" content="noindex, nofollow">
+@endsection
+
+{{-- 🌍 Open Graph / Twitter (for nice previews if ever shared privately) --}}
+@section('og_title', "Edit Dive #{$displayNum} | {$siteName}")
+@section('og_description', "Private editing page for Dive #{$displayNum} at {$siteName} on Vizzbud.")
+@section('og_image', asset('images/divesites/default.webp'))
+@section('twitter_title', "Edit Dive #{$displayNum} | {$siteName}")
+@section('twitter_description', "Edit and update your personal dive log on Vizzbud.")
+@section('twitter_image', asset('images/divesites/default.webp'))
+
+@push('head')
+  {{-- Canonical back to logbook index --}}
+  <link rel="canonical" href="{{ url('/logbook') }}">
+
+  {{-- Optional structured data (low-impact, for completeness) --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Edit Dive Log",
+    "description": "Edit and update your recorded scuba dive details including depth, time, and site on Vizzbud.",
+    "url": "{{ url()->current() }}",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com"
+    }
+  }
+  </script>
+@endpush
+
 @section('content')
 <section class="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
 

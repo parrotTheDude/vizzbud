@@ -1,69 +1,98 @@
 @extends('layouts.vizzbud')
 
 @section('title', "{$diveSite->name} Dive Guide | Conditions, Entry & Marine Life")
-@section('meta_description', "How to dive {$diveSite->name}: entry points, depth, hazards, marine life, and live dive conditions in {$diveSite->region->name}, {$diveSite->region->state->name}, {$diveSite->region->state->country->name}.")
+@section('meta_description', "How to dive {{ $diveSite->name }} — entry points, depth, hazards, marine life, and live dive conditions in {{ $diveSite->region->name }}, {{ $diveSite->region->state->name }}, {{ $diveSite->region->state->country->name }}.")
 
 {{-- 🌍 Open Graph / Twitter --}}
-@section('og_title', "{$diveSite->name} Dive Guide | {$diveSite->region->name}")
-@section('og_description', "Explore {$diveSite->name}: live dive conditions, depth info, marine life, and local dive tips.")
-@section('og_image', asset(optional($diveSite->photos()->where('is_featured', true)->first())->image_path ?? 'og-image.webp'))
+@section('og_title', "{$diveSite->name} Dive Guide | {{ $diveSite->region->name }}")
+@section('og_description', "Explore {{ $diveSite->name }}: live dive conditions, entry info, depth details, marine life, and local dive tips.")
+@section('og_image', asset(optional($diveSite->photos()->where('is_featured', true)->first())->image_path ?? 'images/divesites/default.webp'))
 @section('og_type', 'article')
 @section('og_locale', 'en_AU')
 @section('twitter_card', 'summary_large_image')
+@section('twitter_title', "{$diveSite->name} Dive Guide | {{ $diveSite->region->name }}")
+@section('twitter_description', "How to dive {{ $diveSite->name }}: entry, hazards & current conditions in {{ $diveSite->region->state->name }}.")
+@section('twitter_image', asset(optional($diveSite->photos()->where('is_featured', true)->first())->image_path ?? 'images/divesites/default.webp'))
 
 @push('head')
+  {{-- Article metadata (for Facebook/Twitter rich previews) --}}
   <meta property="article:section" content="Dive Guides">
   <meta property="article:published_time" content="{{ $diveSite->created_at->toIso8601String() }}">
   <meta property="article:modified_time" content="{{ $diveSite->updated_at->toIso8601String() }}">
-@endpush
 
-@section('twitter_title', "{$diveSite->name} Dive Guide | {$diveSite->region->name}")
-@section('twitter_description', "How to dive {$diveSite->name}: entry, hazards & current conditions in {$diveSite->region->state->name}.")
-@section('twitter_image', asset(optional($diveSite->photos()->where('is_featured', true)->first())->image_path ?? 'og-image.webp'))
+  {{-- Canonical URL for consistent SEO --}}
+  <link rel="canonical" href="{{ url()->current() }}">
 
-{{-- 🧭 Structured Data --}}
-@push('head')
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Place",
-  "name": "{{ $diveSite->name }}",
-  "description": "{{ Str::limit(strip_tags($diveSite->description ?? 'Dive site details and conditions.'), 160) }}",
-  "url": "{{ url()->current() }}",
-  "image": "{{ asset(optional($diveSite->photos()->where('is_featured', true)->first())->image_path ?? 'og-image.webp') }}",
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": {{ $diveSite->lat }},
-    "longitude": {{ $diveSite->lng }}
-  },
-  "address": {
-    "@type": "PostalAddress",
-    "addressRegion": "{{ $diveSite->region->state->name ?? '' }}",
-    "addressCountry": "{{ $diveSite->region->state->country->name ?? '' }}"
-  }
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Dive Sites",
-      "item": "https://vizzbud.com/dive-sites"
+  {{-- ✅ Structured Data for Dive Site Page --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TouristAttraction",
+    "name": "{{ $diveSite->name }}",
+    "description": "{{ Str::limit(strip_tags($diveSite->description ?? 'Dive site details and conditions.'), 160) }}",
+    "image": "{{ asset(optional($diveSite->photos()->where('is_featured', true)->first())->image_path ?? 'images/divesites/default.webp') }}",
+    "url": "{{ url()->current() }}",
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": {{ $diveSite->lat }},
+      "longitude": {{ $diveSite->lng }}
     },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "{{ $diveSite->name }}",
-      "item": "{{ url()->current() }}"
+    "address": {
+      "@type": "PostalAddress",
+      "addressRegion": "{{ $diveSite->region->state->name ?? '' }}",
+      "addressCountry": "{{ $diveSite->region->state->country->name ?? '' }}"
+    },
+    "isAccessibleForFree": true,
+    "touristType": "Scuba Divers",
+    "containedInPlace": {
+      "@type": "Place",
+      "name": "{{ $diveSite->region->name }}, {{ $diveSite->region->state->country->name }}"
     }
-  ]
-}
-</script>
+  }
+  </script>
+
+  {{-- Breadcrumbs for better SERP context --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Dive Sites",
+        "item": "https://vizzbud.com/dive-sites"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "{{ $diveSite->region->state->country->name }}",
+        "item": "https://vizzbud.com/dive-sites/{{ $diveSite->region->state->country->slug }}"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ $diveSite->region->state->name }}",
+        "item": "https://vizzbud.com/dive-sites/{{ $diveSite->region->state->country->slug }}/{{ $diveSite->region->state->slug }}"
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "{{ $diveSite->region->name }}",
+        "item": "https://vizzbud.com/dive-sites/{{ $diveSite->region->state->country->slug }}/{{ $diveSite->region->state->slug }}/{{ $diveSite->region->slug }}"
+      },
+      {
+        "@type": "ListItem",
+        "position": 5,
+        "name": "{{ $diveSite->name }}",
+        "item": "{{ url()->current() }}"
+      }
+    ]
+  }
+  </script>
+
+  {{-- Mapbox Styles --}}
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
 @endpush
 
 @php
@@ -77,10 +106,6 @@
       default  => 'cyan',
   };
 @endphp
-
-@push('head')
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">  
-@endpush
 
 @section('content')
 <section class="relative">

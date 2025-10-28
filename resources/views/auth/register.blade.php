@@ -3,6 +3,22 @@
 @section('title', 'Create Your Vizzbud Account')
 @section('meta_description', 'Sign up for a free Vizzbud account to log your scuba dives, track stats, and explore real-time dive site conditions.')
 
+@push('head')
+  {{-- Auth and registration pages should never be indexed --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical URL for clarity --}}
+  <link rel="canonical" href="{{ url('/register') }}">
+
+  {{-- Optional OG/Twitter for clean private shares --}}
+  <meta property="og:title" content="Join Vizzbud | Create Your Account">
+  <meta property="og:description" content="Create a Vizzbud account to log your dives, view stats, and explore live scuba dive conditions.">
+  <meta property="og:image" content="{{ asset('images/divesites/default.webp') }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ url('/register') }}">
+  <meta name="twitter:card" content="summary">
+@endpush
+
 @section('content')
 <section class="relative max-w-md mx-auto px-6 py-16">
 

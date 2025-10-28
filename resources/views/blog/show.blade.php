@@ -1,6 +1,57 @@
 @extends('layouts.vizzbud')
 
-@section('title', $post->title)
+@section('title', "{$post->title} | Vizzbud Blog")
+@section('meta_description', Str::limit(strip_tags($post->excerpt ?? $post->content), 160))
+
+@push('head')
+  {{-- Canonical --}}
+  <link rel="canonical" href="{{ route('blog.show', $post->slug) }}">
+
+  {{-- Open Graph / Twitter --}}
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{ $post->title }}">
+  <meta property="og:description" content="{{ Str::limit(strip_tags($post->excerpt ?? $post->content), 200) }}">
+  <meta property="og:image" content="{{ $post->featured_image ? asset($post->featured_image) : asset('images/divesites/default.webp') }}">
+  <meta property="og:url" content="{{ route('blog.show', $post->slug) }}">
+  <meta property="article:published_time" content="{{ $post->created_at->toIso8601String() }}">
+  <meta property="article:modified_time" content="{{ $post->updated_at->toIso8601String() }}">
+  <meta property="article:author" content="{{ $post->author->name ?? 'Vizzbud Team' }}">
+  <meta property="og:site_name" content="Vizzbud">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ $post->title }}">
+  <meta name="twitter:description" content="{{ Str::limit(strip_tags($post->excerpt ?? $post->content), 200) }}">
+  <meta name="twitter:image" content="{{ $post->featured_image ? asset($post->featured_image) : asset('images/divesites/default.webp') }}">
+
+  {{-- Structured Data: BlogPosting --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "{{ $post->title }}",
+    "description": "{{ Str::limit(strip_tags($post->excerpt ?? $post->content), 200) }}",
+    "image": "{{ $post->featured_image ? asset($post->featured_image) : asset('images/divesites/default.webp') }}",
+    "author": {
+      "@type": "Person",
+      "name": "{{ $post->author->name ?? 'Vizzbud Team' }}"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Vizzbud",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://vizzbud.com/android-chrome-512x512.png"
+      }
+    },
+    "datePublished": "{{ $post->created_at->toIso8601String() }}",
+    "dateModified": "{{ $post->updated_at->toIso8601String() }}",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "{{ route('blog.show', $post->slug) }}"
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 <section class="max-w-4xl mx-auto px-4 sm:px-6 py-12 text-white">

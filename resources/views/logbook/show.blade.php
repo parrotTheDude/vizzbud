@@ -9,10 +9,10 @@
     : "Dive #{$diveNumber} @ {$siteName} | Vizzbud";
 
   $metaDescription = ($diveTitle !== '')
-    ? "{$diveTitle} — Details for Dive #{$diveNumber} at {$siteName}: " .
+    ? "{$diveTitle} — Dive #{$diveNumber} at {$siteName}: " .
       ($log->depth ?? 'unknown') . "m / " . ($log->duration ?? 'unknown') .
       " min. View your personal dive stats on Vizzbud."
-    : "Details for Dive #{$diveNumber} at {$siteName}: " .
+    : "Dive #{$diveNumber} at {$siteName}: " .
       ($log->depth ?? 'unknown') . "m / " . ($log->duration ?? 'unknown') .
       " min. View your personal dive stats on Vizzbud.";
 
@@ -22,25 +22,64 @@
 @section('title', $title)
 @section('meta_description', $metaDescription)
 
+{{-- 🚫 Noindex for personal logs --}}
+@section('noindex')
+  <meta name="robots" content="noindex, nofollow">
+@endsection
+
+{{-- 🌍 Open Graph / Twitter (for sharing) --}}
+@section('og_title', $title)
+@section('og_description', $metaDescription)
+@section('og_image', asset('images/divesites/default.webp'))
+@section('twitter_title', $title)
+@section('twitter_description', $metaDescription)
+@section('twitter_image', asset('images/divesites/default.webp'))
+
 @push('head')
+  {{-- Canonical to the main logbook --}}
+  <link rel="canonical" href="{{ url('/logbook') }}">
+
+  {{-- Structured Data (for personal activity tracking, not SEO ranking) --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ExerciseAction",
+    "name": "Scuba Dive #{{ $diveNumber }}",
+    "description": "{{ Str::limit(strip_tags($metaDescription), 160) }}",
+    "agent": {
+      "@type": "Person",
+      "name": "{{ auth()->user()->name ?? 'Vizzbud Diver' }}"
+    },
+    "location": {
+      "@type": "Place",
+      "name": "{{ $siteName }}",
+      @if($hasSite)
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": {{ $log->site->lat }},
+        "longitude": {{ $log->site->lng }}
+      }
+      @endif
+    },
+    "startTime": "{{ optional($log->date)->toIso8601String() }}",
+    "endTime": "{{ optional($log->date)->copy()->addMinutes($log->duration ?? 0)->toIso8601String() }}"
+  }
+  </script>
+
+  {{-- Mapbox CSS & small UI tweak for footer overlap --}}
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" />
   <script defer src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
 
   <style>
-    /* Nudge controls up so the footer overlay doesn’t cover them */
     #dive-site-map-desktop .mapboxgl-ctrl-bottom-right,
-    #dive-site-map-desktop .mapboxgl-ctrl-bottom-left {
-        bottom: 3.25rem; /* match overlay height */
-        right: .75rem;   /* slight inset looks nicer */
-        left: .75rem;
-    }
+    #dive-site-map-desktop .mapboxgl-ctrl-bottom-left,
     #dive-site-map-mobile .mapboxgl-ctrl-bottom-right,
     #dive-site-map-mobile .mapboxgl-ctrl-bottom-left {
         bottom: 3.25rem;
-        right: .5rem;
-        left: .5rem;
+        right: .75rem;
+        left: .75rem;
     }
-    </style>
+  </style>
 @endpush
 
 @section('content')

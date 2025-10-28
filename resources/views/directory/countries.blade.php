@@ -1,5 +1,49 @@
 @extends('layouts.vizzbud')
+
 @section('title', 'Dive Sites by Country | Vizzbud')
+@section('meta_description', 'Browse global scuba dive sites by country. Discover the best diving destinations worldwide and explore each region’s top dive spots.')
+
+{{-- 🌍 Open Graph / Twitter --}}
+@section('og_title', 'Dive Sites by Country | Vizzbud')
+@section('og_description', 'Explore dive destinations around the world — from Australia to Indonesia and beyond. See top regions, dive types, and live conditions.')
+@section('og_image', asset('images/divesites/default.webp'))
+@section('twitter_title', 'Dive Sites by Country | Vizzbud')
+@section('twitter_description', 'Explore global dive destinations and local conditions on Vizzbud.')
+@section('twitter_image', asset('images/divesites/default.webp'))
+
+@push('head')
+  {{-- Canonical --}}
+  <link rel="canonical" href="{{ url('/dive-sites') }}">
+
+  {{-- Structured Data --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Dive Sites by Country",
+    "description": "Browse global scuba dive sites by country and explore top diving destinations worldwide with Vizzbud.",
+    "url": "https://vizzbud.com/dive-sites",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com"
+    },
+    "mainEntity": {
+      "@type": "ItemList",
+      "itemListElement": [
+        @foreach($countries as $index => $country)
+        {
+          "@type": "ListItem",
+          "position": {{ $index + 1 }},
+          "name": "{{ $country->name }}",
+          "url": "{{ route('dive-sites.country', $country->slug) }}"
+        }@if(!$loop->last),@endif
+        @endforeach
+      ]
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 @php

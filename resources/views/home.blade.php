@@ -4,21 +4,6 @@
 @section('meta_description', 'Explore live scuba dive site conditions and log your underwater adventures with Vizzbud. Plan your dives smarter with real-time updates.')
 
 @section('head')
-  {{-- Structured data for Google --}}
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Vizzbud",
-    "url": "https://vizzbud.com/",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://vizzbud.com/dive-sites?query={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
-  }
-  </script>
-
   {{-- Open Graph / Twitter meta tags --}}
   <meta property="og:type" content="website">
   <meta property="og:title" content="Vizzbud | Real-Time Dive Conditions, Logs & Stats">

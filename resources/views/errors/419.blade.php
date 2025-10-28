@@ -1,7 +1,35 @@
 @extends('layouts.vizzbud')
 
 @section('title', 'Session Expired | Vizzbud')
-@section('meta_description', 'Your session has expired. Please refresh and try again.')
+@section('meta_description', 'Your session has expired. Please refresh the page or log in again to continue using Vizzbud.')
+
+@push('head')
+  {{-- 🚫 Prevent search engines from indexing transient or error states --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical (safe, though this shouldn’t be indexed) --}}
+  <link rel="canonical" href="{{ url()->current() }}">
+
+  {{-- Theme consistency --}}
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Vizzbud">
+  <meta name="color-scheme" content="dark light">
+
+  {{-- Optional structured data for clarity --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Session Expired",
+    "description": "Your session expired due to inactivity or timeout. Please refresh or log in again to continue using Vizzbud.",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com"
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 <section class="relative flex items-center justify-center px-6 py-24 sm:py-32">

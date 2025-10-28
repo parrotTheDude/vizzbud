@@ -3,6 +3,40 @@
 @section('title', 'Log a New Dive | Vizzbud')
 @section('meta_description', 'Record a new scuba dive including site, depth, duration, gear, and conditions. Keep your dive history organized with Vizzbud.')
 
+{{-- 🚫 Noindex for private user content --}}
+@section('noindex')
+  <meta name="robots" content="noindex, nofollow">
+@endsection
+
+{{-- 🌍 Open Graph / Twitter --}}
+@section('og_title', 'Log a New Dive | Vizzbud')
+@section('og_description', 'Privately record your scuba dive details — site, time, depth, and conditions — in your Vizzbud dive log.')
+@section('og_image', asset('images/divesites/default.webp'))
+@section('twitter_title', 'Log a New Dive | Vizzbud')
+@section('twitter_description', 'Record a new scuba dive in your private Vizzbud logbook.')
+@section('twitter_image', asset('images/divesites/default.webp'))
+
+@push('head')
+  {{-- Canonical reference back to main logbook index --}}
+  <link rel="canonical" href="{{ url('/logbook') }}">
+
+  {{-- Optional structured data (helps maintain context consistency) --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Log a New Dive",
+    "description": "Create a new scuba dive log entry including site, depth, time, and equipment details using Vizzbud.",
+    "url": "{{ url()->current() }}",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com"
+    }
+  }
+  </script>
+@endpush
+
 @section('content')
 @php $returnTo = request('return', route('logbook.index')); @endphp
 <section class="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-12">

@@ -1,10 +1,39 @@
 @extends('layouts.vizzbud')
 
-@section('title', 'Edit Post')
+@section('title', 'Edit Post | Admin | Vizzbud')
+@section('meta_description', 'Edit an existing blog post in the Vizzbud admin dashboard. Update titles, content, images, and SEO details.')
+
+@push('head')
+  {{-- 🚫 Prevent indexing (private admin area) --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical (for internal consistency) --}}
+  <link rel="canonical" href="{{ route('admin.blog.edit', $post->id ?? null) }}">
+
+  {{-- Admin UI Theme --}}
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Vizzbud Admin">
+  <meta name="color-scheme" content="dark">
+
+  {{-- Optional structured data for internal context --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Vizzbud Admin — Edit Blog Post",
+    "url": "{{ route('admin.blog.edit', $post->id ?? null) }}",
+    "description": "Administrative dashboard page for editing an existing blog post on Vizzbud.",
+    "creator": {
+      "@type": "Organization",
+      "name": "Vizzbud"
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 <section class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
-    <h1 class="text-3xl font-bold text-white mb-6">✏️ Edit Blog Post</h1>
+    <h1 class="text-3xl font-bold text-white mb-6">Edit Blog Post</h1>
 
     @if ($errors->any())
         <div class="bg-red-600 text-white px-4 py-2 rounded mb-6">

@@ -3,6 +3,22 @@
 @section('title', 'Reset Your Password | Vizzbud')
 @section('meta_description', 'Enter a new password to regain access to your Vizzbud account and continue logging your scuba dives.')
 
+@push('head')
+  {{-- Auth pages should never be indexed --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical --}}
+  <link rel="canonical" href="{{ url('/reset-password') }}">
+
+  {{-- Open Graph / Twitter for private shares --}}
+  <meta property="og:title" content="Reset Your Password | Vizzbud">
+  <meta property="og:description" content="Securely set a new password to restore access to your Vizzbud dive log and account.">
+  <meta property="og:image" content="{{ asset('images/divesites/default.webp') }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ url('/reset-password') }}">
+  <meta name="twitter:card" content="summary">
+@endpush
+
 @section('content')
 <section class="relative max-w-md mx-auto px-6 py-16">
 

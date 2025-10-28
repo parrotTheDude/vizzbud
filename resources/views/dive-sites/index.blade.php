@@ -4,19 +4,38 @@
 @section('meta_description', 'Explore live scuba dive site conditions on an interactive map. Filter by dive level, type, and get wave, wind, and tide data for each location.')
 
 @section('head')
-  <link rel="canonical" href="{{ url('/dive-sites') }}">
+  {{-- ✅ Canonical URL --}}
+  <link rel="canonical" href="{{ url('/dive-map') }}">
+
+  {{-- 🧭 Meta robots handling: hide bbox/lat/lng variations from Google --}}
   @if (!empty($hasMapParams) && $hasMapParams)
     <meta name="robots" content="noindex,follow">
     <script>
-      // Clean up query params from the URL after load
+      // Clean up query params from the URL after map load to keep canonical SEO clean
       window.addEventListener('load', () => {
-        const baseUrl = window.location.origin + '/dive-sites';
+        const baseUrl = window.location.origin + '/dive-map';
         if (window.location.search.length > 0) {
           window.history.replaceState({}, '', baseUrl);
         }
       });
     </script>
   @endif
+
+  {{-- 🧾 Structured data for SEO --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Dive Site Map",
+    "url": "https://vizzbud.com/dive-map",
+    "description": "Explore live scuba dive site conditions on an interactive map. Filter by dive level, type, and get wave, wind, and tide data for each location.",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com"
+    }
+  }
+  </script>
 @endsection
 
 @push('head')

@@ -1,7 +1,23 @@
 @extends('layouts.vizzbud')
 
 @section('title', 'Log In to Vizzbud')
-@section('meta_description', 'Access your Vizzbud dive log account to manage your dives, view stats, and explore scuba sites with real-time conditions.')
+@section('meta_description', 'Access your Vizzbud account to manage your dive logs, view stats, and explore live scuba dive conditions.')
+
+@push('head')
+  {{-- Auth pages should never be indexed --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical (clean URL for consistency) --}}
+  <link rel="canonical" href="{{ url('/login') }}">
+
+  {{-- Optional Open Graph (so private shares look neat) --}}
+  <meta property="og:title" content="Log In to Vizzbud">
+  <meta property="og:description" content="Access your dive log, stats, and dive planning tools securely on Vizzbud.">
+  <meta property="og:image" content="{{ asset('images/divesites/default.webp') }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ url('/login') }}">
+  <meta name="twitter:card" content="summary">
+@endpush
 
 @section('content')
 <section class="relative max-w-md mx-auto px-6 py-16">

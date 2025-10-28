@@ -1,6 +1,35 @@
 @extends('layouts.vizzbud')
 
-@section('title', 'Manage Blog')
+@section('title', 'Manage Blog | Admin | Vizzbud')
+@section('meta_description', 'Create, edit, and manage blog posts in the Vizzbud admin dashboard.')
+
+@push('head')
+  {{-- 🚫 Prevent indexing (private admin area) --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical (for internal reference only) --}}
+  <link rel="canonical" href="{{ route('admin.blog.index') }}">
+
+  {{-- Admin UI meta --}}
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Vizzbud Admin">
+  <meta name="color-scheme" content="dark">
+
+  {{-- Optional structured data (for internal context or analytics) --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Vizzbud Admin — Blog Management",
+    "url": "{{ route('admin.blog.index') }}",
+    "description": "Administrative dashboard for managing blog articles, drafts, and publishing settings in Vizzbud.",
+    "creator": {
+      "@type": "Organization",
+      "name": "Vizzbud"
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 <section class="max-w-6xl mx-auto px-4 sm:px-6 py-12">

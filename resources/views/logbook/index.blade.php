@@ -3,8 +3,59 @@
 @section('title', 'Dive Log | Vizzbud')
 @section('meta_description', 'Track your scuba dives by site, depth, and duration. View stats, charts, and search your personal dive history with Vizzbud.')
 
+{{-- 🌍 Open Graph / Twitter --}}
+@section('og_title', 'Dive Log | Vizzbud')
+@section('og_description', 'Track dives, explore stats, and visualize your scuba history with Vizzbud.')
+@section('og_image', asset('images/divesites/default.webp'))
+@section('twitter_title', 'Dive Log | Vizzbud')
+@section('twitter_description', 'Log your scuba dives and explore your personal dive data with Vizzbud.')
+@section('twitter_image', asset('images/divesites/default.webp'))
+
+{{-- Canonical + Structured Data --}}
 @push('head')
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <link rel="canonical" href="{{ url('/logbook') }}">
+
+  {{-- Structured Data (WebPage + Breadcrumbs) --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Dive Log",
+    "description": "Track and analyze your scuba dives by site, depth, and duration using Vizzbud’s personal dive log system.",
+    "url": "https://vizzbud.com/logbook",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://vizzbud.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Dive Log",
+          "item": "https://vizzbud.com/logbook"
+        }
+      ]
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://vizzbud.com/android-chrome-512x512.png"
+      }
+    }
+  }
+  </script>
+@endpush
+
+{{-- Mapbox dependencies --}}
+@push('head')
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
   <script defer src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
 @endpush
 

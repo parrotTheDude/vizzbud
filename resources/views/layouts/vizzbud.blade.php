@@ -21,7 +21,6 @@
   @endif
 
   <!-- Theme -->
-  <meta name="theme-color" content="#0f172a">
   <meta name="color-scheme" content="dark light">
 
   <!-- Open Graph / Twitter -->
@@ -31,10 +30,13 @@
   <meta property="og:description" content="@yield('og_description', 'Dive sites, live conditions, and dive logs.')">
   <meta property="og:url" content="https://vizzbud.com{{ request()->getPathInfo() }}">
   <meta property="og:image" content="@yield('og_image', asset('og-image.webp'))">
+  <meta property="og:locale" content="en_AU">
+  <meta property="og:image:alt" content="Vizzbud – Dive smarter with live conditions and dive site guides">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="@yield('twitter_title', 'Vizzbud')">
   <meta name="twitter:description" content="@yield('twitter_description', 'Track dives, see live conditions, and plan your next dive.')">
   <meta name="twitter:image" content="@yield('twitter_image', asset('og-image.webp'))">
+  <meta name="keywords" content="@yield('keywords', 'scuba diving, dive sites, dive conditions, diving Australia, Vizzbud')">
 
   <!-- Favicons -->
   <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
@@ -43,12 +45,13 @@
   <link rel="manifest" href="{{ asset('manifest.json') }}">
   <meta name="theme-color" content="#06b6d4">
   <meta name="msapplication-TileColor" content="#0f172a">
+  <link rel="alternate" href="https://vizzbud.com{{ request()->getPathInfo() }}" hreflang="en">
 
   <!-- Preconnects -->
-  <link rel="preconnect" href="https://unpkg.com" crossorigin>
-  <link rel="preconnect" href="https://api.mapbox.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://api.mapbox.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link rel="preconnect" href="https://scripts.simpleanalyticscdn.com" crossorigin>
   <link rel="preconnect" href="https://queue.simpleanalyticscdn.com" crossorigin>
 
@@ -85,14 +88,13 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebSite",
+    "@type": "Organization",
     "name": "Vizzbud",
-    "url": "https://vizzbud.com/",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://vizzbud.com/dive-sites?query={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
+    "url": "https://vizzbud.com",
+    "logo": "https://vizzbud.com/android-chrome-512x512.png",
+    "sameAs": [
+      "https://www.instagram.com/vizzbud"
+    ]
   }
   </script>
 

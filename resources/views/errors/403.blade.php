@@ -3,6 +3,34 @@
 @section('title', 'Access Denied | Vizzbud')
 @section('meta_description', 'You don’t have permission to access this page on Vizzbud.')
 
+@push('head')
+  {{-- 🚫 Prevent search engines from indexing restricted content --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical (for clarity, though shouldn’t be crawled) --}}
+  <link rel="canonical" href="{{ url()->current() }}">
+
+  {{-- Theme and identity --}}
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Vizzbud">
+  <meta name="color-scheme" content="dark light">
+
+  {{-- Optional structured data --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Access Denied",
+    "description": "This page is restricted and requires additional permissions on Vizzbud.",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com"
+    }
+  }
+  </script>
+@endpush
+
 @section('content')
 <section class="relative flex items-center justify-center px-6 py-24 sm:py-32">
   {{-- background glow --}}

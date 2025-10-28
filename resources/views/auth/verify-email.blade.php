@@ -3,6 +3,22 @@
 @section('title', 'Verify Your Email | Vizzbud')
 @section('meta_description', 'Please verify your email to activate your Vizzbud account and start logging your scuba dives and viewing live dive site data.')
 
+@push('head')
+  {{-- Auth verification pages should never be indexed --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical --}}
+  <link rel="canonical" href="{{ url('/verify-email') }}">
+
+  {{-- OG / Twitter (for private links in email clients etc.) --}}
+  <meta property="og:title" content="Verify Your Email | Vizzbud">
+  <meta property="og:description" content="Confirm your email address to complete registration and access your Vizzbud dive log and live site data.">
+  <meta property="og:image" content="{{ asset('images/divesites/default.webp') }}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ url('/verify-email') }}">
+  <meta name="twitter:card" content="summary">
+@endpush
+
 @section('content')
 <section class="relative max-w-md mx-auto px-6 py-16">
 

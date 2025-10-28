@@ -1,6 +1,44 @@
 @extends('layouts.vizzbud')
 
-@section('title', $user->name . ' | Profile | Vizzbud')
+@section('title', "{$user->name} | Profile | Vizzbud")
+@section('meta_description', "View {$user->name}'s diving profile on Vizzbud — dive logs, stats, and favorite dive sites.")
+
+@push('head')
+  {{-- User profile pages should only be indexed if public --}}
+  @if($user->is_public ?? false)
+    <meta name="robots" content="index,follow">
+  @else
+    <meta name="robots" content="noindex, nofollow">
+  @endif
+
+  {{-- Canonical --}}
+  <link rel="canonical" href="{{ route('profile.show', $user->slug ?? $user->id) }}">
+
+  {{-- Open Graph / Twitter --}}
+  <meta property="og:title" content="{{ $user->name }}'s Dive Profile | Vizzbud">
+  <meta property="og:description" content="Explore {{ $user->name }}'s latest dives, stats, and favorite sites on Vizzbud.">
+  <meta property="og:image" content="{{ $user->avatar_url ?? asset('images/divesites/default.webp') }}">
+  <meta property="og:type" content="profile">
+  <meta property="og:url" content="{{ route('profile.show', $user->slug ?? $user->id) }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ $user->name }}'s Dive Profile | Vizzbud">
+  <meta name="twitter:description" content="View {{ $user->name }}'s dive log, stats, and favorite sites.">
+  <meta name="twitter:image" content="{{ $user->avatar_url ?? asset('images/divesites/default.webp') }}">
+
+  {{-- Structured Data --}}
+  @if($user->is_public ?? false)
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "{{ $user->name }}",
+    "url": "{{ route('profile.show', $user->slug ?? $user->id) }}",
+    "image": "{{ $user->avatar_url ?? asset('images/divesites/default.webp') }}",
+    "description": "Diver on Vizzbud — logging dives and exploring global dive sites."
+  }
+  </script>
+  @endif
+@endpush
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100 py-10 px-4 sm:px-6">

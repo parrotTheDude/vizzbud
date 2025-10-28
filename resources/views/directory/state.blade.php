@@ -1,5 +1,48 @@
 @extends('layouts.vizzbud')
-@section('title', $country->name . ' Dive Regions | Vizzbud')
+@section('title', $country->name . ' Dive Regions & States | Vizzbud')
+@section('meta_description', 'Explore dive regions and states within ' . $country->name . '. Find top scuba diving locations, conditions, and local guides on Vizzbud.')
+
+{{-- 🌍 Open Graph / Twitter --}}
+@section('og_title', $country->name . ' Dive Regions & States | Vizzbud')
+@section('og_description', 'Discover ' . $country->name . ' dive destinations — explore each region’s top dive sites and local conditions.')
+@section('og_image', asset('images/divesites/default.webp'))
+@section('twitter_title', $country->name . ' Dive Regions & States | Vizzbud')
+@section('twitter_description', 'Explore scuba diving regions and dive sites across ' . $country->name . ' on Vizzbud.')
+@section('twitter_image', asset('images/divesites/default.webp'))
+
+@push('head')
+  {{-- Canonical --}}
+  <link rel="canonical" href="{{ route('dive-sites.country', $country->slug) }}">
+
+  {{-- Structured Data --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "{{ $country->name }} Dive Regions",
+    "description": "Browse scuba diving regions and states within {{ $country->name }} and explore each area's dive sites and local conditions.",
+    "url": "{{ route('dive-sites.country', $country->slug) }}",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com"
+    },
+    "mainEntity": {
+      "@type": "ItemList",
+      "itemListElement": [
+        @foreach($states as $index => $state)
+        {
+          "@type": "ListItem",
+          "position": {{ $index + 1 }},
+          "name": "{{ $state->name }}",
+          "url": "{{ route('dive-sites.state', [$country->slug, $state->slug]) }}"
+        }@if(!$loop->last),@endif
+        @endforeach
+      ]
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 @php

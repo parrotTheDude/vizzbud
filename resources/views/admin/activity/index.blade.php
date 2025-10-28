@@ -1,6 +1,35 @@
 @extends('layouts.vizzbud')
 
-@section('title', 'Activity Logs | Admin')
+@section('title', 'Activity Logs | Admin | Vizzbud')
+@section('meta_description', 'View and monitor user and system activity logs within the Vizzbud admin dashboard.')
+
+@push('head')
+  {{-- 🚫 Admin pages should never be indexed --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical (for internal reference) --}}
+  <link rel="canonical" href="{{ route('admin.activity.index') }}">
+
+  {{-- Theme & display --}}
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Vizzbud Admin">
+  <meta name="color-scheme" content="dark">
+
+  {{-- Optional structured data for internal admin clarity --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Vizzbud Admin — Activity Logs",
+    "url": "{{ route('admin.activity.index') }}",
+    "description": "Administrative dashboard page for viewing user and system activity logs on Vizzbud.",
+    "creator": {
+      "@type": "Organization",
+      "name": "Vizzbud"
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 <section class="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">

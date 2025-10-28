@@ -1,7 +1,57 @@
 @extends('layouts.vizzbud')
 
 @section('title', 'How Vizzbud Works — A Diver’s Guide')
-@section('meta_description', 'Learn how to use Vizzbud, interpret the map rings and colors, and where our live marine data comes from.')
+@section('meta_description', 'Learn how to use Vizzbud, interpret map rings and colors, and understand where our live marine data comes from.')
+
+{{-- 🌍 Open Graph / Twitter --}}
+@section('og_title', 'How Vizzbud Works — A Diver’s Guide')
+@section('og_description', 'Discover how Vizzbud helps divers plan smarter: real-time conditions, dive logs, and location insights.')
+@section('og_image', asset('images/divesites/default.webp'))
+@section('twitter_title', 'How Vizzbud Works — A Diver’s Guide')
+@section('twitter_description', 'Explore how to use Vizzbud, interpret map rings and colors, and track dives efficiently.')
+@section('twitter_image', asset('images/divesites/default.webp'))
+
+{{-- 📘 SEO Canonical + Structured Data --}}
+@push('head')
+  <link rel="canonical" href="{{ url('/how-it-works') }}">
+
+  {{-- JSON-LD Structured Data --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "How Vizzbud Works",
+    "description": "Learn how to use Vizzbud, interpret map rings and colors, and understand where our live marine data comes from.",
+    "url": "https://vizzbud.com/how-it-works",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://vizzbud.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "How It Works",
+          "item": "https://vizzbud.com/how-it-works"
+        }
+      ]
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://vizzbud.com/android-chrome-512x512.png"
+      }
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 <section class="relative max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">

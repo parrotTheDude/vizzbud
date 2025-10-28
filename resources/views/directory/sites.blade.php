@@ -1,5 +1,82 @@
 @extends('layouts.vizzbud')
-@section('title', $region->name . ' Dive Sites | Vizzbud')
+
+@section('title', "{$region->name} Dive Sites | {$state->name}, {$country->name} | Vizzbud")
+@section('meta_description', "Discover all scuba dive sites in {$region->name}, {$state->name}, {$country->name}. See site depth, type, and live marine conditions with Vizzbud.")
+
+{{-- 🌍 Open Graph / Twitter --}}
+@section('og_title', "{$region->name} Dive Sites | {$state->name}")
+@section('og_description', "Explore top scuba dive sites in {$region->name}, {$state->name}. Get live conditions, entry notes, and underwater details.")
+@section('og_image', asset('images/divesites/default.webp'))
+@section('twitter_title', "{$region->name} Dive Sites | {$state->name}")
+@section('twitter_description', "Plan your next dive in {$region->name}, {$state->name}, {$country->name} — live dive conditions and site guides on Vizzbud.")
+@section('twitter_image', asset('images/divesites/default.webp'))
+
+@push('head')
+  {{-- Canonical --}}
+  <link rel="canonical" href="{{ route('dive-sites.region', [$country->slug, $state->slug, $region->slug]) }}">
+
+  {{-- Structured Data: CollectionPage + BreadcrumbList --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "{{ $region->name }} Dive Sites",
+    "description": "Browse scuba dive sites in {{ $region->name }}, {{ $state->name }}, {{ $country->name }}. Find dive details, live conditions, and site info with Vizzbud.",
+    "url": "{{ route('dive-sites.region', [$country->slug, $state->slug, $region->slug]) }}",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com"
+    },
+    "mainEntity": {
+      "@type": "ItemList",
+      "itemListElement": [
+        @foreach($diveSites as $index => $site)
+        {
+          "@type": "ListItem",
+          "position": {{ $index + 1 }},
+          "name": "{{ $site->name }}",
+          "url": "{{ route('dive-sites.show', [$country->slug, $state->slug, $region->slug, $site->slug]) }}"
+        }@if(!$loop->last),@endif
+        @endforeach
+      ]
+    }
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Dive Sites",
+        "item": "https://vizzbud.com/dive-sites"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "{{ $country->name }}",
+        "item": "{{ route('dive-sites.country', $country->slug) }}"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ $state->name }}",
+        "item": "{{ route('dive-sites.state', [$country->slug, $state->slug]) }}"
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "{{ $region->name }}",
+        "item": "{{ route('dive-sites.region', [$country->slug, $state->slug, $region->slug]) }}"
+      }
+    ]
+  }
+  </script>
+@endpush
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100 py-12 px-4 sm:px-6">

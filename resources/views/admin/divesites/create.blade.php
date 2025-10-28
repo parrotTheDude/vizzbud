@@ -1,6 +1,35 @@
 @extends('layouts.vizzbud')
 
-@section('title', 'Add New Dive Site | Admin')
+@section('title', 'Add New Dive Site | Admin | Vizzbud')
+@section('meta_description', 'Add a new scuba dive site to the Vizzbud platform. Input name, region, coordinates, and site details from the admin dashboard.')
+
+@push('head')
+  {{-- 🚫 Prevent search engine indexing (admin area) --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical (internal consistency only) --}}
+  <link rel="canonical" href="{{ route('admin.dive-sites.create') }}">
+
+  {{-- Admin theme + app metadata --}}
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Vizzbud Admin">
+  <meta name="color-scheme" content="dark">
+
+  {{-- Optional internal-use structured data --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Vizzbud Admin — Add Dive Site",
+    "url": "{{ route('admin.dive-sites.create') }}",
+    "description": "Administrative interface for adding new dive sites to the Vizzbud directory.",
+    "creator": {
+      "@type": "Organization",
+      "name": "Vizzbud"
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 <section class="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-12 text-white">

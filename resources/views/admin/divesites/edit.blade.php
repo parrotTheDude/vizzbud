@@ -1,6 +1,35 @@
 @extends('layouts.vizzbud')
 
-@section('title', 'Edit Dive Site | Admin')
+@section('title', 'Edit Dive Site | Admin | Vizzbud')
+@section('meta_description', 'Edit dive site details including region, depth, conditions, and visibility within the Vizzbud admin dashboard.')
+
+@push('head')
+  {{-- 🚫 Prevent indexing and public exposure --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical link (for internal consistency only) --}}
+  <link rel="canonical" href="{{ route('admin.dive-sites.edit', $diveSite->id) }}">
+
+  {{-- Theme / Application meta for admin environment --}}
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Vizzbud Admin">
+  <meta name="color-scheme" content="dark">
+
+  {{-- Optional structured data (internal reference only) --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Vizzbud Admin — Edit Dive Site",
+    "url": "{{ route('admin.dive-sites.edit', $diveSite->id) }}",
+    "description": "Admin dashboard interface for editing existing dive site records and managing data.",
+    "creator": {
+      "@type": "Organization",
+      "name": "Vizzbud"
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 <section class="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-12 text-white">

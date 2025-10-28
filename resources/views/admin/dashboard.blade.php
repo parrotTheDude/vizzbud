@@ -1,6 +1,36 @@
 @extends('layouts.vizzbud')
 
-@section('title', 'Admin · Dashboard')
+@section('title', 'Admin · Dashboard | Vizzbud')
+@section('meta_description', 'Manage dive sites, blog posts, users, and system settings in the Vizzbud admin dashboard.')
+
+@push('head')
+  {{-- 🚫 No indexing or crawling --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical (main dashboard route) --}}
+  <link rel="canonical" href="{{ route('admin.dashboard') }}">
+
+  {{-- No Open Graph or Twitter tags (private area) --}}
+  {{-- Optional internal-use only meta for dev tools or PWA display --}}
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Vizzbud Admin">
+  <meta name="color-scheme" content="dark">
+
+  {{-- Optional JSON-LD (for completeness, but not indexed) --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Vizzbud Admin Dashboard",
+    "url": "{{ route('admin.dashboard') }}",
+    "description": "Administrative interface for managing the Vizzbud platform.",
+    "creator": {
+      "@type": "Organization",
+      "name": "Vizzbud"
+    }
+  }
+  </script>
+@endpush
 
 @section('content')
 <section class="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">

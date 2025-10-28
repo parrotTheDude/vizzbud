@@ -3,6 +3,34 @@
 @section('title', 'Server Error | Vizzbud')
 @section('meta_description', 'Something went wrong on our end. Please try again soon.')
 
+@push('head')
+  {{-- 🚫 Prevent indexing — never let error pages appear in search results --}}
+  <meta name="robots" content="noindex, nofollow">
+
+  {{-- Canonical (for clarity, even though not indexed) --}}
+  <link rel="canonical" href="{{ url()->current() }}">
+
+  {{-- Theme + consistency --}}
+  <meta name="theme-color" content="#0f172a">
+  <meta name="application-name" content="Vizzbud">
+  <meta name="color-scheme" content="dark light">
+
+  {{-- Optional structured data --}}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Server Error",
+    "description": "Something went wrong on Vizzbud’s servers. Please try again soon or contact support if the issue persists.",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "Vizzbud",
+      "url": "https://vizzbud.com"
+    }
+  }
+  </script>
+@endpush
+
 @section('content')
 <section class="relative flex items-center justify-center px-6 py-24 sm:py-32">
   {{-- background glow --}}
