@@ -1,7 +1,17 @@
 User-agent: *
+# --- Allow public sections ---
+Allow: /
+Allow: /logbook$
+
+# --- Block sensitive or user-only areas ---
 Disallow: /admin
 Disallow: /dashboard
 Disallow: /profile
-Disallow: /logbook
+Disallow: /logbook/
 
+# --- Optional: prevent map parameter duplicates ---
+Disallow: /*?lat=
+Disallow: /*?lng=
+
+# --- Sitemap for crawlers ---
 Sitemap: https://vizzbud.com/sitemap.xml
