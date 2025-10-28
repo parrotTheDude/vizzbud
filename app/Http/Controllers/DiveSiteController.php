@@ -113,6 +113,8 @@ class DiveSiteController extends Controller
                     ? collect($todayRow)->only(['morning','afternoon','night'])
                     : null;
 
+                $routeParams = $site->getFullRouteParams();
+
                 return [
                     'id'          => $site->id,
                     'slug'        => $site->slug,
@@ -156,6 +158,8 @@ class DiveSiteController extends Controller
 
                     'dayparts' => $dayparts->values(),
                     'today_summary' => $todaySummary,
+
+                    'route_params' => $routeParams,
                 ];
             })->values();
 

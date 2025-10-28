@@ -487,7 +487,7 @@
                 : asset('images/divesites/default.webp');
             @endphp
 
-            <a href="{{ route('dive-sites.show', $site->slug) }}" 
+            <a href="{{ route('dive-sites.show', $site->getFullRouteParams()) }}"
               class="group block rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 
                       transition overflow-hidden text-left">
               
@@ -519,7 +519,7 @@
         <p class="text-slate-400 text-sm mt-8">
           Looking for more? See other 
           @php $regionName = optional($diveSite->region)->name ?? 'this region'; @endphp
-          <a href="{{ route('dive-sites.index', ['region' => optional($diveSite->region)->slug]) }}" class="text-cyan-400 hover:underline">
+          <a href="{{ route('dive-map.index', ['region' => optional($diveSite->region)->slug]) }}" class="text-cyan-400 hover:underline">
             dive sites in {{ $regionName }}
           </a>
         </p>

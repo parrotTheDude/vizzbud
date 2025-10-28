@@ -224,4 +224,23 @@ class DiveSite extends Model
     public function region() {
         return $this->belongsTo(Region::class);
     }
+
+    public function getFullRouteParams(): ?array
+    {
+        if (
+            !$this->region ||
+            !$this->region->state ||
+            !$this->region->state->country
+        ) {
+            // Fallback if relationships are missing
+            return null;
+        }
+
+        return [
+            'country' => $this->region->state->country->slug,
+            'state' => $this->region->state->slug,
+            'region' => $this->region->slug,
+            'diveSite' => $this->slug,
+        ];
+    }
 }

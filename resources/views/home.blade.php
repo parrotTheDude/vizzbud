@@ -77,7 +77,7 @@
               : asset('images/divesites/default-home.webp');
         @endphp
 
-        <a href="{{ route('dive-sites.show', $featured) }}"
+        <a href="{{ route('dive-sites.show', $featured->getFullRouteParams()) }}"
           aria-label="View {{ $featured->name }}"
           class="lg:col-span-2 group relative block overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition">
 
@@ -190,7 +190,7 @@
       @endif
 
       {{-- Quick Action: Dive Map (optimized for LCP) --}}
-      <a href="{{ route('dive-sites.index') }}"
+      <a href="{{ route('dive-map.index') }}"
         class="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 ring-1 ring-white/10 shadow-xl hover:scale-[1.01] transition
                 min-h-[220px] sm:min-h-[260px]">
 

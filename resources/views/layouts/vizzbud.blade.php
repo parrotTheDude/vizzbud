@@ -160,7 +160,7 @@
         <nav class="hidden sm:flex items-center gap-6 text-sm font-medium">
           @php
             $links = [
-              ['label' => 'Dive Sites', 'route' => 'dive-sites.index'],
+              ['label' => 'Dive Sites', 'route' => 'dive-map.index'],
               ['label' => 'Dive Log', 'route' => 'logbook.index'],
             ];
           @endphp
@@ -361,26 +361,40 @@
     @yield('content')
   </main>
 
- <footer class="relative border-t border-slate-800 bg-slate-900/80 backdrop-blur-xl backdrop-saturate-150 z-10">
-  <div class="mx-auto max-w-7xl px-6 py-10 flex flex-col items-center text-center text-slate-300 text-sm space-y-3">
+  <footer class="relative border-t border-slate-800 bg-slate-900/80 backdrop-blur-xl backdrop-saturate-150 z-10">
+    <div class="mx-auto max-w-7xl px-6 py-10 text-center text-slate-300 text-sm space-y-6">
 
-    <!-- Logo -->
-    <img src="{{ asset('vizzbudLogo.webp') }}" alt="Vizzbud Logo" class="w-10 h-10 mb-1">
+      <!-- Logo + Brand -->
+      <div class="flex flex-col items-center">
+        <img src="{{ asset('vizzbudLogo.webp') }}" alt="Vizzbud Logo" class="w-10 h-10 mb-2">
+        <span class="text-white font-semibold text-lg">Vizzbud</span>
+        <span class="text-slate-400 text-sm">Dive smarter. Made for divers worldwide.</span>
+      </div>
 
-    <!-- Brand -->
-    <span class="text-white font-semibold text-lg">Vizzbud</span>
-    <span class="text-slate-300 text-sm">Dive smarter. Made for divers worldwide.</span>
+      <!-- 🌐 Navigation Links -->
+      <nav class="flex flex-wrap justify-center gap-4 sm:gap-6 text-[13px] text-slate-400">
+        <a href="{{ url('/dive-sites') }}" class="hover:text-cyan-400 transition">Dive Sites</a>
+      </nav>
 
-    <!-- Disclaimer -->
-    <p class="max-w-xl text-[13px] text-slate-400 leading-relaxed mt-3">
-      <strong class="text-slate-200">Disclaimer:</strong> Dive conditions shown on Vizzbud are based on external data sources 
-      and forecasts. Always use your own experience, training, and local knowledge to assess dive safety before entering the water.
-    </p>
+      <!-- 🌊 Social Icons -->
+      <div class="flex justify-center gap-5 text-slate-400">
+        <a href="https://instagram.com/vizzbud.dive" target="_blank" rel="noopener" class="hover:text-cyan-400 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M7 2C4.24 2 2 4.24 2 7v10c0 2.76 2.24 5 5 5h10c2.76 0 5-2.24 5-5V7c0-2.76-2.24-5-5-5H7zm10 2c1.65 0 3 1.35 3 3v10c0 1.65-1.35 3-3 3H7c-1.65 0-3-1.35-3-3V7c0-1.65 1.35-3 3-3h10zM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm4.5-3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/>
+          </svg>
+        </a>
+      </div>
 
-    <!-- Copyright -->
-    <span class="mt-2 text-[12px] text-slate-400">© 2025 Vizzbud · Made for divers</span>
-  </div>
-</footer>
+      <!-- 🧭 Disclaimer -->
+      <p class="max-w-xl mx-auto text-[13px] text-slate-400 leading-relaxed">
+        <strong class="text-slate-200">Disclaimer:</strong> Dive conditions shown on Vizzbud are based on external data sources 
+        and forecasts. Always use your own experience, training, and local knowledge to assess dive safety before entering the water.
+      </p>
+
+      <!-- Copyright -->
+      <span class="text-[12px] text-slate-500">© 2025 Vizzbud · Made for divers</span>
+    </div>
+  </footer>
 
   @stack('scripts')
 </body>

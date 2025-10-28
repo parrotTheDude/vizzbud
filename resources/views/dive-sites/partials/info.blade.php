@@ -82,13 +82,18 @@
           href="#"
           @click.prevent="
             localStorage.setItem('vizzbud_last_site', selectedSite.slug);
-            window.location.href = `/dive-sites/${selectedSite.slug}?lat=${map.getCenter().lat.toFixed(5)}&lng=${map.getCenter().lng.toFixed(5)}&zoom=${map.getZoom()}`
+            if (selectedSite.route_params) {
+              const r = selectedSite.route_params;
+              window.location.href = `/dive-sites/${r.country}/${r.state}/${r.region}/${r.diveSite}?lat=${map.getCenter().lat.toFixed(5)}&lng=${map.getCenter().lng.toFixed(5)}&zoom=${map.getZoom()}`;
+            } else {
+              console.warn('Missing route params for site:', selectedSite);
+            }
           "
           class="block w-full rounded-full px-5 py-2.5 text-center text-sm font-semibold 
-                 text-white shadow-md transition-all duration-300 
-                 bg-gradient-to-r from-cyan-600 via-cyan-500 to-cyan-600
-                 hover:shadow-lg hover:scale-[1.02] hover:from-cyan-500 hover:to-cyan-400
-                 focus:outline-none focus:ring-2 focus:ring-cyan-300"
+                text-white shadow-md transition-all duration-300 
+                bg-gradient-to-r from-cyan-600 via-cyan-500 to-cyan-600
+                hover:shadow-lg hover:scale-[1.02] hover:from-cyan-500 hover:to-cyan-400
+                focus:outline-none focus:ring-2 focus:ring-cyan-300"
         >
           <span class="flex items-center justify-center gap-2">
             View Full Dive Site

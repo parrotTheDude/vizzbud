@@ -234,7 +234,7 @@
       </p>
 
       <div class="flex flex-col sm:flex-row justify-center gap-4">
-        <a href="{{ route('dive-sites.index') }}"
+        <a href="{{ route('dive-map.index') }}"
            class="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold text-white
                   bg-gradient-to-r from-cyan-500/90 to-teal-400/90
                   hover:from-cyan-400/90 hover:to-teal-300/90

@@ -29,7 +29,7 @@
                 transition transform hover:scale-[1.02]">
         🏝️ Back to Home
       </a>
-      <a href="{{ route('dive-sites.index') }}"
+      <a href="{{ route('dive-map.index') }}"
          class="flex items-center justify-center gap-2 rounded-lg px-5 py-3
                 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20
                 text-slate-200 font-semibold shadow-sm transition">

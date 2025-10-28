@@ -10,6 +10,7 @@ use App\Http\Controllers\{
     AdminController,
     SuggestionController,
     ProfileController,
+    DiveDirectoryController,
     Admin\ActivityLogController,
     Admin\DiveSiteSearchController,
     Auth\ForgotPasswordController,
@@ -40,10 +41,18 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-// 🐠 Dive Sites
-Route::prefix('dive-sites')->name('dive-sites.')->group(function () {
+// 🗺️ Dive Map (interactive)
+Route::prefix('dive-map')->name('dive-map.')->group(function () {
     Route::get('/', [DiveSiteController::class, 'index'])->name('index');
-    Route::get('/{diveSite}', [DiveSiteController::class, 'show'])->name('show');
+});
+
+// 🌍 Dive Site Directory (hierarchical listings + show)
+Route::prefix('dive-sites')->name('dive-sites.')->group(function () {
+    Route::get('/{country}/{state}/{region}/{diveSite:slug}', [DiveDirectoryController::class, 'show'])->name('show');
+    Route::get('/{country}/{state}/{region}', [DiveDirectoryController::class, 'region'])->name('region');
+    Route::get('/{country}/{state}', [DiveDirectoryController::class, 'state'])->name('state');
+    Route::get('/{country}', [DiveDirectoryController::class, 'country'])->name('country');
+    Route::get('/', [DiveDirectoryController::class, 'countries'])->name('countries');
 });
 
 // 📘 Dive Log (Public)
