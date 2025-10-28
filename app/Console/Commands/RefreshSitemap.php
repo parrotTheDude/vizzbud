@@ -34,6 +34,6 @@ class RefreshSitemap extends Command
         $controller = new SitemapController();
         $controller->index(); // Triggers regeneration and caching
 
-        $this->info('✅ Sitemap cache cleared and regenerated successfully.');
+        $this->info('Sitemap cache cleared and regenerated successfully.');
     }
 }
