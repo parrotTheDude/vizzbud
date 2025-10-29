@@ -48,8 +48,8 @@
     <section class="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6">
       <div class="flex items-center gap-4">
         <img src="{{ $user->avatar_url ?? asset('images/main/defaultProfile.webp') }}"
-             alt="Profile photo"
-             class="w-24 h-24 rounded-full border-4 border-cyan-400/40 shadow-md object-cover">
+          alt="Profile photo"
+          class="w-24 h-24 rounded-full border-4 border-cyan-400/40 shadow-md object-cover">
         <div>
           <h1 class="text-2xl font-bold text-cyan-400">{{ $user->name }}</h1>
 
@@ -75,6 +75,8 @@
          Edit Profile
       </a>
     </section>
+
+    <x-dashboard.welcome :user="$user" :stats="$stats" />
 
     {{-- 🌏 Dive Map --}}
     @if(isset($mapSites) && $mapSites->count())

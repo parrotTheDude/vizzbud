@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserDiveLog;
 use App\Models\DiveSite;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Laravel\Facades\Image;
 
 class ProfileController extends Controller
 {
@@ -118,32 +120,46 @@ class ProfileController extends Controller
         return view('profile.edit', compact('user'));
     }
 
-    /**
-     * Handle profile updates.
-     */
     public function update(Request $request)
     {
         $user = Auth::user();
 
-        if (!$user) {
-            return redirect()->route('login');
-        }
-
         $data = $request->validate([
-            'name'          => 'required|string|max:255',
-            'bio'           => 'nullable|string|max:1000',
-            'certification' => 'nullable|string|max:255',
-            'avatar'        => 'nullable|image|max:2048',
+            'name'   => 'required|string|max:255',
+            'avatar' => 'nullable|mimes:jpg,jpeg,png,webp,heic,heif|max:8192',
         ]);
 
-        // Handle avatar upload
+        // 🖼 Handle avatar upload
         if ($request->hasFile('avatar')) {
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $data['avatar_url'] = "/storage/{$path}";
+            $file = $request->file('avatar');
+
+            // Use the bound ImageManager service (from AppServiceProvider)
+            $manager = app(\Intervention\Image\ImageManager::class);
+            $image = $manager
+                ->read($file)          // new v3 syntax replaces ->make()
+                ->cover(400, 400)      // crop + resize while keeping centre
+                ->toWebp(80);          // compress to WebP format
+
+            // Generate filename
+            $filename = 'avatars/' . uniqid('avatar_') . '.webp';
+
+            // Delete old avatar if exists
+            if ($user->avatar_url && str_contains($user->avatar_url, '/storage/')) {
+                $oldPath = str_replace('/storage/', '', $user->avatar_url);
+                \Storage::disk('public')->delete($oldPath);
+            }
+
+            // Save new image
+            \Storage::disk('public')->put($filename, (string) $image);
+
+            // Update DB path
+            $data['avatar_url'] = '/storage/' . $filename;
         }
 
         $user->update($data);
 
-        return redirect()->route('profile.show')->with('success', 'Profile updated successfully!');
+        return redirect()
+            ->route('profile.show')
+            ->with('success', 'Profile updated successfully!');
     }
 }
