@@ -60,26 +60,67 @@ class DiveSiteController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:191',
-            'lat' => 'required|numeric',
-            'lng' => 'required|numeric',
-            'region_id' => 'required|exists:regions,id',
-            'dive_type' => 'required|in:shore,boat',
-            'suitability' => 'required|in:Open Water,Advanced,Deep',
-            'map_image_path' => 'nullable|string|max:255',
-            'map_caption' => 'nullable|string|max:255',
-            'marine_life' => 'nullable|string',
+            'name'          => 'required|string|max:191',
+            'lat'           => 'required|numeric',
+            'lng'           => 'required|numeric',
+            'region_name'   => 'nullable|string|max:191',
+            'state_name'    => 'nullable|string|max:191',
+            'country_name'  => 'nullable|string|max:191',
+            'dive_type'     => 'required|in:shore,boat',
+            'suitability'   => 'required|in:Open Water,Advanced,Deep',
+            'max_depth'     => 'nullable|integer|min:0|max:100',
+            'avg_depth'     => 'nullable|integer|min:0|max:100',
+            'map_image_path'=> 'nullable|string|max:255',
+            'map_caption'   => 'nullable|string|max:255',
+            'marine_life'   => 'nullable|string',
         ]);
 
+        // ✅ Sanitize names (trim, title-case, normalize)
+        $regionName  = $this->sanitizeName($request->input('region_name'));
+        $stateName   = $this->sanitizeName($request->input('state_name'));
+        $countryName = $this->sanitizeName($request->input('country_name'));
+
+        // ✅ Build or find hierarchy
+        $country = null;
+        $state   = null;
+        $region  = null;
+
+        if ($countryName) {
+            $country = \App\Models\Country::firstOrCreate(
+                ['name' => $countryName],
+                ['slug' => Str::slug($countryName)]
+            );
+        }
+
+        if ($stateName && $country) {
+            $state = \App\Models\State::firstOrCreate(
+                ['name' => $stateName, 'country_id' => $country->id],
+                ['slug' => Str::slug($stateName)]
+            );
+        }
+
+        if ($regionName && $state) {
+            $region = \App\Models\Region::firstOrCreate(
+                ['name' => $regionName, 'state_id' => $state->id],
+                ['slug' => Str::slug($regionName)]
+            );
+        }
+
+        // ✅ Compose site data
         $validated['slug'] = Str::slug($validated['name']);
         $validated['is_active'] = false;
         $validated['needs_review'] = true;
 
+        if ($region) {
+            $validated['region_id'] = $region->id;
+        }
+
+        // ✅ Create new dive site
         $site = DiveSite::create($validated);
 
         return redirect()
             ->route('admin.divesites.edit', $site->slug)
-            ->with('success', 'Dive site created successfully. You can now edit details and activate it.');
+            ->with('success', 'Dive site created successfully with depths and region hierarchy synced. You can now edit details and activate it.');
     }
 
     public function edit(DiveSite $diveSite)
