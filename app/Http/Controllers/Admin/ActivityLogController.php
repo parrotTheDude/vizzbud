@@ -98,6 +98,21 @@ class ActivityLogController extends Controller
     {
         $user = User::findOrFail($id);
         $logs = ActivityLog::where('user_id', $id)->latest()->paginate(25);
-        return view('admin.activity.user', compact('user', 'logs'));
+
+        return view('admin.activity.index', [
+            'user' => $user,
+            'logs' => $logs,
+            'summary' => [
+                'recent' => ActivityLog::where('user_id', $id)
+                                    ->where('created_at', '>=', now()->subDay())
+                                    ->count(),
+                'active_users' => 1,
+                'top_action' => ActivityLog::where('user_id', $id)
+                                        ->select('action', DB::raw('count(*) as total'))
+                                        ->groupBy('action')
+                                        ->orderByDesc('total')
+                                        ->first(),
+            ],
+        ]);
     }
 }
