@@ -47,20 +47,24 @@
     {{-- 🧍 Diver Header --}}
     <section class="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6">
       <div class="flex items-center gap-4">
-        <img src="{{ $user->avatar_url ?? asset('images/main/defaultProfile.webp') }}"
+        <img src="{{ $user->profile->avatar_url ?? asset('images/main/defaultProfile.webp') }}"
           alt="Profile photo"
           class="w-24 h-24 rounded-full border-4 border-cyan-400/40 shadow-md object-cover">
         <div>
           <h1 class="text-2xl font-bold text-cyan-400">{{ $user->name }}</h1>
 
-          @if($user->certification || !empty($stats['first_year']))
+          {{-- Certification & start year --}}
+          @if($user->profile->diveLevel || !empty($stats['first_year']))
             <p class="text-slate-300 text-sm">
-              {{ $user->certification ?? '' }}
-              @if($user->certification && !empty($stats['first_year'])) <span class="mx-1 text-slate-500">·</span> @endif
+              {{ $user->profile->diveLevel->name ?? 'Uncertified Diver' }}
+              @if($user->profile->diveLevel && !empty($stats['first_year']))
+                <span class="mx-1 text-slate-500">·</span>
+              @endif
               @if(!empty($stats['first_year'])) Diving since {{ $stats['first_year'] }} @endif
             </p>
           @endif
 
+          {{-- Totals --}}
           @if(!empty($stats['total_dives']) || !empty($stats['total_hours']))
             <p class="text-xs text-slate-400 mt-1">
               {{ $stats['total_dives'] ?? 0 }} dives
@@ -76,6 +80,7 @@
       </a>
     </section>
 
+    {{-- 🧭 Welcome / Stats --}}
     <x-dashboard.welcome :user="$user" :stats="$stats" />
 
     {{-- 🌏 Dive Map --}}
@@ -90,62 +95,26 @@
     </section>
     @endif
 
-    {{-- 📊 Dive Insights --}}
-    @if(!empty($stats['total_dives']) && $stats['total_dives'] > 3)
-    <section>
-      <h2 class="text-lg font-semibold text-cyan-400 mb-4">Dive Insights</h2>
-      <div class="grid sm:grid-cols-3 gap-4">
-        <div class="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4">
-          <h3 class="text-sm font-semibold text-slate-200 mb-2">Depth Distribution</h3>
-          <canvas id="depthChart" class="w-full h-40"></canvas>
-        </div>
-        <div class="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4">
-          <h3 class="text-sm font-semibold text-slate-200 mb-2">Dive Frequency</h3>
-          <canvas id="frequencyChart" class="w-full h-40"></canvas>
-        </div>
-        <div class="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 p-4">
-          <h3 class="text-sm font-semibold text-slate-200 mb-2">Dive Type</h3>
-          <canvas id="typeChart" class="w-full h-40"></canvas>
-        </div>
-      </div>
-    </section>
-    @endif
-
-    {{-- 🥇 Achievements --}}
-    @if(!empty($badges) && count($badges))
-    <section>
-      <h2 class="text-lg font-semibold text-cyan-400 mb-3">Achievements</h2>
-      <div class="flex flex-wrap gap-3">
-        @foreach($badges as $badge)
-          <div class="flex items-center gap-2 bg-white/10 border border-white/20 px-3 py-2 rounded-full text-sm shadow-sm">
-            <img src="{{ $badge['icon'] ?? asset('images/icons/star.svg') }}" class="w-5 h-5" alt="">
-            <span class="text-slate-200">{{ $badge['label'] ?? 'Achievement' }}</span>
-          </div>
-        @endforeach
-      </div>
-    </section>
-    @endif
-
     {{-- ⚙️ Gear & Bio --}}
-    @if($user->suit_type || $user->tank_type || $user->weight_used || $user->preferred_dive_type || $user->bio)
+    @if($user->profile->suit_type || $user->profile->tank_type || $user->profile->weight_used || $user->profile->preferred_dive_type || $user->profile->bio)
     <section class="grid sm:grid-cols-2 gap-6">
-      @if($user->suit_type || $user->tank_type || $user->weight_used || $user->preferred_dive_type)
+      @if($user->profile->suit_type || $user->profile->tank_type || $user->profile->weight_used || $user->profile->preferred_dive_type)
       <div>
         <h2 class="text-lg font-semibold text-cyan-400 mb-3">Your Gear Setup</h2>
         <ul class="space-y-2 text-sm text-slate-300">
-          @if($user->suit_type)<li><strong>Suit:</strong> {{ $user->suit_type }}</li>@endif
-          @if($user->tank_type)<li><strong>Tank:</strong> {{ $user->tank_type }}</li>@endif
-          @if($user->weight_used)<li><strong>Weight:</strong> {{ $user->weight_used }} kg</li>@endif
-          @if($user->preferred_dive_type)<li><strong>Preferred Type:</strong> {{ $user->preferred_dive_type }}</li>@endif
+          @if($user->profile->suit_type)<li><strong>Suit:</strong> {{ $user->profile->suit_type }}</li>@endif
+          @if($user->profile->tank_type)<li><strong>Tank:</strong> {{ $user->profile->tank_type }}</li>@endif
+          @if($user->profile->weight_used)<li><strong>Weight:</strong> {{ $user->profile->weight_used }} kg</li>@endif
+          @if($user->profile->preferred_dive_type)<li><strong>Preferred Type:</strong> {{ $user->profile->preferred_dive_type }}</li>@endif
         </ul>
       </div>
       @endif
 
-      @if($user->bio)
+      @if($user->profile->bio)
       <div>
         <h2 class="text-lg font-semibold text-cyan-400 mb-3">About You</h2>
         <p class="text-slate-300 text-sm leading-relaxed">
-          {{ $user->bio }}
+          {{ $user->profile->bio }}
         </p>
       </div>
       @endif
@@ -174,6 +143,36 @@
 
   </div>
 </div>
+
+{{-- ChartJS --}}
+@if(!empty($stats['total_dives']) && $stats['total_dives'] > 3)
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const ctx = document.getElementById('depthChart');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['0–10m', '10–20m', '20–30m', '30m+'],
+        datasets: [{
+          data: [12, 28, 9, 3],
+          backgroundColor: 'rgba(6,182,212,0.6)',
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        scales: {
+          y: { beginAtZero: true, ticks: { color: '#9CA3AF' } },
+          x: { ticks: { color: '#9CA3AF' } }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+});
+</script>
+@endif
 
 {{-- ChartJS --}}
 @if(!empty($stats['total_dives']) && $stats['total_dives'] > 3)

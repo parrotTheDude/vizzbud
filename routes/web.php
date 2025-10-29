@@ -138,6 +138,7 @@ Route::middleware(['auth', 'verified'])
         Route::get('/', [ProfileController::class, 'show'])->name('show');
         Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
         Route::put('/', [ProfileController::class, 'update'])->name('update');
+        Route::post('/remove-avatar', [ProfileController::class, 'removeAvatar'])->name('removeAvatar');
     });
 
 /*
