@@ -30,7 +30,11 @@ return new class extends Migration
                 $table->dropColumn('avatar_url');
             }
             if (Schema::hasColumn('users', 'dive_level_id')) {
-                $table->dropForeign(['dive_level_id']);
+                try {
+                    $table->dropForeign(['dive_level_id']);
+                } catch (\Exception $e) {
+                    // Foreign key might not exist — ignore
+                }
                 $table->dropColumn('dive_level_id');
             }
             if (Schema::hasColumn('users', 'bio')) {

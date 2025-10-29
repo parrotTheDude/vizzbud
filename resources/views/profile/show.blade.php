@@ -45,39 +45,74 @@
   <div class="max-w-6xl mx-auto space-y-10">
 
     {{-- 🧍 Diver Header --}}
-    <section class="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6">
-      <div class="flex items-center gap-4">
-        <img src="{{ $user->profile->avatar_url ?? asset('images/main/defaultProfile.webp') }}"
-          alt="Profile photo"
-          class="w-24 h-24 rounded-full border-4 border-cyan-400/40 shadow-md object-cover">
-        <div>
-          <h1 class="text-2xl font-bold text-cyan-400">{{ $user->name }}</h1>
+    <section 
+      class="relative flex flex-col sm:flex-row items-center sm:items-center justify-between gap-8 
+            bg-gradient-to-r from-slate-800/80 to-slate-900/60 border border-white/10 
+            rounded-2xl p-6 sm:p-8 shadow-lg overflow-hidden">
+
+      {{-- Decorative glow --}}
+      <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-cyan-500/10 blur-2xl opacity-30 pointer-events-none"></div>
+
+      {{-- Left: Avatar + Info --}}
+      <div class="flex flex-col sm:flex-row items-center sm:items-center gap-6 relative z-10">
+        {{-- Avatar --}}
+        <div class="relative group">
+          <img 
+            src="{{ $user->profile->avatar_url ?? asset('images/main/defaultProfile.webp') }}"
+            alt="Profile photo"
+            class="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-cyan-400/40 shadow-md transition-transform duration-300 group-hover:scale-105">
+          <div class="absolute inset-0 rounded-full bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition duration-300"></div>
+        </div>
+
+        {{-- Text Info --}}
+        <div class="text-center sm:text-left">
+          <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            {{ $user->name }}
+          </h1>
 
           {{-- Certification & start year --}}
           @if($user->profile->diveLevel || !empty($stats['first_year']))
-            <p class="text-slate-300 text-sm">
+            <p class="text-slate-300 text-sm sm:text-base mt-1">
               {{ $user->profile->diveLevel->name ?? 'Uncertified Diver' }}
               @if($user->profile->diveLevel && !empty($stats['first_year']))
-                <span class="mx-1 text-slate-500">·</span>
+                <span class="mx-1 text-slate-600">·</span>
               @endif
               @if(!empty($stats['first_year'])) Diving since {{ $stats['first_year'] }} @endif
             </p>
           @endif
 
-          {{-- Totals --}}
+          {{-- Stats summary --}}
           @if(!empty($stats['total_dives']) || !empty($stats['total_hours']))
-            <p class="text-xs text-slate-400 mt-1">
-              {{ $stats['total_dives'] ?? 0 }} dives
-              @if(!empty($stats['total_hours'])) · {{ $stats['total_hours'] }}h underwater @endif
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">
+              <span class="text-cyan-400 font-semibold">{{ $stats['total_dives'] ?? 0 }}</span> dives
+              @if(!empty($stats['total_hours']))
+                · <span class="text-cyan-400 font-semibold">{{ $stats['total_hours'] }}</span>h underwater
+              @endif
+            </p>
+          @endif
+
+          {{-- Optional bio (inline preview) --}}
+          @if(!empty($user->profile->bio))
+            <p class="text-slate-400 text-sm mt-3 italic leading-relaxed max-w-sm mx-auto sm:mx-0">
+              “{{ Str::limit($user->profile->bio, 100) }}”
             </p>
           @endif
         </div>
       </div>
 
-      <a href="{{ route('profile.edit') }}"
-         class="rounded-full bg-cyan-600 px-5 py-2 text-sm font-semibold hover:bg-cyan-500 transition">
-         Edit Profile
-      </a>
+      {{-- Right: Button --}}
+      <div class="flex-shrink-0 relative z-10">
+        <a href="{{ route('profile.edit') }}"
+          class="inline-flex items-center gap-2 rounded-full bg-cyan-600 hover:bg-cyan-500 
+                  text-white px-5 py-2.5 text-sm font-semibold shadow-md 
+                  transition-all duration-200 hover:shadow-cyan-500/20 active:scale-[0.98]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                  d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036l-4.243.707.707-4.243L15.232 5.232z"/>
+          </svg>
+          Edit Profile
+        </a>
+      </div>
     </section>
 
     {{-- 🧭 Welcome / Stats --}}
