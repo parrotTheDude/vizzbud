@@ -249,4 +249,29 @@ class DiveSiteController extends Controller
             'nearbySites' => $nearbySites,
         ]);
     }
+
+    public function regionSearch(Request $request)
+    {
+        $query = trim($request->get('q', ''));
+
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $regions = \App\Models\Region::with(['state.country'])
+            ->where('name', 'LIKE', "%{$query}%")
+            ->orderBy('name')
+            ->limit(10)
+            ->get()
+            ->map(function ($region) {
+                return [
+                    'id' => $region->id,
+                    'name' => $region->name,
+                    'state' => $region->state?->name,
+                    'country' => $region->state?->country?->name,
+                ];
+            });
+
+        return response()->json($regions);
+    }
 }

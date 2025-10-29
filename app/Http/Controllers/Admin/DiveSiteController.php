@@ -97,8 +97,9 @@ class DiveSiteController extends Controller
             'name' => 'required|string|max:191',
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
-            'region_id' => 'nullable|exists:regions,id',
-            'timezone' => 'nullable|string|max:64',
+            'region_name' => 'nullable|string|max:191',
+            'state_name' => 'nullable|string|max:191',
+            'country_name' => 'nullable|string|max:191',
             'dive_type' => 'nullable|in:shore,boat',
             'suitability' => 'nullable|in:Open Water,Advanced,Deep',
             'max_depth' => 'nullable|integer|min:0|max:100',
@@ -108,16 +109,52 @@ class DiveSiteController extends Controller
             'pro_tips' => 'nullable|string',
             'entry_notes' => 'nullable|string',
             'parking_notes' => 'nullable|string',
-            'marine_life' => 'nullable|string', 
-            'is_active' => 'boolean',
-            'needs_review' => 'boolean',
+            'marine_life' => 'nullable|string',
             'map_image_path' => 'nullable|string|max:255',
             'map_caption' => 'nullable|string|max:255',
+            'is_active' => 'boolean',
+            'needs_review' => 'boolean',
         ]);
 
-        // Auto-generate unique slug if name changed
-        if ($diveSite->isDirty('name') || $request->name !== $diveSite->name) {
+        // ✅ Sanitize text fields (trim, normalize capitalization)
+        $regionName = $this->sanitizeName($request->input('region_name'));
+        $stateName  = $this->sanitizeName($request->input('state_name'));
+        $countryName = $this->sanitizeName($request->input('country_name'));
+
+        // ✅ Build / find related hierarchy
+        $country = null;
+        $state   = null;
+        $region  = null;
+
+        if ($countryName) {
+            $country = \App\Models\Country::firstOrCreate(
+                ['name' => $countryName],
+                ['slug' => Str::slug($countryName)]
+            );
+        }
+
+        if ($stateName && $country) {
+            $state = \App\Models\State::firstOrCreate(
+                ['name' => $stateName, 'country_id' => $country->id],
+                ['slug' => Str::slug($stateName)]
+            );
+        }
+
+        if ($regionName && $state) {
+            $region = \App\Models\Region::firstOrCreate(
+                ['name' => $regionName, 'state_id' => $state->id],
+                ['slug' => Str::slug($regionName)]
+            );
+        }
+
+        // ✅ Update slug if name changed
+        if ($diveSite->name !== $request->name) {
             $validated['slug'] = \App\Models\DiveSite::uniqueSlugFrom($request->name, $diveSite->id);
+        }
+
+        // ✅ Merge relationships
+        if ($region) {
+            $validated['region_id'] = $region->id;
         }
 
         $diveSite->update(array_merge($validated, [
@@ -125,8 +162,23 @@ class DiveSiteController extends Controller
             'needs_review' => $request->has('needs_review'),
         ]));
 
-        return redirect()->route('admin.divesites.index')
-            ->with('success', 'Dive site updated successfully.');
+        return redirect()
+            ->route('admin.divesites.index')
+            ->with('success', 'Dive site updated successfully, with location hierarchy synced.');
+    }
+
+    /**
+     * 🔤 Helper: sanitize text names before saving
+     */
+    private function sanitizeName(?string $name): ?string
+    {
+        if (!$name) return null;
+
+        $name = trim($name);
+        // Normalize capitalization (Sydney → Sydney, new south wales → New South Wales)
+        $name = mb_convert_case($name, MB_CASE_TITLE, 'UTF-8');
+
+        return preg_replace('/\s+/', ' ', $name);
     }
 
     public function destroy(DiveSite $diveSite)

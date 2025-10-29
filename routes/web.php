@@ -44,6 +44,10 @@ Route::get('/', function () {
 // 🗺️ Dive Map (interactive)
 Route::prefix('dive-map')->name('dive-map.')->group(function () {
     Route::get('/', [DiveSiteController::class, 'index'])->name('index');
+
+    // Make region search open to all
+    Route::get('/region-search', [DiveSiteController::class, 'regionSearch'])
+        ->name('region-search');
 });
 
 // 🌍 Dive Site Directory (hierarchical listings + show)
