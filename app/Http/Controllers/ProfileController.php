@@ -201,24 +201,34 @@ class ProfileController extends Controller
     public function removeAvatar(Request $request)
     {
         $user = Auth::user();
+
+        // Ensure the user has a profile
+        if (!$user->profile) {
+            $user->profile()->create(); // create a blank one if missing
+        }
+
         $profile = $user->profile;
 
-        if (!$profile || !$profile->avatar_url) {
+        // If no avatar exists, bail out gracefully
+        if (empty($profile->avatar_url)) {
             return redirect()
                 ->route('profile.edit')
                 ->with('error', 'No profile photo found.');
         }
 
-        // Delete file
+        // Safely delete old avatar if stored publicly
         if (str_contains($profile->avatar_url, '/storage/')) {
             $oldPath = str_replace('/storage/', '', $profile->avatar_url);
-            Storage::disk('public')->delete($oldPath);
+            if (Storage::disk('public')->exists($oldPath)) {
+                Storage::disk('public')->delete($oldPath);
+            }
         }
 
+        // Nullify the avatar URL
         $profile->update(['avatar_url' => null]);
 
         return redirect()
             ->route('profile.edit')
-            ->with('success', 'Profile photo removed.');
+            ->with('success', 'Profile photo removed successfully!');
     }
 }
