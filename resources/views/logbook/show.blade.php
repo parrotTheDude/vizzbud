@@ -61,8 +61,6 @@
       }
       @endif
     },
-    "startTime": "{{ optional($log->date)->toIso8601String() }}",
-    "endTime": "{{ optional($log->date)->copy()->addMinutes($log->duration ?? 0)->toIso8601String() }}"
   }
   </script>
 

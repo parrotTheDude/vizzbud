@@ -20,63 +20,72 @@ class ProfileController extends Controller
             return redirect()->route('login')->with('error', 'Please log in to view your profile.');
         }
 
-        // --- Dive stats
-        $totalDives = UserDiveLog::where('user_id', $user->id)->count();
-        $avgDepth   = round(UserDiveLog::where('user_id', $user->id)->avg('depth') ?? 0, 1);
-        $totalMins  = UserDiveLog::where('user_id', $user->id)->sum('duration');
+        // --- Retrieve all user logs once with site relationships
+        $logs = UserDiveLog::where('user_id', $user->id)
+            ->with(['site.region.state.country'])
+            ->get();
+
+        // --- If no dives, short-circuit gracefully
+        if ($logs->isEmpty()) {
+            return view('profile.show', [
+                'user'        => $user,
+                'stats'       => [
+                    'total_dives' => 0,
+                    'avg_depth'   => 0,
+                    'total_hours' => 0,
+                    'top_site'    => null,
+                ],
+                'topSites'    => collect(),
+                'recentDives' => collect(),
+                'mapSites'    => collect(),
+            ]);
+        }
+
+        // --- Stats
+        $totalDives = $logs->count();
+        $avgDepth   = round($logs->avg('depth') ?? 0, 1);
+        $totalMins  = $logs->sum('duration');
         $totalHours = round($totalMins / 60, 1);
 
         // --- Top site (most frequently visited)
-        $topSiteRow = UserDiveLog::where('user_id', $user->id)
-            ->selectRaw('dive_site_id, COUNT(*) as total')
-            ->groupBy('dive_site_id')
-            ->orderByDesc('total')
-            ->with('site:id,name,slug,region,country')
-            ->first();
+        $topSiteGroup = $logs->groupBy('dive_site_id')
+            ->map->count()
+            ->sortDesc();
 
-        $topSite = $topSiteRow?->site?->name ?? null;
+        $topSiteId = $topSiteGroup->keys()->first();
+        $topSite   = optional(DiveSite::with('region.state.country')->find($topSiteId))->name;
 
-        // --- Top 3 most dived sites
-        $topSites = UserDiveLog::where('user_id', $user->id)
-            ->selectRaw('dive_site_id, COUNT(*) as dives_count')
-            ->groupBy('dive_site_id')
-            ->orderByDesc('dives_count')
-            ->with('site:id,name,slug,region,country')
-            ->take(3)
-            ->get()
-            ->map(fn($row) => (object)[
-                'name'        => $row->site->name,
-                'slug'        => $row->site->slug,
-                'region'      => $row->site->region,
-                'country'     => $row->site->country,
-                'dives_count' => $row->dives_count,
-            ]);
+        // --- Top 3 sites
+        $topSites = $topSiteGroup->take(3)->map(function ($count, $siteId) {
+            $site = DiveSite::with('region.state.country')->find($siteId);
+            if (!$site) return null;
+            return (object)[
+                'name'        => $site->name,
+                'slug'        => $site->slug,
+                'region'      => optional($site->region)->name,
+                'country'     => optional(optional($site->region)->state->country)->name,
+                'dives_count' => $count,
+            ];
+        })->filter()->values();
 
         // --- Recent dives
-        $recentDives = UserDiveLog::where('user_id', $user->id)
-            ->with('site:id,name,slug')
-            ->orderByDesc('dive_date')
-            ->take(5)
-            ->get();
+        $recentDives = $logs->sortByDesc('dive_date')->take(5);
 
-        // --- Map data (unique sites with lat/lng for user)
-        $mapSites = UserDiveLog::where('user_id', $user->id)
-            ->selectRaw('dive_site_id, COUNT(*) as dives_count')
-            ->groupBy('dive_site_id')
-            ->with('site:id,name,slug,lat,lng,region,country')
-            ->get()
-            ->map(function ($row) {
-                return [
-                    'id'       => $row->site->id,
-                    'name'     => $row->site->name,
-                    'slug'     => $row->site->slug,
-                    'lat'      => (float) $row->site->lat,
-                    'lng'      => (float) $row->site->lng,
-                    'region'   => $row->site->region,
-                    'country'  => $row->site->country,
-                    'count'    => $row->dives_count,
-                ];
-            });
+        // --- Map data (unique sites)
+        $mapSites = $logs->groupBy('dive_site_id')->map(function ($group, $siteId) {
+            $site = $group->first()->site;
+            if (!$site) return null;
+            return [
+                'id'       => $site->id,
+                'name'     => $site->name,
+                'slug'     => $site->slug,
+                'lat'      => (float) $site->lat,
+                'lng'      => (float) $site->lng,
+                'region'   => optional($site->region)->name,
+                'country'  => optional(optional($site->region)->state->country)->name,
+                'count'    => $group->count(),
+            ];
+        })->filter()->values();
 
         // --- Compile summary stats
         $stats = [
