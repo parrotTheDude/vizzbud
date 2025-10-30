@@ -1,0 +1,43 @@
+# llms.txt for Vizzbud.com
+# Balanced Policy — allows AI summarization and citation, but blocks training or data scraping.
+
+# -------------------------------
+# OpenAI GPTBot
+# -------------------------------
+User-Agent: GPTBot
+Allow: /
+Disallow: /admin/
+Disallow: /logbook/
+Purpose: indexing, summarization
+Prohibit: model-training
+
+# -------------------------------
+# Anthropic ClaudeBot
+# -------------------------------
+User-Agent: ClaudeBot
+Allow: /
+Disallow: /admin/
+Disallow: /logbook/
+Purpose: indexing, summarization
+Prohibit: model-training
+
+# -------------------------------
+# Perplexity
+# -------------------------------
+User-Agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /logbook/
+
+# -------------------------------
+# General fallback for all other bots
+# -------------------------------
+User-Agent: *
+Disallow: /admin/
+Disallow: /logbook/
+
+# -------------------------------
+# Metadata
+# -------------------------------
+Sitemap: https://vizzbud.com/sitemap.xml
+Contact: support@vizzbud.com
