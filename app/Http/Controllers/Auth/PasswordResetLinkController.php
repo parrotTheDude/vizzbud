@@ -7,6 +7,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 class PasswordResetLinkController extends Controller
 {
@@ -28,6 +30,20 @@ class PasswordResetLinkController extends Controller
         $validated = $request->validate([
             'email' => ['required', 'email'],
         ]);
+
+        $captchaResponse = Http::asForm()->post('https://api.friendlycaptcha.com/api/v1/siteverify', [
+            'solution' => $request->input('frc-captcha-solution'),
+            'secret'   => config('services.friendlycaptcha.secret'),
+            'sitekey'  => config('services.friendlycaptcha.sitekey'),
+        ]);
+
+        $captchaData = $captchaResponse->json();
+
+        if (!($captchaData['success'] ?? false)) {
+            throw ValidationException::withMessages([
+                'captcha' => 'Captcha verification failed. Please try again.',
+            ]);
+        }
 
         $email = normalize_email($validated['email']);
         $pepper = config('app.email_pepper');

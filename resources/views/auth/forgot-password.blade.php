@@ -73,6 +73,8 @@
                    transition-all duration-300 hover:-translate-y-0.5">
       <span>Send reset link</span>
     </button>
+
+    <x-vizzbud.captcha />
   </form>
 
   {{-- back + signup --}}
