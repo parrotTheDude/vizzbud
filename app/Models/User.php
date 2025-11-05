@@ -14,23 +14,16 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * The attributes that are mass assignable.
-     *
-     * @var list<string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
         'role',
-        'avatar_url',
-        'bio',
-        'certification',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
      */
     protected $hidden = [
         'password',
@@ -39,15 +32,43 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * The attributes that should be cast.
-     *
-     * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
+            'name'              => 'encrypted',
+            'email'             => 'encrypted',
         ];
+    }
+
+    /**
+     * Handle encrypted email + deterministic lookup hash.
+     * Prevents re-encrypting already-encrypted values.
+     */
+    public function setEmailAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['email'] = null;
+            $this->attributes['email_hash'] = null;
+            return;
+        }
+
+        $pepper = config('app.email_pepper');
+        $normalized = strtolower(trim($value));
+
+        // Detect if value looks already encrypted (Laravel encrypted strings start with eyJpdi)
+        if (str_starts_with($value, 'eyJpdi')) {
+            // already encrypted, just assign it
+            $this->attributes['email'] = $value;
+        } else {
+            // encrypt plaintext
+            $this->attributes['email'] = encrypt($value);
+        }
+
+        // always compute deterministic hash from plaintext
+        $this->attributes['email_hash'] = hash_hmac('sha256', $normalized, $pepper);
     }
 
     /**
@@ -59,7 +80,7 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Derived: get initials (useful for avatars without images)
+     * Derived: initials for avatar placeholders.
      */
     public function getInitialsAttribute(): string
     {
@@ -69,12 +90,19 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Derived: quick profile completeness percentage
+     * Derived: profile completion percentage.
      */
     public function getProfileCompletionAttribute(): int
     {
-        $fields = ['avatar_url', 'bio', 'certification'];
-        $filled = collect($fields)->filter(fn($f) => !empty($this->$f))->count();
+        if (!$this->relationLoaded('profile')) {
+            $this->load('profile');
+        }
+
+        $profile = $this->profile;
+        if (!$profile) return 0;
+
+        $fields = ['avatar_url', 'bio', 'dive_level_id'];
+        $filled = collect($fields)->filter(fn($f) => !empty($profile->$f))->count();
         return round(($filled / count($fields)) * 100);
     }
 
@@ -115,6 +143,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === 'admin';
     }
 
+    /**
+     * Linked profile.
+     */
     public function profile()
     {
         return $this->hasOne(UserProfile::class);

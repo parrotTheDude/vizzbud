@@ -9,6 +9,8 @@ use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\MarkdownConverter;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Illuminate\Support\Facades\Auth;
+use App\Auth\EncryptedUserProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,10 +40,15 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
-     */
-    public function boot()
+    */
+    public function boot(): void
     {
         Schema::defaultStringLength(191);
         date_default_timezone_set(config('app.timezone'));
+
+        Auth::provider('encrypted', function ($app, array $config) {
+            $model = $config['model'] ?? null;
+            return new EncryptedUserProvider($app['hash'], $model);
+        });
     }
 }
