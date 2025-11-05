@@ -100,17 +100,43 @@
       @endif
     </div>
 
-    {{-- Submit button --}}
-    <button type="submit"
-            class="group inline-flex items-center justify-center gap-2 w-full
-                  rounded-xl px-4 py-3 font-semibold text-white
-                  bg-gradient-to-r from-cyan-500/90 to-teal-400/90
-                  hover:from-cyan-400/90 hover:to-teal-300/90
-                  border border-white/10 ring-1 ring-white/10
-                  backdrop-blur-md shadow-lg shadow-cyan-500/20
-                  transition-all duration-300 hover:-translate-y-0.5">
-      <span>Login</span>
-    </button>
+{{-- Submit button with visible spinner and validation guard --}}
+<div x-data="{ loading: false }">
+  <button type="submit"
+          @click.prevent="
+            const form = $el.closest('form');
+            if (form.checkValidity()) {
+              loading = true;
+              // Let Alpine render the spinner before submit
+              requestAnimationFrame(() => form.submit());
+            } else {
+              form.reportValidity(); // triggers native validation messages
+            }
+          "
+          x-bind:disabled="loading"
+          class="group inline-flex items-center justify-center gap-2 w-full
+                 rounded-xl px-4 py-3 font-semibold text-white
+                 bg-gradient-to-r from-cyan-500/90 to-teal-400/90
+                 hover:from-cyan-400/90 hover:to-teal-300/90
+                 border border-white/10 ring-1 ring-white/10
+                 backdrop-blur-md shadow-lg shadow-cyan-500/20
+                 transition-all duration-300 hover:-translate-y-0.5
+                 disabled:opacity-50 disabled:cursor-not-allowed">
+
+    {{-- Normal label --}}
+    <span x-show="!loading">Login</span>
+
+    {{-- Loading spinner --}}
+    <div x-show="loading" class="flex items-center gap-2">
+      <svg class="animate-spin h-4 w-4 text-white/90" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span>Logging in…</span>
+    </div>
+  </button>
+</div>
 
     <x-vizzbud.captcha />
 
