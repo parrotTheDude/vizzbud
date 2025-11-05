@@ -48,8 +48,6 @@
   <link rel="alternate" href="https://vizzbud.com{{ request()->getPathInfo() }}" hreflang="en">
 
   <!-- Preconnects -->
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://api.mapbox.com" crossorigin>
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link rel="preconnect" href="https://scripts.simpleanalyticscdn.com" crossorigin>
@@ -57,13 +55,15 @@
 
   <!-- Preloads -->
   <link rel="preload" as="image" href="{{ asset('vizzbudLogo.webp') }}" fetchpriority="high" imagesrcset="{{ asset('vizzbudLogo.webp') }}" imagesizes="32px">
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
-  <link rel="preload" as="script" href="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" importance="low">
+  <link rel="preload" as="style" href="{{ asset('css/fonts.css') }}">
+  <link rel="preload" as="font" type="font/ttf" href="{{ asset('fonts/figtree/Figtree-Regular.ttf') }}" crossorigin>
+  <link rel="preload" as="font" type="font/ttf" href="{{ asset('fonts/figtree/Figtree-Bold.ttf') }}" crossorigin>
 
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-        rel="stylesheet" media="print" onload="this.media='all'">
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+  <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
+
+  <!-- Scripts -->
+  <link rel="preload" as="script" href="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" importance="low">
 
   <!-- Vite Assets -->
   @vite(['resources/css/app.css', 'resources/js/app.js'])
