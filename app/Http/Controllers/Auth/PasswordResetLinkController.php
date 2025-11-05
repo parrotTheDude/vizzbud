@@ -25,29 +25,39 @@ class PasswordResetLinkController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // ✅ Validate input
         $validated = $request->validate([
             'email' => ['required', 'email'],
         ]);
 
-        // 🧹 Normalize the email for consistency
         $email = normalize_email($validated['email']);
-        $timestamp = now('UTC')->toDateTimeString();
+        $pepper = config('app.email_pepper');
+        $emailHash = hash_hmac('sha256', strtolower(trim($email)), $pepper);
 
-        // 🚀 Attempt to send password reset link
-        $status = Password::sendResetLink(['email' => $email]);
+        // 🔍 Lookup user using deterministic hash
+        $user = \App\Models\User::where('email_hash', $emailHash)->first();
 
-        // 🧾 Log every attempt
-        log_activity('password_reset_link_requested', null, [
-            'email'   => $email,
-            'status'  => $status,
-            'success' => $status === Password::RESET_LINK_SENT,
-        ]);
+        if (!$user) {
+            return back()->withErrors(['email' => 'We have emailed you a password reset link.']);
+        }
 
-        // 🔁 Return response
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', __($status))
-            : back()->withInput(['email' => $email])
-                    ->withErrors(['email' => __($status)]);
+        // 🧠 Create token
+        $token = app('auth.password.broker')->createToken($user);
+
+        // 📨 Send reset email via Postmark
+        app(\App\Services\PostmarkService::class)->sendEmail(
+            templateId: (int) config('services.postmark.reset_template_id'),
+            to: $user->email,
+            variables: [
+                'name'          => $user->name,
+                'action_url'    => url(route('password.reset', ['token' => $token, 'email' => $email], false)),
+                'support_email' => config('mail.from.address'),
+                'year'          => now('UTC')->year,
+            ],
+            tag: 'password-reset'
+        );
+
+        log_activity('password_reset_link_sent', $user, ['email' => $email]);
+
+        return back()->with('status', __('passwords.sent'));
     }
 }

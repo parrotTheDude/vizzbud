@@ -54,7 +54,7 @@ class NewPasswordController extends Controller
             [
                 'email' => $email,
                 'password' => $validated['password'],
-                'password_confirmation' => $validated['password_confirmation'],
+                'password_confirmation' => $request->input('password_confirmation'),
                 'token' => $validated['token'],
             ],
             function (User $user) use ($validated) {
