@@ -15,4 +15,3 @@ Disallow: /*?lng=
 
 # --- Sitemap for crawlers ---
 Sitemap: https://vizzbud.com/sitemap.xml
-LLMS: https://vizzbud.com/llms.txt
