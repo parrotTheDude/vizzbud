@@ -136,17 +136,39 @@
       </ul>
     </div>
 
-    {{-- Submit (full width) --}}
+    {{-- Submit (auto spinner on valid submit) --}}
     <button type="submit"
+            x-data="{ loading: false }"
+            x-on:submit.window="
+              // When the page is about to unload (form actually submitted), show spinner
+              loading = true;
+              setTimeout(() => loading = false, 6000); // safety reset if no reload
+            "
+            :disabled="loading"
             class="group inline-flex items-center justify-center gap-2 w-full
-                   rounded-xl px-4 py-3 font-semibold text-white
-                   bg-gradient-to-r from-cyan-500/90 to-teal-400/90
-                   hover:from-cyan-400/90 hover:to-teal-300/90
-                   border border-white/10 ring-1 ring-white/10
-                   backdrop-blur-md shadow-lg shadow-cyan-500/20
-                   transition-all duration-300 hover:-translate-y-0.5">
-      <span>Register</span>
+                  rounded-xl px-4 py-3 font-semibold text-white
+                  bg-gradient-to-r from-cyan-500/90 to-teal-400/90
+                  hover:from-cyan-400/90 hover:to-teal-300/90
+                  border border-white/10 ring-1 ring-white/10
+                  backdrop-blur-md shadow-lg shadow-cyan-500/20
+                  transition-all duration-300 hover:-translate-y-0.5
+                  disabled:opacity-60 disabled:cursor-not-allowed">
+
+      {{-- Text --}}
+      <span x-show="!loading" x-transition>Register</span>
+
+      {{-- Spinner --}}
+      <svg x-show="loading" x-transition
+          class="animate-spin h-5 w-5 text-white"
+          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10"
+                stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
     </button>
+
+    <x-vizzbud.captcha />
   </form>
 
   {{-- secondary action --}}

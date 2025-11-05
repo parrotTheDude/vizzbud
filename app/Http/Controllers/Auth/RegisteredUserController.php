@@ -15,6 +15,8 @@ use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 use Illuminate\Support\Str;
 use Throwable;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 class RegisteredUserController extends Controller
 {
@@ -29,7 +31,23 @@ class RegisteredUserController extends Controller
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'frc-captcha-solution' => ['required', 'string'],
         ]);
+
+        // ✅ Verify FriendlyCaptcha
+        $captchaResponse = Http::asForm()->post('https://api.friendlycaptcha.com/api/v1/siteverify', [
+            'solution' => $request->input('frc-captcha-solution'),
+            'secret'   => config('services.friendlycaptcha.secret'),
+            'sitekey'  => config('services.friendlycaptcha.sitekey'),
+        ]);
+
+        $captchaData = $captchaResponse->json();
+
+        if (!($captchaData['success'] ?? false)) {
+            throw ValidationException::withMessages([
+                'captcha' => 'Captcha verification failed. Please try again.',
+            ]);
+        }
 
         // 🧹 Normalize email
         $email = strtolower(trim($validated['email']));
