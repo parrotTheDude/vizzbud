@@ -7,7 +7,11 @@
 
 {{-- Load Friendly Captcha script only once --}}
 @once
-  <script src="https://cdn.jsdelivr.net/npm/friendly-challenge@0.9.15/widget.min.js"
+  <script type="module"
+          src="https://unpkg.com/@friendlycaptcha/sdk@0.1.31/site.min.js"
+          async defer></script>
+  <script nomodule
+          src="https://unpkg.com/@friendlycaptcha/sdk@0.1.31/site.compat.min.js"
           async defer></script>
 
   <style>
