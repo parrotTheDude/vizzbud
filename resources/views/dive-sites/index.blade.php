@@ -3,17 +3,21 @@
 @section('title', 'Dive Site Map | Vizzbud')
 @section('meta_description', 'Explore live scuba dive site conditions on an interactive map. Filter by dive level, type, and get wave, wind, and tide data for each location.')
 
-@section('head')
+@push('head')
   {{-- ✅ Canonical URL --}}
-  <link rel="canonical" href="{{ url('/dive-map') }}">
+  @php
+    $canonical = url('/dive-map');
+  @endphp
+  <link rel="canonical" href="{{ $canonical }}">
 
-  {{-- 🧭 Meta robots handling: hide bbox/lat/lng variations from Google --}}
+  {{-- 🧭 Robots Handling: Prevent duplicate indexing of map parameter variations --}}
   @if (!empty($hasMapParams) && $hasMapParams)
-    <meta name="robots" content="noindex,follow">
+    <meta name="robots" content="noindex, follow">
+
+    {{-- Clean up query parameters after load for SEO cleanliness --}}
     <script>
-      // Clean up query params from the URL after map load to keep canonical SEO clean
       window.addEventListener('load', () => {
-        const baseUrl = window.location.origin + '/dive-map';
+        const baseUrl = '{{ $canonical }}';
         if (window.location.search.length > 0) {
           window.history.replaceState({}, '', baseUrl);
         }
@@ -36,10 +40,8 @@
     }
   }
   </script>
-@endsection
 
-@push('head')
-  {{-- Chart.js (optional; only if used on this page) --}}
+  {{-- 🧭 Chart.js (optional; only if used on this page) --}}
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
 
   {{-- ✅ Inline CSS tweaks for the map --}}

@@ -12,10 +12,24 @@
 @section('twitter_image', asset('images/divesites/default.webp'))
 
 @push('head')
-  {{-- Canonical --}}
-  <link rel="canonical" href="{{ url('/dive-sites') }}">
+  {{-- ✅ Canonical URL --}}
+  @php $canonical = url('/dive-sites'); @endphp
+  <link rel="canonical" href="{{ $canonical }}">
 
-  {{-- Structured Data --}}
+  {{-- 🧭 Robots Handling: avoid duplicate indexing of parameterized pages --}}
+  @if (!empty($hasFilterParams) && $hasFilterParams)
+    <meta name="robots" content="noindex, follow">
+    <script>
+      window.addEventListener('load', () => {
+        const baseUrl = '{{ $canonical }}';
+        if (window.location.search.length > 0) {
+          window.history.replaceState({}, '', baseUrl);
+        }
+      });
+    </script>
+  @endif
+
+  {{-- 🧾 Structured Data --}}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -32,12 +46,12 @@
       "@type": "ItemList",
       "itemListElement": [
         @foreach($countries as $index => $country)
-        {
-          "@type": "ListItem",
-          "position": {{ $index + 1 }},
-          "name": "{{ $country->name }}",
-          "url": "{{ route('dive-sites.country', $country->slug) }}"
-        }@if(!$loop->last),@endif
+          {
+            "@type": "ListItem",
+            "position": {{ $index + 1 }},
+            "name": "{{ e($country->name) }}",
+            "url": "{{ route('dive-sites.country', $country->slug) }}"
+          }@if(!$loop->last),@endif
         @endforeach
       ]
     }
