@@ -27,21 +27,29 @@ class RegisteredUserController extends Controller
     {
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
+            'email'    => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         // 🧹 Normalize email
-        $email = normalize_email($validated['email']);
-        $validated['email'] = $email;
+        $email = strtolower(trim($validated['email']));
+        $pepper = config('app.email_pepper');
+        $emailHash = hash_hmac('sha256', $email, $pepper);
+
+        // 🚫 Check if already registered
+        if (User::where('email_hash', $emailHash)->exists()) {
+            return back()
+                ->withErrors(['email' => 'This email is already taken.'])
+                ->withInput();
+        }
 
         $user = null;
 
-        DB::transaction(function () use (&$user, $validated) {
-            // 🧾 Create user
+        DB::transaction(function () use (&$user, $validated, $email) {
+            // 🧾 Create user (email gets encrypted automatically via cast)
             $user = User::create([
                 'name'     => $validated['name'],
-                'email'    => $validated['email'],
+                'email'    => $email,
                 'password' => Hash::make($validated['password']),
                 'role'     => 'user',
             ]);
@@ -109,8 +117,7 @@ class RegisteredUserController extends Controller
         // 🚪 Auto-login
         Auth::login($user);
 
-        log_activity('user_logged_in_after_registration', $user, [
-        ]);
+        log_activity('user_logged_in_after_registration', $user, []);
 
         return redirect()->route('verification.notice');
     }
