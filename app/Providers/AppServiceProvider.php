@@ -11,6 +11,8 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Illuminate\Support\Facades\Auth;
 use App\Auth\EncryptedUserProvider;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Login;
 
 class AppServiceProvider extends ServiceProvider
 {
