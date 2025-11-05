@@ -86,8 +86,12 @@ Route::middleware('auth')->group(function () {
         ->name('verification.send');
 });
 
-// 📖 Static Pages
-Route::view('/how-it-works', 'pages.how-vizzbud-works')->name('how_it_works');
+// 📄 Static Pages
+Route::prefix('pages')->group(function () {
+    Route::view('/how-it-works', 'pages.how-vizzbud-works')->name('how_it_works');
+    Route::view('/privacy', 'pages.privacy')->name('privacy');
+    Route::view('/terms', 'pages.terms')->name('terms');
+});
 
 // 💬 Suggestions (Public)
 Route::post('/suggestions', [SuggestionController::class, 'store'])
@@ -95,14 +99,6 @@ Route::post('/suggestions', [SuggestionController::class, 'store'])
     ->name('suggestions.store');
 
 Route::get('/api/dive-sites/search', [DiveSiteSearchController::class, 'search'])->name('api.dive-sites.search');
-
-// 🔍 Admin Utility (Search Test)
-Route::middleware(['auth', AdminMiddleware::class])
-    ->prefix('admin')
-    ->name('admin.')
-    ->group(function () {
-        Route::get('/dive-sites/search-test', [DiveSiteSearchController::class, 'index'])->name('dive-sites.search-test');
-    });
 
 /*
 |--------------------------------------------------------------------------

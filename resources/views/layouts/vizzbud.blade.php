@@ -109,7 +109,7 @@
   <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js')
-      .then(() => console.log('✅ Service Worker registered'))
+      .then(() => console.log('Service Worker registered'))
       .catch((err) => console.warn('Service Worker failed:', err));
   }
   </script>
@@ -373,12 +373,14 @@
         <span class="text-slate-400 text-sm">Dive smarter. Made for divers worldwide.</span>
       </div>
 
-      <!-- 🌐 Navigation Links -->
+      <!-- Navigation Links -->
       <nav class="flex flex-wrap justify-center gap-4 sm:gap-6 text-[13px] text-slate-400">
+        <a href="{{ route('privacy') }}" class="hover:text-cyan-400 transition">Privacy Policy</a>
         <a href="{{ url('/dive-sites') }}" class="hover:text-cyan-400 transition">Dive Sites</a>
+        <a href="{{ route('terms') }}" class="hover:text-cyan-400 transition">Terms of Service</a>
       </nav>
 
-      <!-- 🌊 Social Icons -->
+      <!-- Social Icons -->
       <div class="flex justify-center gap-5 text-slate-400">
         <a href="https://instagram.com/vizzbud.dive" target="_blank" rel="noopener" class="hover:text-cyan-400 transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -387,7 +389,7 @@
         </a>
       </div>
 
-      <!-- 🧭 Disclaimer -->
+      <!-- Disclaimer -->
       <p class="max-w-xl mx-auto text-[13px] text-slate-400 leading-relaxed">
         <strong class="text-slate-200">Disclaimer:</strong> Dive conditions shown on Vizzbud are based on external data sources 
         and forecasts. Always use your own experience, training, and local knowledge to assess dive safety before entering the water.
