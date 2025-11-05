@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Http;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -27,6 +28,23 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $timestamp = now('UTC')->toDateTimeString();
+
+        $captchaResponse = Http::asForm()->post('https://api.friendlycaptcha.com/api/v1/siteverify', [
+            'solution' => $request->input('frc-captcha-solution'),
+            'secret'   => config('services.friendlycaptcha.secret'),
+            'sitekey'  => config('services.friendlycaptcha.sitekey'),
+        ]);
+
+        if (! $captchaResponse->json('success')) {
+            log_activity('login_captcha_failed', null, [
+                'email' => $request->input('email'),
+                'reason' => 'captcha_verification_failed',
+            ]);
+
+            return back()
+                ->withErrors(['captcha' => 'Please complete the human verification.'])
+                ->withInput();
+        }
 
         try {
             // 🔐 Attempt authentication via the validated FormRequest

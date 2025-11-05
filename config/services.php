@@ -48,4 +48,9 @@ return [
         'key' => env('TINYMCE_API_KEY'),
     ],
 
+    'friendlycaptcha' => [
+        'sitekey' => env('FRIENDLY_CAPTCHA_SITEKEY'),
+        'secret'  => env('FRIENDLY_CAPTCHA_SECRET'),
+    ],
+
 ];

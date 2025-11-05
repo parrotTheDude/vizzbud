@@ -100,17 +100,19 @@
       @endif
     </div>
 
-    {{-- submit --}}
+    {{-- Submit button --}}
     <button type="submit"
-            class="group inline-flex w-full items-center justify-center gap-2
-                   rounded-xl px-4 py-2.5 font-semibold text-white text-base
-                   bg-gradient-to-r from-cyan-500/90 to-teal-400/90
-                   hover:from-cyan-400/90 hover:to-teal-300/90
-                   border border-white/10 ring-1 ring-white/10
-                   backdrop-blur-md shadow-lg shadow-cyan-500/20
-                   transition-all duration-300 hover:-translate-y-0.5">
-      <span>Log in</span>
+            class="group inline-flex items-center justify-center gap-2 w-full
+                  rounded-xl px-4 py-3 font-semibold text-white
+                  bg-gradient-to-r from-cyan-500/90 to-teal-400/90
+                  hover:from-cyan-400/90 hover:to-teal-300/90
+                  border border-white/10 ring-1 ring-white/10
+                  backdrop-blur-md shadow-lg shadow-cyan-500/20
+                  transition-all duration-300 hover:-translate-y-0.5">
+      <span>Login</span>
     </button>
+
+    <x-vizzbud.captcha />
 
     {{-- divider --}}
     <div class="flex items-center gap-3 text-xs text-white/50">
