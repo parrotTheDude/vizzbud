@@ -14,19 +14,20 @@ class UserProfile extends Model
         'dive_level_id',
         'avatar_url',
         'bio',
+        'onboarding_complete',
     ];
 
-    /**
-     * Relationship: profile belongs to a user.
-     */
+    protected $casts = [
+        'bio' => 'encrypted',
+        'onboarding_complete' => 'boolean',
+    ];
+
+    // Relationships
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Relationship: profile has one dive level.
-     */
     public function diveLevel()
     {
         return $this->belongsTo(DiveLevel::class);

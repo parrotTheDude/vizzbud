@@ -204,10 +204,10 @@
         <input name="buddy" x-ref="buddy" placeholder="Dive Buddy"
                class="rounded-xl px-4 py-2.5 backdrop-blur-md">
 
-        <input name="air_start" type="number" step="0.1" placeholder="Air Start (bar)"
+        <input name="air_start" type="number" step="0.1" placeholder="Start Pressure (bar)"
                class="rounded-xl px-4 py-2.5 backdrop-blur-md">
 
-        <input name="air_end" type="number" step="0.1" placeholder="Air End (bar)"
+        <input name="air_end" type="number" step="0.1" placeholder="End Pressure (bar)"
                class="rounded-xl px-4 py-2.5 backdrop-blur-md">
 
         <input name="temperature" type="number" step="0.1" placeholder="Water Temp (°C)"
