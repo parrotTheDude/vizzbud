@@ -58,6 +58,19 @@ class UserDiveLogController extends Controller
                     'averageDuration'  => (int) round((float) $agg->avg_duration),
                 ];
 
+                $deepestLog = UserDiveLog::where('user_id', $userId)
+                    ->orderByDesc('depth')
+                    ->select('id', 'depth')
+                    ->first();
+
+                $longestLog = UserDiveLog::where('user_id', $userId)
+                    ->orderByDesc('duration')
+                    ->select('id', 'duration')
+                    ->first();
+
+                $stats['deepestDiveId'] = optional($deepestLog)->id;
+                $stats['longestDiveId'] = optional($longestLog)->id;
+
                 // Recent (already ordered)
                 $recentDives = $logs->take(3);
 
@@ -135,6 +148,8 @@ class UserDiveLogController extends Controller
             'monthLabels'        => $monthLabels,
             'dayLabels'          => $dayLabels,
             'weeks'              => $weeks,
+            'deepestDiveId'      => $stats['deepestDiveId'],
+            'longestDiveId'      => $stats['longestDiveId'],
         ]);
     }
 

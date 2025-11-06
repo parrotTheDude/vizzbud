@@ -72,7 +72,7 @@
                rounded-xl bg-emerald-500/15 text-emerald-200
                ring-1 ring-emerald-400/30 border border-white/10
                backdrop-blur-md shadow-lg px-4 py-3">
-        ✅ Your email has been successfully verified!
+        Your email has been successfully verified!
       </div>
     @endif
 
@@ -105,51 +105,91 @@
     @auth
     <div class="mb-12">
 
-        {{-- Mobile (2 per row) --}}
-        <div class="grid grid-cols-2 gap-2 sm:hidden">
-            @foreach ([
-                ['Total Dives', $totalDives],
-                ['Dive Time', $totalHours . 'h ' . $remainingMinutes . 'm'],
-                ['Deepest', $deepestDive . ' m'],
-                ['Longest', $longestDive . ' min'],
-                ['Avg Depth', $averageDepth . ' m'],
-                ['Avg Duration', $averageDuration . ' min'],
-                ['Top Site', $siteName],
-                ['Sites', $uniqueSitesVisited],
-            ] as [$label, $value])
-                <span class="inline-flex flex-col items-center justify-center 
-                            rounded-full px-3 py-2 
-                            bg-white/10 backdrop-blur-md 
-                            ring-1 ring-white/15 border border-white/10 
-                            text-slate-200 text-xs sm:text-sm">
-                    <span class="font-semibold">{{ $value }}</span>
-                    <span class="text-[0.65rem] uppercase tracking-wide text-slate-400">{{ $label }}</span>
-                </span>
-            @endforeach
-        </div>
+      {{-- Mobile (2 per row) --}}
+      <div class="grid grid-cols-2 gap-2 sm:hidden">
+        @foreach ([
+            ['Total Dives', $totalDives],
+            ['Dive Time', $totalHours . 'h ' . $remainingMinutes . 'm'],
+            ['Deepest', $deepestDive . ' m', $deepestDiveId ?? null],
+            ['Longest', $longestDive . ' min', $longestDiveId ?? null],
+            ['Avg Depth', $averageDepth . ' m'],
+            ['Avg Duration', $averageDuration . ' min'],
+            ['Top Site', $siteName],
+            ['Sites', $uniqueSitesVisited],
+        ] as $item)
+          @php
+            $label = $item[0];
+            $value = $item[1];
+            $linkId = $item[2] ?? null;
+            $isClickable = in_array($label, ['Deepest', 'Longest']) && $linkId;
+          @endphp
 
-        {{-- Desktop (grid of pills, 4 per row) --}}
-        <div class="hidden sm:grid grid-cols-2 md:grid-cols-4 gap-3">
-            @foreach ([
-                ['Total Dives', $totalDives],
-                ['Dive Time', $totalHours . 'h ' . $remainingMinutes . 'm'],
-                ['Deepest', $deepestDive . ' m'],
-                ['Longest', $longestDive . ' min'],
-                ['Avg Depth', $averageDepth . ' m'],
-                ['Avg Duration', $averageDuration . ' min'],
-                ['Top Site', $siteName],
-                ['Sites', $uniqueSitesVisited],
-            ] as [$label, $value])
-                <span class="inline-flex flex-col items-center justify-center 
-                            rounded-full px-4 py-3 
-                            bg-white/10 backdrop-blur-md 
-                            ring-1 ring-white/15 border border-white/10 
-                            text-slate-200 text-sm">
-                    <span class="font-bold text-white">{{ $value }}</span>
-                    <span class="text-[0.7rem] uppercase tracking-wide text-slate-400">{{ $label }}</span>
-                </span>
-            @endforeach
-        </div>
+          @if($isClickable)
+            <a href="{{ route('logbook.show', $linkId) }}"
+              class="inline-flex flex-col items-center justify-center 
+                    rounded-full px-3 py-2 
+                    bg-white/10 backdrop-blur-md 
+                    ring-1 ring-white/15 border border-white/10 
+                    text-slate-200 text-xs sm:text-sm
+                    hover:bg-cyan-500/20 transition cursor-pointer">
+              <span class="font-semibold">{{ $value }}</span>
+              <span class="text-[0.65rem] uppercase tracking-wide text-slate-400">{{ $label }}</span>
+            </a>
+          @else
+            <span class="inline-flex flex-col items-center justify-center 
+                        rounded-full px-3 py-2 
+                        bg-white/10 backdrop-blur-md 
+                        ring-1 ring-white/15 border border-white/10 
+                        text-slate-200 text-xs sm:text-sm">
+              <span class="font-semibold">{{ $value }}</span>
+              <span class="text-[0.65rem] uppercase tracking-wide text-slate-400">{{ $label }}</span>
+            </span>
+          @endif
+        @endforeach
+      </div>
+
+      {{-- Desktop (grid of pills, 4 per row) --}}
+      <div class="hidden sm:grid grid-cols-2 md:grid-cols-4 gap-3">
+        @foreach ([
+            ['Total Dives', $totalDives],
+            ['Dive Time', $totalHours . 'h ' . $remainingMinutes . 'm'],
+            ['Deepest', $deepestDive . ' m', $deepestDiveId ?? null],
+            ['Longest', $longestDive . ' min', $longestDiveId ?? null],
+            ['Avg Depth', $averageDepth . ' m'],
+            ['Avg Duration', $averageDuration . ' min'],
+            ['Top Site', $siteName],
+            ['Sites', $uniqueSitesVisited],
+        ] as $item)
+          @php
+            $label = $item[0];
+            $value = $item[1];
+            $linkId = $item[2] ?? null;
+            $isClickable = in_array($label, ['Deepest', 'Longest']) && $linkId;
+          @endphp
+
+          @if($isClickable)
+            <a href="{{ route('logbook.show', $linkId) }}"
+              class="inline-flex flex-col items-center justify-center 
+                    rounded-full px-4 py-3 
+                    bg-white/10 backdrop-blur-md 
+                    ring-1 ring-white/15 border border-white/10 
+                    text-slate-200 text-sm
+                    hover:bg-cyan-500/20 transition cursor-pointer">
+              <span class="font-bold text-white">{{ $value }}</span>
+              <span class="text-[0.7rem] uppercase tracking-wide text-slate-400">{{ $label }}</span>
+            </a>
+          @else
+            <span class="inline-flex flex-col items-center justify-center 
+                        rounded-full px-4 py-3 
+                        bg-white/10 backdrop-blur-md 
+                        ring-1 ring-white/15 border border-white/10 
+                        text-slate-200 text-sm">
+              <span class="font-bold text-white">{{ $value }}</span>
+              <span class="text-[0.7rem] uppercase tracking-wide text-slate-400">{{ $label }}</span>
+            </span>
+          @endif
+        @endforeach
+      </div>
     </div>
     @endauth
 
