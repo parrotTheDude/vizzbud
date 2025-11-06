@@ -390,110 +390,115 @@
       </div>
     @endif
 
-@php
-  $hasDiveInfo = $diveSite->description || $diveSite->entry_notes || $diveSite->parking_notes ||
-                $diveSite->hazards || $diveSite->marine_life || $diveSite->pro_tips ||
-                $diveSite->suitability || $diveSite->dive_type || $diveSite->max_depth || $diveSite->avg_depth;
-@endphp
+    @php
+    $hasDiveInfo =
+        !empty($diveSite->description) ||
+        !empty($diveSite->entry_notes) ||
+        !empty($diveSite->parking_notes) ||
+        !empty($diveSite->hazards) ||
+        !empty($diveSite->marine_life) ||
+        !empty($diveSite->pro_tips) ||
+        !empty($diveSite->map_image_path);
+    @endphp
 
-@if($hasDiveInfo)
-  <article itemscope itemtype="https://schema.org/Article" class="rounded-3xl p-6 sm:p-10 bg-white/10 backdrop-blur-2xl 
-                  border border-white/15 ring-1 ring-white/10 shadow-xl w-full text-center mb-16">
-    
-    <h2 class="text-white font-semibold text-xl sm:text-2xl mb-6 tracking-tight">
-      How to Dive {{ $diveSite->name }}
-    </h2>
+    @if($hasDiveInfo)
+      <article itemscope itemtype="https://schema.org/Article" class="rounded-3xl p-6 sm:p-10 bg-white/10 backdrop-blur-2xl 
+                      border border-white/15 ring-1 ring-white/10 shadow-xl w-full text-center mb-16">
+        
+        <h2 class="text-white font-semibold text-xl sm:text-2xl mb-6 tracking-tight">
+          How to Dive {{ $diveSite->name }}
+        </h2>
 
-    {{-- 🗺️ Dive Map --}}
-    @if($diveSite->map_image_path)
-      <div class="w-full mb-6">
-        <div class="relative w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
-          <img 
-            src="{{ asset($diveSite->map_image_path) }}" 
-            alt="Dive map for {{ $diveSite->name }}"
-            class="w-full h-auto max-h-[80vh] object-contain bg-slate-900/40"
-            loading="lazy"
-            decoding="async"
-          >
-        </div>
+        {{-- 🗺️ Dive Map --}}
+        @if($diveSite->map_image_path)
+          <div class="w-full mb-6">
+            <div class="relative w-full overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
+              <img 
+                src="{{ asset($diveSite->map_image_path) }}" 
+                alt="Dive map for {{ $diveSite->name }}"
+                class="w-full h-auto max-h-[80vh] object-contain bg-slate-900/40"
+                loading="lazy"
+                decoding="async"
+              >
+            </div>
 
-        @if($diveSite->map_caption)
-          <p class="text-xs text-white/60 mt-3 text-center italic">
-            {{ $diveSite->map_caption }}
-          </p>
+            @if($diveSite->map_caption)
+              <p class="text-xs text-white/60 mt-3 text-center italic">
+                {{ $diveSite->map_caption }}
+              </p>
+            @endif
+
+            <div class="mt-4 text-center">
+              <a 
+                href="{{ asset($diveSite->map_image_path) }}" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 text-[13px] text-cyan-300 hover:text-cyan-200 font-medium transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M14 3h7m0 0v7m0-7L10 14m-1 7H5a2 2 0 01-2-2v-4" />
+                </svg>
+                Open full map in new tab
+              </a>
+            </div>
+          </div>
         @endif
 
-        <div class="mt-4 text-center">
-          <a 
-            href="{{ asset($diveSite->map_image_path) }}" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-2 text-[13px] text-cyan-300 hover:text-cyan-200 font-medium transition"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M14 3h7m0 0v7m0-7L10 14m-1 7H5a2 2 0 01-2-2v-4" />
-            </svg>
-            Open full map in new tab
-          </a>
+        <div class="space-y-10 mt-6 text-slate-300 leading-relaxed text-[15px] 
+                text-left sm:text-center sm:max-w-3xl mx-auto">
+          {{-- ✏️ Overview --}}
+          @if($diveSite->description)
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+              <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Overview</h3>
+              <p class="text-white/90 text-base sm:text-[17px] leading-relaxed">
+                {{ $diveSite->description }}
+              </p>
+            </div>
+          @endif
+
+          {{-- 🚪 Entry & Access --}}
+          @if($diveSite->entry_notes || $diveSite->parking_notes)
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+              <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Entry & Access</h3>
+              <div class="space-y-2">
+                @if($diveSite->entry_notes)
+                  <p><strong class="text-white">Entry:</strong> {{ $diveSite->entry_notes }}</p>
+                @endif
+                @if($diveSite->parking_notes)
+                  <p><strong class="text-white">Parking:</strong> {{ $diveSite->parking_notes }}</p>
+                @endif
+              </div>
+            </div>
+          @endif
+
+          {{-- ⚠️ Hazards --}}
+          @if($diveSite->hazards)
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+              <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Hazards</h3>
+              <p>{{ $diveSite->hazards }}</p>
+            </div>
+          @endif
+
+          {{-- 🐠 Marine Life --}}
+          @if($diveSite->marine_life)
+            <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
+              <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Marine Life</h3>
+              <p>{{ $diveSite->marine_life }}</p>
+            </div>
+          @endif
+
+          {{-- 💡 Pro Tips --}}
+          @if($diveSite->pro_tips)
+            <div class="p-6 rounded-2xl bg-amber-500/10 border border-amber-400/30">
+              <h3 class="text-amber-300 font-semibold text-base uppercase tracking-wide mb-3">Pro Tip</h3>
+              <p class="text-amber-100 text-sm leading-relaxed">{{ $diveSite->pro_tips }}</p>
+            </div>
+          @endif
+
         </div>
-      </div>
+    </article>
     @endif
-
-    <div class="space-y-10 mt-6 text-slate-300 leading-relaxed text-[15px] 
-            text-left sm:text-center sm:max-w-3xl mx-auto">
-      {{-- ✏️ Overview --}}
-      @if($diveSite->description)
-        <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
-          <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Overview</h3>
-          <p class="text-white/90 text-base sm:text-[17px] leading-relaxed">
-            {{ $diveSite->description }}
-          </p>
-        </div>
-      @endif
-
-      {{-- 🚪 Entry & Access --}}
-      @if($diveSite->entry_notes || $diveSite->parking_notes)
-        <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
-          <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Entry & Access</h3>
-          <div class="space-y-2">
-            @if($diveSite->entry_notes)
-              <p><strong class="text-white">Entry:</strong> {{ $diveSite->entry_notes }}</p>
-            @endif
-            @if($diveSite->parking_notes)
-              <p><strong class="text-white">Parking:</strong> {{ $diveSite->parking_notes }}</p>
-            @endif
-          </div>
-        </div>
-      @endif
-
-      {{-- ⚠️ Hazards --}}
-      @if($diveSite->hazards)
-        <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
-          <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Hazards</h3>
-          <p>{{ $diveSite->hazards }}</p>
-        </div>
-      @endif
-
-      {{-- 🐠 Marine Life --}}
-      @if($diveSite->marine_life)
-        <div class="p-6 rounded-2xl bg-white/5 border border-white/10">
-          <h3 class="text-white font-semibold text-base uppercase tracking-wide mb-3">Marine Life</h3>
-          <p>{{ $diveSite->marine_life }}</p>
-        </div>
-      @endif
-
-      {{-- 💡 Pro Tips --}}
-      @if($diveSite->pro_tips)
-        <div class="p-6 rounded-2xl bg-amber-500/10 border border-amber-400/30">
-          <h3 class="text-amber-300 font-semibold text-base uppercase tracking-wide mb-3">Pro Tip</h3>
-          <p class="text-amber-100 text-sm leading-relaxed">{{ $diveSite->pro_tips }}</p>
-        </div>
-      @endif
-
-    </div>
-</article>
-@endif
 
     {{-- 📍 Nearby Dive Sites --}}
     @if(isset($nearbySites) && $nearbySites->isNotEmpty())

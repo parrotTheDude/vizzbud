@@ -103,11 +103,14 @@
 
             {{-- Dropdown --}}
             <ul x-show="open && results.length > 0"
-                class="absolute z-50 mt-1 w-full rounded-lg bg-white/10 border border-white/15
-                       backdrop-blur-md shadow-lg max-h-48 overflow-y-auto overscroll-contain">
+                class="absolute left-0 right-0 top-full z-[9999] mt-1 
+                      rounded-xl border border-cyan-400/40 shadow-2xl 
+                      bg-slate-900/95 backdrop-blur-2xl 
+                      ring-1 ring-cyan-400/30 divide-y divide-white/10 
+                      max-h-60 overflow-y-auto overscroll-contain">
               <template x-for="(r, i) in results" :key="i">
                 <li @click="select(r)"
-                    class="px-3 py-2 text-sm text-white/90 hover:bg-cyan-600 hover:text-white cursor-pointer">
+                    class="px-4 py-2.5 text-sm text-white/90 hover:bg-cyan-600/40 hover:text-white cursor-pointer transition">
                   <span x-text="r.name"></span>
                   <span class="text-white/50 text-xs ml-1"
                         x-text="r.state ? `(${r.state}, ${r.country})` : ''"></span>
