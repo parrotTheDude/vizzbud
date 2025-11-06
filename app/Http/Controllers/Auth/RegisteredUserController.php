@@ -60,14 +60,25 @@ class RegisteredUserController extends Controller
                 ->withErrors(['email' => 'This email is already taken.'])
                 ->withInput();
         }
+        
+        // 🧾 Generate unique handle from email
+        $baseHandle = Str::before($email, '@');
+        $handle = Str::slug($baseHandle, '_');
+        $originalHandle = $handle;
+        $counter = 1;
+
+        while (User::where('handle', $handle)->exists()) {
+            $handle = $originalHandle . '_' . $counter++;
+        }
 
         $user = null;
 
-        DB::transaction(function () use (&$user, $validated, $email) {
+        DB::transaction(function () use (&$user, $validated, $email, $handle) {
             // 🧾 Create user (email gets encrypted automatically via cast)
             $user = User::create([
                 'name'     => $validated['name'],
                 'email'    => $email,
+                'handle'   => $handle,
                 'password' => Hash::make($validated['password']),
                 'role'     => 'user',
             ]);
