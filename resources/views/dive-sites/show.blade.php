@@ -572,7 +572,7 @@
             or want to share local knowledge, send us a quick note below.
           </p>
 
-          {{-- Formm --}}
+          {{-- Form --}}
           <form action="{{ route('suggestions.store') }}" method="POST" 
                 class="space-y-4 max-w-md mx-auto"  {{-- 🧭 limit width + center --}}
                 x-on:submit="sent = true">
