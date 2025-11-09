@@ -55,12 +55,6 @@
 
   <!-- Preloads -->
   <link rel="preload" as="image" href="{{ asset('vizzbudLogo.webp') }}" fetchpriority="high" imagesrcset="{{ asset('vizzbudLogo.webp') }}" imagesizes="32px">
-  <link rel="preload" as="style" href="{{ asset('css/fonts.css') }}">
-  <link rel="preload" as="font" type="font/ttf" href="{{ asset('fonts/figtree/Figtree-Regular.ttf') }}" crossorigin>
-  <link rel="preload" as="font" type="font/ttf" href="{{ asset('fonts/figtree/Figtree-Bold.ttf') }}" crossorigin>
-
-  <!-- Fonts -->
-  <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
 
   <!-- Scripts -->
   <link rel="preload" as="script" href="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" importance="low">

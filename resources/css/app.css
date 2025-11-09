@@ -53,3 +53,5 @@
 .animate-slideUp {
   animation: slideUp 0.6s ease-out;
 }
+
+@import './fonts.css';
