@@ -116,12 +116,15 @@ class DiveSiteSearchController extends Controller
 
         // --- 3️⃣ Normalize for JSON output ---
         $clean = $results->map(function ($site) {
+            $route = $site->getFullRouteParams();
+            
             return [
                 'id' => $site->id,
                 'name' => trim($site->name),
                 'region' => optional($site->region)->name,
                 'state' => optional($site->region?->state)->abbreviation ?? optional($site->region?->state)->name,
                 'country' => optional($site->region?->state?->country)->name,
+                'route' => $route,
                 'lat' => $site->lat,
                 'lng' => $site->lng,
                 'distance_km' => isset($site->distance_km)
@@ -181,5 +184,46 @@ class DiveSiteSearchController extends Controller
                 return null;
             }
         });
+    }
+
+    public function nearby(Request $request)
+    {
+        $lat = $request->input('lat');
+        $lng = $request->input('lng');
+        $radiusKm = $request->input('radius', 100);
+
+        if (!$lat || !$lng) {
+            return response()->json(['results' => []]);
+        }
+
+        $sites = DiveSite::query()
+            ->with('region.state.country', 'photos')
+            ->selectRaw("
+                dive_sites.*,
+                (6371 * acos(
+                    cos(radians(?)) * cos(radians(lat)) *
+                    cos(radians(lng) - radians(?)) +
+                    sin(radians(?)) * sin(radians(lat))
+                )) AS distance_km
+            ", [$lat, $lng, $lat])
+            ->having('distance_km', '<=', $radiusKm)
+            ->orderBy('distance_km')
+            ->limit(3)
+            ->get();
+
+        $results = $sites->map(fn($site) => [
+            'id' => $site->id,
+            'name' => $site->name,
+            'region' => optional($site->region)->name,
+            'state' => optional($site->region?->state)->abbreviation ?? optional($site->region?->state)->name,
+            'country' => optional($site->region?->state?->country)->name,
+            'thumb' => optional($site->photos->first())->image_path 
+                ? asset($site->photos->first()->image_path)
+                : asset('images/divesites/default.webp'),
+            'distance_km' => round($site->distance_km, 1),
+            'route' => $site->getFullRouteParams(),
+        ]);
+
+        return response()->json(['results' => $results]);
     }
 }

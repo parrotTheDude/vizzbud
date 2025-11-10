@@ -100,6 +100,9 @@ Route::post('/suggestions', [SuggestionController::class, 'store'])
 
 Route::get('/api/dive-sites/search', [DiveSiteSearchController::class, 'search'])->name('api.dive-sites.search');
 
+Route::get('/api/dive-sites/nearby', [DiveSiteSearchController::class, 'nearby'])
+    ->name('api.dive-sites.nearby');
+
 /*
 |--------------------------------------------------------------------------
 | 🔐 Authenticated + Verified Routes
