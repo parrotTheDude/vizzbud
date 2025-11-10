@@ -192,107 +192,118 @@
   </div>
 @endif
 
-{{--  Compact Info Bar --}}
-<section class="w-full flex justify-center my-4 sm:my-6 px-3 sm:px-0">
-  <div class="flex flex-wrap items-center justify-center sm:inline-flex
-              w-full sm:w-auto
-              bg-white/10 backdrop-blur-2xl border border-white/15 ring-1 ring-white/10 shadow-md
-              rounded-full divide-x divide-white/10 overflow-hidden
-              py-1.5 px-2 sm:px-3 sm:py-1.5 mx-auto max-w-[95%] sm:max-w-none">
+  {{-- 🌊 Refined Compact Info Bar --}}
+  <section class="w-full flex justify-center my-4 sm:my-6 px-3 sm:px-0">
+    <div class="flex flex-wrap items-center justify-center sm:inline-flex
+                w-full sm:w-auto
+                bg-gradient-to-r from-cyan-500/10 via-slate-900/50 to-indigo-700/10
+                backdrop-blur-2xl border border-white/10 ring-1 ring-white/10
+                shadow-[0_0_25px_rgba(56,189,248,0.15)]
+                rounded-full divide-x divide-white/10 overflow-hidden
+                py-1.5 px-2 sm:px-4 mx-auto max-w-[95%] sm:max-w-none">
 
-    @php
-      $items = [
-        ['icon' => 'diver.svg', 'label' => $diveSite->suitability],
-        ['icon' => $diveSite->dive_type === 'boat' ? 'boat.svg' : 'beach.svg', 'label' => ucfirst($diveSite->dive_type)],
-        ['icon' => 'pool-depth.svg', 'label' => 'Avg ' . number_format($diveSite->avg_depth, 0) . 'm'],
-        ['icon' => 'under-water.svg', 'label' => 'Max ' . number_format($diveSite->max_depth, 0) . 'm'],
-      ];
-    @endphp
+      @php
+        $items = [
+          ['icon' => 'diver.svg', 'label' => $diveSite->suitability],
+          ['icon' => $diveSite->dive_type === 'boat' ? 'boat.svg' : 'beach.svg', 'label' => ucfirst($diveSite->dive_type)],
+          ['icon' => 'pool-depth.svg', 'label' => 'Avg ' . number_format($diveSite->avg_depth, 0) . 'm'],
+          ['icon' => 'under-water.svg', 'label' => 'Max ' . number_format($diveSite->max_depth, 0) . 'm'],
+        ];
+      @endphp
 
-    @foreach ($items as $item)
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1
-                  flex-1 sm:flex-none
-                  px-2 sm:px-3 py-0.5 sm:py-1">
-        <img src="/icons/{{ $item['icon'] }}"
-             class="w-3.5 h-3.5 sm:w-4 sm:h-4 invert opacity-80"
-             alt="">
-        <span class="text-[11px] sm:text-[12px] text-white/90 font-medium tracking-tight leading-none">
-          {{ $item['label'] }}
-        </span>
-      </div>
-    @endforeach
-  </div>
-</section>
+      @foreach ($items as $item)
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1
+                    flex-1 sm:flex-none px-2.5 sm:px-3 py-0.5 sm:py-1
+                    transition-all duration-200 hover:bg-white/5">
+          <img src="/icons/{{ $item['icon'] }}"
+              class="w-3.5 h-3.5 sm:w-4 sm:h-4 invert opacity-90"
+              alt="">
+          <span class="text-[11px] sm:text-[12px] text-white/90 font-medium tracking-tight leading-none">
+            {{ $item['label'] }}
+          </span>
+        </div>
+      @endforeach
+    </div>
+  </section>
 
   {{-- 🌊 Conditions + Forecast --}}
   <section class="max-w-5xl mx-auto mb-16 px-4 sm:px-8 space-y-10 sm:space-y-8">
 
-    {{-- 🌊 Current Conditions --}}
+    {{-- 🌊 Current Conditions (Refined Glass Look) --}}
     @if($c)
       @php 
         $status = strtolower(optional($diveSite->latestCondition)->status ?? '');
         $classes = match ($status) {
-            'green'  => 'bg-emerald-500/20 border-emerald-400/40 text-emerald-100',
-            'yellow' => 'bg-amber-400/25 border-amber-300/40 text-amber-100',
-            'red'    => 'bg-rose-500/25 border-rose-400/40 text-rose-100',
-            default  => 'bg-slate-500/20 border-slate-400/40 text-slate-200',
+            'green'  => 'bg-emerald-500/15 border-emerald-400/30 text-emerald-100',
+            'yellow' => 'bg-amber-400/20 border-amber-300/30 text-amber-100',
+            'red'    => 'bg-rose-500/20 border-rose-400/30 text-rose-100',
+            default  => 'bg-slate-500/15 border-slate-400/30 text-slate-200',
         };
       @endphp
 
-      <div class="rounded-3xl bg-white/10 backdrop-blur-2xl border border-white/15 
-                  ring-1 ring-{{ $accent }}-500/20 shadow-xl p-6 sm:p-8">
+        <section class="w-full mb-16 px-2 sm:px-6">
+          <div class="relative w-full rounded-3xl overflow-hidden
+                      bg-gradient-to-br from-cyan-500/10 via-slate-900/50 to-indigo-700/10
+                      backdrop-blur-2xl border border-white/10 ring-1 ring-white/10
+                      shadow-[inset_0_0_20px_rgba(255,255,255,0.04),0_0_40px_rgba(56,189,248,0.2)]
+                      p-5 sm:p-10">
 
-        {{-- Header --}}
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5 text-center sm:text-left">
-          <h2 class="text-white font-semibold text-lg flex items-center gap-2 justify-center sm:justify-start">
-            Current Conditions
-          </h2>
+          {{-- Accent glow --}}
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_70%)] pointer-events-none"></div>
 
-          {{-- Live Status Pill --}}
-          <div class="flex items-center justify-center sm:justify-end gap-2 rounded-full px-3 py-1.5 
-                      border {{ $classes }} backdrop-blur-sm shadow-sm w-fit mx-auto sm:mx-0">
-            <span class="relative inline-flex w-2.5 h-2.5">
-              <span class="absolute inset-0 rounded-full opacity-50 animate-ping
-                {{ $status === 'green' ? 'bg-emerald-300' : ($status === 'yellow' ? 'bg-amber-300' : ($status === 'red' ? 'bg-rose-300' : 'bg-slate-300')) }}"></span>
-              <span class="relative inline-flex w-2.5 h-2.5 rounded-full
-                {{ $status === 'green' ? 'bg-emerald-400' : ($status === 'yellow' ? 'bg-amber-400' : ($status === 'red' ? 'bg-rose-400' : 'bg-slate-400')) }}"></span>
-            </span>
+          {{-- Header --}}
+          <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 text-center sm:text-left">
+            <h2 class="text-white font-semibold text-xl sm:text-2xl tracking-tight flex items-center gap-2 justify-center sm:justify-start">
+              Current Conditions
+            </h2>
 
-            <span class="text-xs uppercase tracking-wide font-medium">Live</span>
-            <span class="text-[13px] font-semibold">
-              @if ($status === 'green') Good now
-              @elseif ($status === 'yellow') Fair now
-              @elseif ($status === 'red') Poor now
-              @else Unavailable
-              @endif
-            </span>
+            {{-- Status pill --}}
+            <div class="flex items-center justify-center gap-2 rounded-full px-3 py-1.5
+                        border {{ $classes }} backdrop-blur-md shadow-sm w-fit mx-auto sm:mx-0">
+              <span class="relative inline-flex w-2.5 h-2.5">
+                <span class="absolute inset-0 rounded-full opacity-50 animate-ping
+                  {{ $status === 'green' ? 'bg-emerald-300' : ($status === 'yellow' ? 'bg-amber-300' : ($status === 'red' ? 'bg-rose-300' : 'bg-slate-300')) }}"></span>
+                <span class="relative inline-flex w-2.5 h-2.5 rounded-full
+                  {{ $status === 'green' ? 'bg-emerald-400' : ($status === 'yellow' ? 'bg-amber-400' : ($status === 'red' ? 'bg-rose-400' : 'bg-slate-400')) }}"></span>
+              </span>
+              <span class="text-xs uppercase tracking-wide font-semibold opacity-80">Live</span>
+              <span class="text-[13px] font-semibold">
+                @if ($status === 'green') Good now
+                @elseif ($status === 'yellow') Fair now
+                @elseif ($status === 'red') Poor now
+                @else Unavailable
+                @endif
+              </span>
+            </div>
+          </div>
+
+          {{-- Metric grid --}}
+          <div class="grid grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4 text-sm">
+            @php
+              $metrics = [
+                ['wave.svg', 'Swell', $c->wave_height ? number_format($c->wave_height, 1).' m' : '–', 'Wave height (metres)'],
+                ['compass.svg', 'Dir', $c->wave_direction !== null ? CompassHelper::fromDegrees($c->wave_direction) : '—', 'Wave direction'],
+                ['tools-and-utensils.svg', 'Period', $c->wave_period ? number_format($c->wave_period, 0).' s' : '–', 'Time between waves'],
+                ['wind.svg', 'Wind', $c->wind_speed ? number_format($c->wind_speed * 1.94384, 0).' kn' : '–', 'Surface wind speed (knots)'],
+                ['temperature.svg', 'Water', $c->water_temperature ? number_format($c->water_temperature, 1).' °C' : '–', 'Water temperature'],
+                ['temperature.svg', 'Air', $c->air_temperature ? number_format($c->air_temperature, 1).' °C' : '–', 'Air temperature'],
+              ];
+            @endphp
+
+            @foreach($metrics as [$icon, $label, $value, $hint])
+              <div class="flex flex-col items-center justify-center p-3 rounded-xl
+                          bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-200
+                          text-white/90" title="{{ $hint }}">
+                <div class="p-2 rounded-lg bg-white/10 border border-white/10 mb-1.5">
+                  <img src="/icons/{{ $icon }}" class="w-5 h-5 invert opacity-90" alt="{{ $label }}">
+                </div>
+                <span class="text-[11px] uppercase tracking-wide text-white/60">{{ $label }}</span>
+                <strong class="text-sm text-white mt-0.5">{{ $value }}</strong>
+              </div>
+            @endforeach
           </div>
         </div>
-
-        {{-- Metrics grid (3 on mobile → 6 on desktop) --}}
-        <div class="grid grid-cols-3 lg:grid-cols-6 gap-3 text-sm mb-2">
-          @php
-            $metrics = [
-              ['wave.svg', 'Swell', $c->wave_height ? number_format($c->wave_height, 1).' m' : '–', 'Wave height in metres'],
-              ['compass.svg', 'Dir', $c->wave_direction !== null ? CompassHelper::fromDegrees($c->wave_direction) : '—', 'Wave direction'],
-              ['tools-and-utensils.svg', 'Period', $c->wave_period ? number_format($c->wave_period, 0).' s' : '–', 'Time between waves (seconds)'],
-              ['wind.svg', 'Wind', $c->wind_speed ? number_format($c->wind_speed * 1.94384, 0).' kn' : '–', 'Surface wind speed in knots'],
-              ['temperature.svg', 'Water', $c->water_temperature ? number_format($c->water_temperature, 1).' °C' : '–', 'Water temperature at depth'],
-              ['temperature.svg', 'Air', $c->air_temperature ? number_format($c->air_temperature, 1).' °C' : '–', 'Air temperature above surface'],
-            ];
-          @endphp
-
-          @foreach($metrics as [$icon, $label, $value, $hint])
-            <div class="flex flex-col items-center justify-center p-3 rounded-xl 
-                        bg-white/5 border border-white/10 text-slate-200 hover:bg-white/10 transition"
-                title="{{ $hint }}">
-              <img src="/icons/{{ $icon }}" class="w-5 h-5 invert mb-1 opacity-90" alt="{{ $label }}">
-              <span class="text-xs uppercase tracking-wide text-white/60">{{ $label }}</span>
-              <strong class="text-sm text-white mt-0.5">{{ $value }}</strong>
-            </div>
-          @endforeach
-        </div>
-      </div>
+      </section>
     @endif
 
     {{-- 🌅 3-Day Diveability Forecast --}}

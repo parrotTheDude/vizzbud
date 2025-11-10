@@ -334,6 +334,7 @@
           </svg>
         </a>
 
+        @guest
         <a href="{{ route('register') }}"
            class="inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 font-semibold text-white
                   bg-gradient-to-r from-cyan-500 to-teal-400
@@ -345,6 +346,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
         </a>
+        @endguest
       </div>
 
       {{-- Footer note --}}
