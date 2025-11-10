@@ -171,28 +171,28 @@
     </div>
   </div>
 
-@if(session('success'))
-  <div 
-    x-data="{ show: true }"
-    x-show="show"
-    x-transition:enter="transition ease-out duration-500"
-    x-transition:enter-start="opacity-0 -translate-y-4"
-    x-transition:enter-end="opacity-100 translate-y-0"
-    x-transition:leave="transition ease-in duration-500"
-    x-transition:leave-start="opacity-100 translate-y-0"
-    x-transition:leave-end="opacity-0 -translate-y-4"
-    x-init="setTimeout(() => show = false, 4000)" {{-- hides after 4 s --}}
-    class="fixed top-[7em] left-1/2 -translate-x-1/2 
-           px-5 py-2 rounded-full 
-           bg-emerald-500/20 border border-emerald-400/30 
-           text-emerald-200 text-sm font-medium text-center
-           shadow-lg backdrop-blur-md z-50"
-  >
-    {{ session('success') }}
-  </div>
-@endif
+  @if(session('success'))
+    <div 
+      x-data="{ show: true }"
+      x-show="show"
+      x-transition:enter="transition ease-out duration-500"
+      x-transition:enter-start="opacity-0 -translate-y-4"
+      x-transition:enter-end="opacity-100 translate-y-0"
+      x-transition:leave="transition ease-in duration-500"
+      x-transition:leave-start="opacity-100 translate-y-0"
+      x-transition:leave-end="opacity-0 -translate-y-4"
+      x-init="setTimeout(() => show = false, 4000)" {{-- hides after 4 s --}}
+      class="fixed top-[7em] left-1/2 -translate-x-1/2 
+            px-5 py-2 rounded-full 
+            bg-emerald-500/20 border border-emerald-400/30 
+            text-emerald-200 text-sm font-medium text-center
+            shadow-lg backdrop-blur-md z-50"
+    >
+      {{ session('success') }}
+    </div>
+  @endif
 
-  {{-- 🌊 Refined Compact Info Bar --}}
+    {{-- 🌊 Refined Compact Info Bar (Centered, Fixed-Width Items) --}}
   <section class="w-full flex justify-center my-4 sm:my-6 px-3 sm:px-0">
     <div class="flex flex-wrap items-center justify-center sm:inline-flex
                 w-full sm:w-auto
@@ -212,13 +212,13 @@
       @endphp
 
       @foreach ($items as $item)
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1
-                    flex-1 sm:flex-none px-2.5 sm:px-3 py-0.5 sm:py-1
+        <div class="flex flex-col sm:flex-row items-center justify-center text-center
+                    min-w-[80px] sm:min-w-[100px] px-2.5 sm:px-3 py-1 sm:py-1.5
                     transition-all duration-200 hover:bg-white/5">
           <img src="/icons/{{ $item['icon'] }}"
-              class="w-3.5 h-3.5 sm:w-4 sm:h-4 invert opacity-90"
+              class="w-4 h-4 invert opacity-90 mb-0.5 sm:mb-0 sm:mr-1"
               alt="">
-          <span class="text-[11px] sm:text-[12px] text-white/90 font-medium tracking-tight leading-none">
+          <span class="text-[11px] sm:text-[12px] text-white/90 font-medium tracking-tight leading-tight break-words">
             {{ $item['label'] }}
           </span>
         </div>
@@ -229,177 +229,261 @@
   {{-- 🌊 Conditions + Forecast --}}
   <section class="max-w-5xl mx-auto mb-16 px-4 sm:px-8 space-y-10 sm:space-y-8">
 
-    {{-- 🌊 Current Conditions (Refined Glass Look) --}}
-    @if($c)
-      @php 
-        $status = strtolower(optional($diveSite->latestCondition)->status ?? '');
-        $classes = match ($status) {
-            'green'  => 'bg-emerald-500/15 border-emerald-400/30 text-emerald-100',
-            'yellow' => 'bg-amber-400/20 border-amber-300/30 text-amber-100',
-            'red'    => 'bg-rose-500/20 border-rose-400/30 text-rose-100',
-            default  => 'bg-slate-500/15 border-slate-400/30 text-slate-200',
-        };
-      @endphp
+  {{-- 🌊 Current Conditions (Dynamic Glow + Responsive Dials) --}}
+  <section class="w-full mb-16 px-2 sm:px-6">
+    @php 
+      $status = strtolower(optional($diveSite->latestCondition)->status ?? '');
+      $accent = match ($status) {
+          'green'  => 'emerald',
+          'yellow' => 'amber',
+          'red'    => 'rose',
+          default  => 'cyan',
+      };
+      $glow = match ($status) {
+          'green'  => 'shadow-[0_0_45px_rgba(16,185,129,0.3)] ring-emerald-400/30',
+          'yellow' => 'shadow-[0_0_45px_rgba(250,204,21,0.25)] ring-amber-400/30',
+          'red'    => 'shadow-[0_0_45px_rgba(244,63,94,0.3)] ring-rose-400/30',
+          default  => 'shadow-[0_0_45px_rgba(56,189,248,0.2)] ring-cyan-400/30',
+      };
+    @endphp
 
-        <section class="w-full mb-16 px-2 sm:px-6">
-          <div class="relative w-full rounded-3xl overflow-hidden
-                      bg-gradient-to-br from-cyan-500/10 via-slate-900/50 to-indigo-700/10
-                      backdrop-blur-2xl border border-white/10 ring-1 ring-white/10
-                      shadow-[inset_0_0_20px_rgba(255,255,255,0.04),0_0_40px_rgba(56,189,248,0.2)]
-                      p-5 sm:p-10">
+    <div class="relative w-full rounded-3xl overflow-hidden
+                bg-gradient-to-br from-cyan-500/10 via-slate-900/50 to-indigo-700/10
+                backdrop-blur-2xl border border-white/10 ring-1 {{ $glow }}
+                p-6 sm:p-10 transition-all duration-500">
 
-          {{-- Accent glow --}}
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_70%)] pointer-events-none"></div>
+      {{-- Glow overlay --}}
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_70%)] pointer-events-none"></div>
 
-          {{-- Header --}}
-          <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 text-center sm:text-left">
-            <h2 class="text-white font-semibold text-xl sm:text-2xl tracking-tight flex items-center gap-2 justify-center sm:justify-start">
-              Current Conditions
-            </h2>
+      {{-- Header --}}
+      <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 text-center sm:text-left">
+        <h2 class="text-white font-semibold text-xl sm:text-2xl tracking-tight flex items-center gap-2 justify-center sm:justify-start">
+          Current Conditions
+        </h2>
 
-            {{-- Status pill --}}
-            <div class="flex items-center justify-center gap-2 rounded-full px-3 py-1.5
-                        border {{ $classes }} backdrop-blur-md shadow-sm w-fit mx-auto sm:mx-0">
-              <span class="relative inline-flex w-2.5 h-2.5">
-                <span class="absolute inset-0 rounded-full opacity-50 animate-ping
-                  {{ $status === 'green' ? 'bg-emerald-300' : ($status === 'yellow' ? 'bg-amber-300' : ($status === 'red' ? 'bg-rose-300' : 'bg-slate-300')) }}"></span>
-                <span class="relative inline-flex w-2.5 h-2.5 rounded-full
-                  {{ $status === 'green' ? 'bg-emerald-400' : ($status === 'yellow' ? 'bg-amber-400' : ($status === 'red' ? 'bg-rose-400' : 'bg-slate-400')) }}"></span>
+        {{-- Live Status Pill --}}
+        <div class="flex items-center justify-center gap-2 rounded-full px-3 py-1.5
+                    border border-white/10 backdrop-blur-md shadow-md w-fit mx-auto sm:mx-0
+                    bg-{{ $accent }}-500/20 text-{{ $accent }}-100
+                    ring-1 ring-{{ $accent }}-400/30 shadow-[0_0_25px_rgba(var(--tw-color-{{ $accent }}-400,56,189,248),0.4)]
+                    transition-all duration-300">
+
+          {{-- Ping dot --}}
+          <span class="relative inline-flex w-2.5 h-2.5">
+            <span class="absolute inset-0 rounded-full opacity-50 animate-ping bg-{{ $accent }}-300"></span>
+            <span class="relative inline-flex w-2.5 h-2.5 rounded-full bg-{{ $accent }}-400"></span>
+          </span>
+
+          {{-- Text inline --}}
+          <span class="flex items-center gap-1">
+            <span class="text-xs uppercase tracking-wide font-semibold opacity-80">Live:</span>
+            <span class="text-[13px] font-semibold capitalize">
+              @if ($status === 'green') Good now
+              @elseif ($status === 'yellow') Fair now
+              @elseif ($status === 'red') Poor now
+              @else Unavailable
+              @endif
+            </span>
+          </span>
+        </div>
+      </div>
+
+      {{-- Swell + Wind Grid --}}
+      <div class="grid md:grid-cols-2 gap-10 sm:gap-12 text-center">
+
+        {{-- 🌊 Swell --}}
+        <div>
+          <h3 class="text-white text-base font-semibold mb-5 flex items-center justify-center gap-2">
+            <img src="/icons/wave.svg" class="w-5 h-5 invert opacity-80" alt=""> Swell
+          </h3>
+
+          {{-- Dial --}}
+          <div class="relative flex items-center justify-center w-28 h-28 sm:w-36 sm:h-36 mx-auto mb-5 transition-transform">
+            <div class="absolute inset-0 rounded-full border border-white/10 shadow-[inset_0_0_25px_rgba(255,255,255,0.1)]"></div>
+
+            @foreach (['N','E','S','W'] as $dir)
+              <span class="absolute text-[10px] sm:text-[11px] font-semibold text-white/70 drop-shadow-sm
+                          {{ $dir === 'N' ? 'top-1' : ($dir === 'S' ? 'bottom-1' : ($dir === 'E' ? 'right-1' : 'left-1')) }}">
+                {{ $dir }}
               </span>
-              <span class="text-xs uppercase tracking-wide font-semibold opacity-80">Live</span>
-              <span class="text-[13px] font-semibold">
-                @if ($status === 'green') Good now
-                @elseif ($status === 'yellow') Fair now
-                @elseif ($status === 'red') Poor now
-                @else Unavailable
-                @endif
-              </span>
+            @endforeach
+
+            @for ($i = 0; $i < 360; $i += 45)
+              <div class="absolute w-[2px] h-[6px] bg-white/10 origin-center"
+                  style="transform: rotate({{ $i }}deg) translateY(-52px);"></div>
+            @endfor
+
+            <svg viewBox="0 0 64 64" class="w-20 h-20 sm:w-24 sm:h-24 relative z-10 transition-transform"
+                style="transform: rotate({{ ($c->wave_direction ?? 0) + 180 }}deg);">
+              <path d="M32 10 L36 26 L32 22 L28 26 Z" fill="#22d3ee" stroke="#0e7490" stroke-width="1.5" />
+              <line x1="32" y1="22" x2="32" y2="54" stroke="#22d3ee" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+              <circle cx="32" cy="32" r="2" fill="#22d3ee"/>
+            </svg>
+          </div>
+
+          {{-- Data --}}
+          <div class="flex flex-wrap justify-center gap-5 sm:gap-6 text-sm sm:text-base text-white/80">
+            <div>
+              <div class="text-xl font-semibold text-white">{{ number_format($c->wave_height ?? 0, 1) }}</div>
+              <div class="text-xs uppercase text-white/60 mt-1">Height (m)</div>
+            </div>
+            <div>
+              <div class="text-xl font-semibold text-white">{{ number_format($c->wave_period ?? 0, 0) }}</div>
+              <div class="text-xs uppercase text-white/60 mt-1">Period (s)</div>
+            </div>
+            <div>
+              <div class="text-lg font-semibold text-cyan-300">{{ $c->wave_direction !== null ? CompassHelper::fromDegrees($c->wave_direction) : '—' }}</div>
+              <div class="text-xs uppercase text-white/60 mt-1">Direction</div>
+            </div>
+            <div>
+              <div class="text-lg font-semibold text-cyan-200">{{ $c->water_temperature ? number_format($c->water_temperature, 1) : '—' }}</div>
+              <div class="text-xs uppercase text-white/60 mt-1">Water °C</div>
             </div>
           </div>
+        </div>
 
-          {{-- Metric grid --}}
-          <div class="grid grid-cols-3 md:grid-cols-6 gap-3 sm:gap-4 text-sm">
-            @php
-              $metrics = [
-                ['wave.svg', 'Swell', $c->wave_height ? number_format($c->wave_height, 1).' m' : '–', 'Wave height (metres)'],
-                ['compass.svg', 'Dir', $c->wave_direction !== null ? CompassHelper::fromDegrees($c->wave_direction) : '—', 'Wave direction'],
-                ['tools-and-utensils.svg', 'Period', $c->wave_period ? number_format($c->wave_period, 0).' s' : '–', 'Time between waves'],
-                ['wind.svg', 'Wind', $c->wind_speed ? number_format($c->wind_speed * 1.94384, 0).' kn' : '–', 'Surface wind speed (knots)'],
-                ['temperature.svg', 'Water', $c->water_temperature ? number_format($c->water_temperature, 1).' °C' : '–', 'Water temperature'],
-                ['temperature.svg', 'Air', $c->air_temperature ? number_format($c->air_temperature, 1).' °C' : '–', 'Air temperature'],
-              ];
-            @endphp
+        {{-- 🌬️ Wind --}}
+        <div>
+          <h3 class="text-white text-base font-semibold mb-5 flex items-center justify-center gap-2">
+            <img src="/icons/wind.svg" class="w-5 h-5 invert opacity-80" alt=""> Wind
+          </h3>
 
-            @foreach($metrics as [$icon, $label, $value, $hint])
-              <div class="flex flex-col items-center justify-center p-3 rounded-xl
-                          bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-200
-                          text-white/90" title="{{ $hint }}">
-                <div class="p-2 rounded-lg bg-white/10 border border-white/10 mb-1.5">
-                  <img src="/icons/{{ $icon }}" class="w-5 h-5 invert opacity-90" alt="{{ $label }}">
-                </div>
-                <span class="text-[11px] uppercase tracking-wide text-white/60">{{ $label }}</span>
-                <strong class="text-sm text-white mt-0.5">{{ $value }}</strong>
-              </div>
+          {{-- Dial --}}
+          <div class="relative flex items-center justify-center w-28 h-28 sm:w-36 sm:h-36 mx-auto mb-5 transition-transform">
+            <div class="absolute inset-0 rounded-full border border-white/10 shadow-[inset_0_0_25px_rgba(255,255,255,0.1)]"></div>
+
+            @foreach (['N','E','S','W'] as $dir)
+              <span class="absolute text-[10px] sm:text-[11px] font-semibold text-white/70 drop-shadow-sm
+                          {{ $dir === 'N' ? 'top-1' : ($dir === 'S' ? 'bottom-1' : ($dir === 'E' ? 'right-1' : 'left-1')) }}">
+                {{ $dir }}
+              </span>
             @endforeach
+
+            @for ($i = 0; $i < 360; $i += 45)
+              <div class="absolute w-[2px] h-[6px] bg-white/10 origin-center"
+                  style="transform: rotate({{ $i }}deg) translateY(-52px);"></div>
+            @endfor
+
+            <svg viewBox="0 0 64 64" class="w-20 h-20 sm:w-24 sm:h-24 relative z-10 transition-transform"
+                style="transform: rotate({{ ($c->wind_direction ?? 0) + 180 }}deg);">
+              <path d="M32 10 L36 26 L32 22 L28 26 Z" fill="#60a5fa" stroke="#3b82f6" stroke-width="1.5" />
+              <line x1="32" y1="22" x2="32" y2="54" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+              <circle cx="32" cy="32" r="2" fill="#60a5fa"/>
+            </svg>
+          </div>
+
+          {{-- Data --}}
+          <div class="flex flex-wrap justify-center gap-5 sm:gap-6 text-sm sm:text-base text-white/80">
+            <div>
+              <div class="text-xl font-semibold text-white">{{ number_format(($c->wind_speed ?? 0) * 1.94384, 0) }}</div>
+              <div class="text-xs uppercase text-white/60 mt-1">Speed (kn)</div>
+            </div>
+            <div>
+              <div class="text-xl font-semibold text-white">{{ number_format($c->air_temperature ?? 0, 1) }}</div>
+              <div class="text-xs uppercase text-white/60 mt-1">Air °C</div>
+            </div>
+            <div>
+              <div class="text-lg font-semibold text-indigo-300">{{ $c->wind_direction !== null ? CompassHelper::fromDegrees($c->wind_direction) : '—' }}</div>
+              <div class="text-xs uppercase text-white/60 mt-1">Direction</div>
+            </div>
           </div>
         </div>
-      </section>
-    @endif
 
-    {{-- 🌅 3-Day Diveability Forecast --}}
-    @if(!empty($daypartForecasts ?? []))
-      <div class="rounded-3xl bg-white/10 backdrop-blur-2xl border border-white/15 
-                  ring-1 ring-{{ $accent }}-500/20 shadow-xl p-6 sm:p-8 w-full">
-        <h2 class="text-white font-semibold text-lg text-center mb-3">3-Day Dive Forecast</h2>
-        <p class="text-center text-xs text-white/60 mb-6">
-          Each segment shows expected dive conditions for different parts of the day.
-        </p>
+      </div>
+    </div>
+  </section>
 
-        {{-- Forecast Grid (now full width like the other cards) --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
-          @foreach ($daypartForecasts as $day)
-            @php $date = \Carbon\Carbon::parse($day['date']); @endphp
+{{-- 🌊 3-Day Dive Forecast (Compact on Mobile) --}}
+@if(!empty($daypartForecasts ?? []))
+  <div class="rounded-3xl bg-gradient-to-br from-cyan-500/10 via-slate-900/50 to-indigo-700/10
+              backdrop-blur-2xl border border-white/15 ring-1 ring-white/10
+              shadow-[0_0_45px_rgba(56,189,248,0.25)] p-4 sm:p-8 space-y-5">
 
-            {{-- Forecast Card --}}
-            <div class="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col items-center 
-                        text-center hover:bg-white/10 transition h-full">
-              
-              {{-- Header --}}
-              <div class="mb-3">
-                <p class="text-white font-semibold text-sm leading-tight">
-                  {{ $date->isToday() ? 'Today' : $date->format('D') }}
-                </p>
-                <p class="text-[11px] text-white/60 leading-tight">{{ $date->format('j M') }}</p>
+    <div class="text-center">
+      <h2 class="text-white font-bold text-lg sm:text-2xl mb-1 tracking-tight">3-Day Dive Forecast</h2>
+      <p class="text-white/70 text-xs sm:text-sm">Average swell, wind, and period for each part of the day — including max swell.</p>
+      <p class="text-cyan-400 font-medium text-[10px] sm:text-xs mt-1">Updated daily at 5 am</p>
+    </div>
+
+    @foreach ($daypartForecasts as $i => $day)
+      @php
+        $date = \Carbon\Carbon::parse($day['date']);
+        $label = $date->isToday() ? 'Today' : ($i === 1 ? 'Tomorrow' : '+2 Days');
+        $accent = $i === 0 ? 'from-cyan-900/40 via-slate-800/30 to-slate-900/40'
+                  : ($i === 1 ? 'from-teal-900/40 via-slate-800/30 to-slate-900/40'
+                  : 'from-slate-800/40 via-slate-900/30 to-slate-900/40');
+
+        $parts = [
+          ['label' => 'Morning', 'key' => 'morning', 'icon' => 'morning.svg', 'time' => '6–11am'],
+          ['label' => 'Midday',  'key' => 'afternoon', 'icon' => 'afternoon.svg', 'time' => '12–4pm'],
+          ['label' => 'Evening', 'key' => 'night', 'icon' => 'night.svg', 'time' => '5–9pm'],
+        ];
+      @endphp
+
+      <div class="rounded-2xl border border-white/10 bg-gradient-to-r {{ $accent }}
+                  p-3 sm:p-5 shadow-inner transition-all">
+
+        <h3 class="text-center text-white font-semibold text-sm sm:text-base mb-3">{{ $label }}</h3>
+
+        {{-- 1 column mobile / 3 columns desktop --}}
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center">
+          @foreach ($parts as $part)
+            @php
+              $p = $day[$part['key']] ?? [];
+              $wave = $p['wave'] ?? null;
+              $waveMax = $p['wave_max'] ?? null;
+              $period = $p['period'] ?? null;
+              $wind = $p['wind'] ?? null;
+              $status = strtolower($p['status'] ?? 'unknown');
+
+              $color = match ($status) {
+                'green'  => ['bg' => 'bg-emerald-500/15', 'border' => 'border-emerald-400/40', 'text' => 'text-emerald-200'],
+                'yellow' => ['bg' => 'bg-amber-400/20', 'border' => 'border-amber-300/40', 'text' => 'text-amber-200'],
+                'red'    => ['bg' => 'bg-rose-500/20', 'border' => 'border-rose-400/40', 'text' => 'text-rose-200'],
+                default  => ['bg' => 'bg-slate-700/20', 'border' => 'border-slate-500/30', 'text' => 'text-white/80'],
+              };
+            @endphp
+
+            <div class="flex flex-col items-center px-3 sm:px-4 py-3 sm:py-4 rounded-xl border {{ $color['bg'] }} {{ $color['border'] }}
+                        backdrop-blur-md hover:scale-[1.01] transition-transform duration-200 w-full">
+
+              {{-- Icon + Label + Time --}}
+              <div class="flex flex-col items-center mb-1">
+                <img src="/icons/{{ $part['icon'] }}" class="w-5 h-5 sm:w-6 sm:h-6 invert opacity-90 mb-0.5" alt="{{ $part['label'] }}">
+                <span class="text-[11px] sm:text-[12px] text-white/70 font-semibold">{{ $part['label'] }}</span>
+                <span class="text-[10px] sm:text-[11px] text-white/50 leading-none">{{ $part['time'] }}</span>
               </div>
 
-              {{-- Day-parts row (icon + label + time) --}}
-              <div class="flex justify-center gap-2 w-full">
-                @php
-                  $parts = [
-                    ['label' => 'Morning', 'time' => '6am – 11am', 'key' => 'morning', 'icon' => 'morning.svg'],
-                    ['label' => 'Afternoon', 'time' => '12pm – 4pm', 'key' => 'afternoon', 'icon' => 'afternoon.svg'],
-                    ['label' => 'Night', 'time' => '5pm – 9pm', 'key' => 'night', 'icon' => 'night.svg'],
-                  ];
-                @endphp
+              {{-- Main Swell --}}
+              <div class="flex flex-col items-center mt-1">
+                <span class="text-xl sm:text-2xl font-bold {{ $color['text'] }}">
+                  {{ $wave ? number_format($wave, 1).' m' : '–' }}
+                </span>
+                <span class="text-[11px] sm:text-[12px] text-white/70 font-medium mt-0.5">Average Swell</span>
+              </div>
 
-                @foreach ($parts as $part)
-                  @php
-                    $status = strtolower($day[$part['key']] ?? 'unknown');
-                    $classes = match ($status) {
-                        'green'  => 'bg-emerald-400/20 border-emerald-400/30 text-emerald-100',
-                        'yellow' => 'bg-amber-400/20 border-amber-300/30 text-amber-100',
-                        'red'    => 'bg-rose-500/20 border-rose-400/30 text-rose-100',
-                        default  => 'bg-slate-500/20 border-slate-400/30 text-slate-200',
-                    };
-                  @endphp
-
-                  <div class="flex flex-col items-center justify-center gap-1.5 rounded-lg 
-                              px-3 py-2 text-[11px] font-medium border {{ $classes }} flex-1 
-                              backdrop-blur-sm shadow-sm hover:bg-white/10 transition"
-                      title="{{ ucfirst($part['label']) }} conditions ({{ $part['time'] }})">
-                    <img src="/icons/{{ $part['icon'] }}" class="w-4 h-4 invert opacity-90 mb-0.5" alt="{{ $part['label'] }}">
-                    <p class="capitalize font-semibold text-white">{{ $part['label'] }}</p>
-                    <p class="text-[10px] text-white/70">{{ $part['time'] }}</p>
-                  </div>
-                @endforeach
+              {{-- Bottom Grid (stacks on mobile) --}}
+              <div class="grid grid-cols-3 sm:grid-cols-3 gap-2 w-full mt-2 sm:mt-3 text-center">
+                <div class="text-[11px] sm:text-[12px] text-white/70">
+                  <span class="block text-base sm:text-lg font-semibold text-white/90">{{ $wind ? number_format($wind, 0) : '–' }}</span>
+                  <span class="opacity-70 text-[10px] sm:text-[11px]">Wind (kn)</span>
+                </div>
+                <div class="text-[11px] sm:text-[12px] text-white/70">
+                  <span class="block text-base sm:text-lg font-semibold text-white/90">{{ $period ? number_format($period, 0) : '–' }}</span>
+                  <span class="opacity-70 text-[10px] sm:text-[11px]">Period (s)</span>
+                </div>
+                <div class="text-[11px] sm:text-[12px] text-white/70">
+                  <span class="block text-base sm:text-lg font-semibold text-white/90">{{ $waveMax ? number_format($waveMax, 1) : '–' }}</span>
+                  <span class="opacity-70 text-[10px] sm:text-[11px]">Max Swell</span>
+                </div>
               </div>
             </div>
           @endforeach
         </div>
-
-        {{-- 🌈 Integrated Legend --}}
-        <div class="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm 
-                    shadow-inner p-5 text-center">
-          <h3 class="text-white font-semibold text-lg text-center mb-3">Dive Condition Key</h3>
-
-          <div class="flex flex-col sm:flex-row justify-center items-stretch gap-4 sm:gap-8 
-                      text-[13px] text-white/80 leading-relaxed max-w-3xl mx-auto">
-
-            {{-- Green --}}
-            <div class="flex flex-col items-center text-center gap-1.5">
-              <span class="w-3 h-3 bg-emerald-400 rounded-full shadow-sm"></span>
-              <p class="font-semibold text-white text-sm">Great diving</p>
-              <p class="text-xs text-white/70 max-w-[220px]">Low swell and wind. Ideal for diving.</p>
-            </div>
-
-            {{-- Yellow --}}
-            <div class="flex flex-col items-center text-center gap-1.5">
-              <span class="w-3 h-3 bg-amber-400 rounded-full shadow-sm"></span>
-              <p class="font-semibold text-white text-sm">Dive with caution</p>
-              <p class="text-xs text-white/70 max-w-[220px]">Moderate swell or shifting wind, check before diving.</p>
-            </div>
-
-            {{-- Red --}}
-            <div class="flex flex-col items-center text-center gap-1.5">
-              <span class="w-3 h-3 bg-rose-400 rounded-full shadow-sm"></span>
-              <p class="font-semibold text-white text-sm">Not ideal</p>
-              <p class="text-xs text-white/70 max-w-[220px]">Strong wind and big swell, check condtitions at the site but diving is not recommended.</p>
-            </div>
-
-          </div>
-        </div>
       </div>
-    @endif
+    @endforeach
+  </div>
+@endif
 
     @php
     $hasDiveInfo =

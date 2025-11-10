@@ -16,12 +16,12 @@ Schedule::command(FetchExternalConditions::class)
 
 // Fetch 3-day forecasts (for all dive sites)
 Schedule::command('vizzbud:fetch-forecast')
-    ->dailyAt('03:00')
+    ->dailyAt('05:00')
     ->timezone('Australia/Sydney');
 
 // Recompute daily “morning/afternoon/night” summaries from forecast data
 Schedule::command('vizzbud:build-dayparts')
-    ->dailyAt('04:00')
+    ->dailyAt('05:45')
     ->timezone('Australia/Sydney')
     ->runInBackground();
 
