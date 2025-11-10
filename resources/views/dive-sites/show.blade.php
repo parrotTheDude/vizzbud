@@ -393,15 +393,15 @@
     </div>
   </section>
 
-{{-- 🌊 3-Day Dive Forecast (Compact on Mobile) --}}
+{{-- 🌊 3-Day Dive Forecast (Thin Mobile + Full Color) --}}
 @if(!empty($daypartForecasts ?? []))
-  <div class="rounded-3xl bg-gradient-to-br from-cyan-500/10 via-slate-900/50 to-indigo-700/10
+  <div class="rounded-2xl bg-gradient-to-br from-cyan-500/10 via-slate-900/50 to-indigo-700/10
               backdrop-blur-2xl border border-white/15 ring-1 ring-white/10
-              shadow-[0_0_45px_rgba(56,189,248,0.25)] p-4 sm:p-8 space-y-5">
+              shadow-[0_0_35px_rgba(56,189,248,0.25)] p-3 sm:p-8 space-y-4">
 
     <div class="text-center">
-      <h2 class="text-white font-bold text-lg sm:text-2xl mb-1 tracking-tight">3-Day Dive Forecast</h2>
-      <p class="text-white/70 text-xs sm:text-sm">Average swell, wind, and period for each part of the day — including max swell.</p>
+      <h2 class="text-white font-bold text-base sm:text-2xl mb-1 tracking-tight">3-Day Dive Forecast</h2>
+      <p class="text-white/70 text-[11px] sm:text-sm">Average swell, wind, and period per part of the day — includes max swell.</p>
       <p class="text-cyan-400 font-medium text-[10px] sm:text-xs mt-1">Updated daily at 5 am</p>
     </div>
 
@@ -409,24 +409,17 @@
       @php
         $date = \Carbon\Carbon::parse($day['date']);
         $label = $date->isToday() ? 'Today' : ($i === 1 ? 'Tomorrow' : '+2 Days');
-        $accent = $i === 0 ? 'from-cyan-900/40 via-slate-800/30 to-slate-900/40'
-                  : ($i === 1 ? 'from-teal-900/40 via-slate-800/30 to-slate-900/40'
-                  : 'from-slate-800/40 via-slate-900/30 to-slate-900/40');
-
         $parts = [
-          ['label' => 'Morning', 'key' => 'morning', 'icon' => 'morning.svg', 'time' => '6–11am'],
-          ['label' => 'Midday',  'key' => 'afternoon', 'icon' => 'afternoon.svg', 'time' => '12–4pm'],
-          ['label' => 'Evening', 'key' => 'night', 'icon' => 'night.svg', 'time' => '5–9pm'],
+          ['label'=>'Morning','key'=>'morning','icon'=>'morning.svg','time'=>'6–11 am'],
+          ['label'=>'Midday','key'=>'afternoon','icon'=>'afternoon.svg','time'=>'12–4 pm'],
+          ['label'=>'Evening','key'=>'night','icon'=>'night.svg','time'=>'5–9 pm'],
         ];
       @endphp
 
-      <div class="rounded-2xl border border-white/10 bg-gradient-to-r {{ $accent }}
-                  p-3 sm:p-5 shadow-inner transition-all">
+      <div class="rounded-xl border border-white/10 bg-slate-800/40 sm:bg-transparent p-2 sm:p-4 shadow-inner">
+        <div class="flex items-center justify-center text-white font-semibold text-xs sm:text-base mb-2">{{ $label }}</div>
 
-        <h3 class="text-center text-white font-semibold text-sm sm:text-base mb-3">{{ $label }}</h3>
-
-        {{-- 1 column mobile / 3 columns desktop --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center">
+        <div class="flex flex-col gap-2 sm:grid sm:grid-cols-3 sm:gap-3">
           @foreach ($parts as $part)
             @php
               $p = $day[$part['key']] ?? [];
@@ -437,44 +430,48 @@
               $status = strtolower($p['status'] ?? 'unknown');
 
               $color = match ($status) {
-                'green'  => ['bg' => 'bg-emerald-500/15', 'border' => 'border-emerald-400/40', 'text' => 'text-emerald-200'],
-                'yellow' => ['bg' => 'bg-amber-400/20', 'border' => 'border-amber-300/40', 'text' => 'text-amber-200'],
-                'red'    => ['bg' => 'bg-rose-500/20', 'border' => 'border-rose-400/40', 'text' => 'text-rose-200'],
-                default  => ['bg' => 'bg-slate-700/20', 'border' => 'border-slate-500/30', 'text' => 'text-white/80'],
+                'green'  => 'bg-emerald-600/40 border-emerald-400/40 text-emerald-100',
+                'yellow' => 'bg-yellow-400/40 border-yellow-300/50 text-yellow-50', /* brighter yellow */
+                'red'    => 'bg-rose-700/40 border-rose-500/40 text-rose-100',
+                default  => 'bg-slate-700/40 border-slate-500/30 text-white/80',
               };
             @endphp
 
-            <div class="flex flex-col items-center px-3 sm:px-4 py-3 sm:py-4 rounded-xl border {{ $color['bg'] }} {{ $color['border'] }}
-                        backdrop-blur-md hover:scale-[1.01] transition-transform duration-200 w-full">
-
-              {{-- Icon + Label + Time --}}
-              <div class="flex flex-col items-center mb-1">
-                <img src="/icons/{{ $part['icon'] }}" class="w-5 h-5 sm:w-6 sm:h-6 invert opacity-90 mb-0.5" alt="{{ $part['label'] }}">
-                <span class="text-[11px] sm:text-[12px] text-white/70 font-semibold">{{ $part['label'] }}</span>
-                <span class="text-[10px] sm:text-[11px] text-white/50 leading-none">{{ $part['time'] }}</span>
+            {{-- Thin horizontal bar on mobile, full grid card on desktop --}}
+            <div class="flex flex-row sm:flex-col items-center justify-between sm:justify-center 
+                        gap-2 sm:gap-3 border {{ $color }} rounded-md sm:rounded-xl px-2 py-1.5 sm:p-3 
+                        backdrop-blur-md hover:scale-[1.01] transition-all duration-200">
+              
+              {{-- Left side: icon + label --}}
+              <div class="flex items-center gap-1.5 min-w-[75px]">
+                <img src="/icons/{{ $part['icon'] }}" class="w-4 h-4 sm:w-5 sm:h-5 invert opacity-90">
+                <div class="flex flex-col text-left sm:text-center">
+                  <span class="text-[11px] sm:text-[12px] font-semibold leading-tight">{{ $part['label'] }}</span>
+                  <span class="text-[10px] sm:text-[11px] text-white/60 sm:hidden">{{ $part['time'] }}</span>
+                </div>
               </div>
 
-              {{-- Main Swell --}}
-              <div class="flex flex-col items-center mt-1">
-                <span class="text-xl sm:text-2xl font-bold {{ $color['text'] }}">
+              {{-- Middle: average swell --}}
+              <div class="flex flex-col items-center flex-1 sm:mt-0">
+                <span class="text-[13px] sm:text-xl font-bold leading-tight">
                   {{ $wave ? number_format($wave, 1).' m' : '–' }}
                 </span>
-                <span class="text-[11px] sm:text-[12px] text-white/70 font-medium mt-0.5">Average Swell</span>
+                <span class="text-[10px] sm:text-[12px] text-white/80">Average Swell</span>
               </div>
 
-              {{-- Bottom Grid (stacks on mobile) --}}
-              <div class="grid grid-cols-3 sm:grid-cols-3 gap-2 w-full mt-2 sm:mt-3 text-center">
-                <div class="text-[11px] sm:text-[12px] text-white/70">
-                  <span class="block text-base sm:text-lg font-semibold text-white/90">{{ $wind ? number_format($wind, 0) : '–' }}</span>
-                  <span class="opacity-70 text-[10px] sm:text-[11px]">Wind (kn)</span>
+              {{-- Right side: compact stats (visible everywhere) --}}
+              <div class="flex items-center gap-3 sm:grid sm:grid-cols-3 sm:gap-2 text-[10px] sm:text-[11px] text-white/70">
+                <div class="text-center">
+                  <span class="block text-[12px] sm:text-base font-semibold text-white/90 leading-tight">{{ $wind ? number_format($wind, 0) : '–' }}</span>
+                  <span class="opacity-70 text-[10px]">Wind</span>
                 </div>
-                <div class="text-[11px] sm:text-[12px] text-white/70">
-                  <span class="block text-base sm:text-lg font-semibold text-white/90">{{ $period ? number_format($period, 0) : '–' }}</span>
-                  <span class="opacity-70 text-[10px] sm:text-[11px]">Period (s)</span>
+                <div class="text-center">
+                  <span class="block text-[12px] sm:text-base font-semibold text-white/90 leading-tight">{{ $period ? number_format($period, 0) : '–' }}</span>
+                  <span class="opacity-70 text-[10px]">Period</span>
                 </div>
-                <div class="text-[11px] sm:text-[12px] text-white/70">
-                  <span class="block text-base sm:text-lg font-semibold text-white/90">{{ $waveMax ? number_format($waveMax, 1) : '–' }}</span>
-                  <span class="opacity-70 text-[10px] sm:text-[11px]">Max Swell</span>
+                <div class="text-center">
+                  <span class="block text-[12px] sm:text-base font-semibold text-white/90 leading-tight">{{ $waveMax ? number_format($waveMax, 1) : '–' }}</span>
+                  <span class="opacity-70 text-[10px]">Max</span>
                 </div>
               </div>
             </div>
