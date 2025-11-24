@@ -423,130 +423,134 @@
       </div>
     </section>
 
-{{-- 🌊 3-Day Dive Forecast (Spaced Layout – Compact Mobile) --}}
-@if (!empty($daypartForecasts ?? []))
-<div class="rounded-2xl bg-slate-900/40 border border-white/10 
-            p-3 sm:p-8 space-y-4 sm:space-y-5">
+    {{-- 🌊 3-Day Dive Forecast (With Averages + Hours) --}}
+    @if (!empty($daypartForecasts ?? []))
+    <div class="rounded-2xl bg-slate-900/40 border border-white/10 
+                p-3 sm:p-8 space-y-4 sm:space-y-5">
 
-    {{-- Header --}}
-    <div class="text-center mb-1 sm:mb-2">
-        <h2 class="text-white font-semibold text-sm sm:text-2xl">
-            3-Day Dive Forecast
-        </h2>
-        <p class="text-white/60 text-[10px] sm:text-sm">
-            Swell, period & wind for each part of the day.
-        </p>
-    </div>
-
-    @foreach ($daypartForecasts as $i => $day)
-        @php
-            $date  = \Carbon\Carbon::parse($day['date']);
-            $label = $date->isToday() ? 'Today' : ($i === 1 ? 'Tomorrow' : '+2 Days');
-
-            $parts = [
-                ['label' => 'Morning', 'key' => 'morning',   'icon' => 'morning.svg'],
-                ['label' => 'Midday',  'key' => 'afternoon', 'icon' => 'afternoon.svg'],
-                ['label' => 'Evening', 'key' => 'night',     'icon' => 'night.svg'],
-            ];
-        @endphp
-
-        <div class="rounded-xl border border-white/10 
-                    p-2.5 sm:p-5 bg-slate-800/30 
-                    space-y-2.5 sm:space-y-3">
-
-            <div class="text-center text-white font-semibold text-xs sm:text-sm mb-1">
-                {{ $label }}
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 sm:gap-5">
-                @foreach ($parts as $part)
-                    @php
-                        $p = $day[$part['key']] ?? [];
-                        $wave    = $p['wave_height_max'] ?? null;
-                        $period  = $p['wave_period_max'] ?? null;
-                        $swellD  = $p['swell_dir_avg'] ?? null;
-                        $windD   = $p['wind_dir_avg'] ?? null;
-                        $wind    = $p['wind_speed_max'] ?? null;
-
-                        $swellTxt = is_numeric($swellD) ? \App\Helpers\CompassHelper::fromDegrees($swellD) : null;
-                        $windTxt  = is_numeric($windD)  ? \App\Helpers\CompassHelper::fromDegrees($windD)  : null;
-
-                        $status  = strtolower($p['status'] ?? 'unknown');
-                        $color = match ($status) {
-                            'green'  => 'border-emerald-400/30 bg-emerald-700/20',
-                            'yellow' => 'border-yellow-300/30 bg-yellow-600/20',
-                            'red'    => 'border-rose-500/30 bg-rose-700/20',
-                            default  => 'border-slate-500/30 bg-slate-700/20',
-                        };
-                    @endphp
-
-                    <div class="rounded-lg 
-                                p-2.5 sm:p-4 
-                                border {{ $color }} 
-                                text-white 
-                                text-[10px] sm:text-sm 
-                                flex flex-col 
-                                gap-2 sm:gap-3">
-
-                        {{-- Header --}}
-                        <div class="flex items-center justify-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
-                            <img src="/icons/{{ $part['icon'] }}" 
-                                 class="w-3.5 h-3.5 sm:w-5 sm:h-5 invert opacity-90">
-                            <span class="font-semibold text-[11px] sm:text-sm">
-                                {{ $part['label'] }}
-                            </span>
-                        </div>
-
-                        {{-- SWELL --}}
-                        <div class="flex flex-col items-center gap-0.5 sm:gap-1">
-                            <div class="flex items-center gap-1.5 sm:gap-2">
-                                @if (is_numeric($swellD))
-                                    <img src="/icons/arrow.svg"
-                                        class="w-3 h-3 sm:w-4 sm:h-4 invert opacity-80"
-                                        style="transform: rotate({{ $swellD + 90 }}deg)">
-                                @endif
-                                <span class="font-bold text-[11px] sm:text-base">
-                                    {{ $wave ? number_format($wave, 1).' m' : '–' }}
-                                </span>
-                                <span class="text-white/70 text-[10px] sm:text-sm">
-                                    {{ $swellTxt ?? '—' }}
-                                </span>
-                            </div>
-
-                            <span class="text-[9px] sm:text-xs text-white/50">
-                                Period: {{ $period ? number_format($period, 0).'s' : '–' }}
-                            </span>
-
-                            <span class="text-[9px] sm:text-xs text-white/50">Swell</span>
-                        </div>
-
-                        {{-- WIND --}}
-                        <div class="flex flex-col items-center gap-0.5 sm:gap-1">
-                            <div class="flex items-center gap-1.5 sm:gap-2">
-                                @if (is_numeric($windD))
-                                    <img src="/icons/arrow.svg"
-                                        class="w-3 h-3 sm:w-4 sm:h-4 invert opacity-80"
-                                        style="transform: rotate({{ $windD + 90 }}deg)">
-                                @endif
-                                <span class="font-bold text-[11px] sm:text-base">
-                                    {{ $wind ? number_format($wind, 0).' kn' : '–' }}
-                                </span>
-                                <span class="text-white/70 text-[10px] sm:text-sm">
-                                    {{ $windTxt ?? '—' }}
-                                </span>
-                            </div>
-                            <span class="text-[9px] sm:text-xs text-white/50">Wind</span>
-                        </div>
-
-                    </div>
-                @endforeach
-            </div>
-
+        {{-- Header --}}
+        <div class="text-center mb-1 sm:mb-2">
+            <h2 class="text-white font-semibold text-sm sm:text-2xl">
+                3-Day Dive Forecast
+            </h2>
+            <p class="text-white/60 text-[10px] sm:text-sm">
+                Avg swell, direction & wind for each daypart.
+            </p>
         </div>
-    @endforeach
 
-</div>
-@endif
+        @foreach ($daypartForecasts as $i => $day)
+            @php
+                $date  = \Carbon\Carbon::parse($day['date']);
+                $label = $date->isToday() ? 'Today' : ($i === 1 ? 'Tomorrow' : '+2 Days');
+
+                $parts = [
+                    ['label' => 'Morning', 'key' => 'morning',   'icon' => 'morning.svg'],
+                    ['label' => 'Midday',  'key' => 'afternoon', 'icon' => 'afternoon.svg'],
+                    ['label' => 'Evening', 'key' => 'night',     'icon' => 'night.svg'],
+                ];
+            @endphp
+
+            <div class="rounded-xl border border-white/10 
+                        p-2.5 sm:p-5 bg-slate-800/30 
+                        space-y-2.5 sm:space-y-3">
+
+                <div class="text-center text-white font-semibold text-xs sm:text-sm mb-1">
+                    {{ $label }}
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 sm:gap-5">
+                    @foreach ($parts as $part)
+                        @php
+                            $p = $day[$part['key']] ?? [];
+
+                            $wave     = $p['wave_avg']    ?? $p['wave_height_max'] ?? null;   // Prefer avg if you add it later
+                            $period   = $p['wave_period_avg'] ?? $p['wave_period_max'] ?? null;
+                            $swellD   = $p['swell_dir_avg']   ?? null;
+                            $windD    = $p['wind_dir_avg']    ?? null;
+                            $wind     = $p['wind_avg']        ?? $p['wind_speed_max'] ?? null;
+
+                            $swellTxt = is_numeric($swellD) ? \App\Helpers\CompassHelper::fromDegrees($swellD) : null;
+                            $windTxt  = is_numeric($windD)  ? \App\Helpers\CompassHelper::fromDegrees($windD)  : null;
+
+                            $status = strtolower($p['status'] ?? 'unknown');
+                            $color = match ($status) {
+                              'green'  => 'border-green-400 bg-green-600/30 text-green-100',
+                                'yellow' => 'border-yellow-400 bg-yellow-500/30 text-yellow-100',
+                                'red'    => 'border-red-500 bg-red-700/30 text-red-100',
+                                default  => 'border-slate-500/30 bg-slate-700/20 text-white/90',
+                            };
+                        @endphp
+
+                        <div class="rounded-lg 
+                                    p-2.5 sm:p-4 
+                                    border {{ $color }} 
+                                    text-white 
+                                    text-[10px] sm:text-sm 
+                                    flex flex-col 
+                                    gap-2 sm:gap-3">
+
+                            {{-- Header + Hours --}}
+                            <div class="flex flex-col items-center">
+                                <div class="flex items-center gap-1.5 sm:gap-2">
+                                    <img src="/icons/{{ $part['icon'] }}" 
+                                        class="w-3.5 h-3.5 sm:w-5 sm:h-5 invert opacity-90">
+                                    <span class="font-semibold text-[11px] sm:text-sm">
+                                        {{ $part['label'] }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {{-- SWELL (avg) --}}
+                            <div class="flex flex-col items-center gap-0.5">
+                                <div class="flex items-center gap-1.5">
+                                    @if (is_numeric($swellD))
+                                        <img src="/icons/arrow.svg"
+                                            class="w-3 h-3 sm:w-4 sm:h-4 invert opacity-80"
+                                            style="transform: rotate({{ $swellD + 90 }}deg)">
+                                    @endif
+                                    <span class="font-bold text-[11px] sm:text-base">
+                                        {{ $wave ? number_format($wave, 1).' m' : '–' }}
+                                    </span>
+                                    <span class="text-white/70 text-[10px] sm:text-sm">
+                                        {{ $swellTxt ?? '—' }}
+                                    </span>
+                                </div>
+
+                                <span class="text-[9px] sm:text-xs text-white/50">
+                                    Period: {{ $period ? number_format($period, 0).'s' : '–' }}
+                                </span>
+
+                                <span class="text-[9px] sm:text-xs text-white/50">Avg Swell</span>
+                            </div>
+
+                            {{-- WIND (avg) --}}
+                            <div class="flex flex-col items-center gap-0.5">
+                                <div class="flex items-center gap-1.5">
+                                    @if (is_numeric($windD))
+                                        <img src="/icons/arrow.svg"
+                                            class="w-3 h-3 sm:w-4 sm:h-4 invert opacity-80"
+                                            style="transform: rotate({{ $windD + 90 }}deg)">
+                                    @endif
+                                    <span class="font-bold text-[11px] sm:text-base">
+                                        {{ $wind ? number_format($wind, 0).' kn' : '–' }}
+                                    </span>
+                                    <span class="text-white/70 text-[10px] sm:text-sm">
+                                        {{ $windTxt ?? '—' }}
+                                    </span>
+                                </div>
+
+                                <span class="text-[9px] sm:text-xs text-white/50">Avg Wind</span>
+                            </div>
+
+                        </div>
+                    @endforeach
+                </div>
+
+            </div>
+        @endforeach
+
+    </div>
+    @endif
 
     @php
     $hasDiveInfo =
