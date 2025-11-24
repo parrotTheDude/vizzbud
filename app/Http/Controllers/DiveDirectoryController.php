@@ -69,68 +69,66 @@ class DiveDirectoryController extends Controller
     public function show($countrySlug, $stateSlug, $regionSlug, DiveSite $diveSite)
     {
         $tz = $diveSite->timezone ?: 'UTC';
-        $now = Carbon::now($tz);
+        $today = Carbon::now($tz)->toDateString();
 
+        // Load only what we need
         $diveSite->loadMissing([
-            'latestCondition' => function ($q) {
-                $q->select([
-                    'external_conditions.id',
-                    'external_conditions.dive_site_id',
-                    'external_conditions.retrieved_at',
-                    'external_conditions.status',
-                    'external_conditions.wave_height',
-                    'external_conditions.wave_period',
-                    'external_conditions.wave_direction',
-                    'external_conditions.water_temperature',
-                    'external_conditions.wind_speed',
-                    'external_conditions.wind_direction',
-                    'external_conditions.air_temperature',
-                ]);
-            },
-            'forecasts' => fn($q) => $q->select([
-                    'external_condition_forecasts.id',
-                    'external_condition_forecasts.dive_site_id',
-                    'external_condition_forecasts.forecast_time',
-                    'external_condition_forecasts.wave_height',
-                    'external_condition_forecasts.wave_period',
-                    'external_condition_forecasts.wave_direction',
-                    'external_condition_forecasts.water_temperature',
-                    'external_condition_forecasts.wind_speed',
-                    'external_condition_forecasts.wind_direction',
-                    'external_condition_forecasts.air_temperature',
-                ])
-                ->where('external_condition_forecasts.forecast_time', '>=', Carbon::now()->startOfHour())
-                ->orderBy('external_condition_forecasts.forecast_time')
-                ->limit(72),
             'dayparts' => fn($q) => $q->select([
-                    'external_condition_dayparts.id',
-                    'external_condition_dayparts.dive_site_id',
-                    'external_condition_dayparts.local_date',
-                    'external_condition_dayparts.part',
-                    'external_condition_dayparts.status'
+                    'id',
+                    'dive_site_id',
+                    'local_date',
+                    'part',
+                    'status',
+                    'wave_height_max',
+                    'wave_period_max',
+                    'wind_speed_max',
+                    'swell_dir_avg',
+                    'wind_dir_avg',
+                    'score'
                 ])
-                ->where('external_condition_dayparts.local_date', '>=', Carbon::now()->toDateString())
-                ->orderBy('external_condition_dayparts.local_date')
-                ->orderBy('external_condition_dayparts.part')
+                ->where('local_date', '>=', $today)
+                ->orderBy('local_date')
+                ->orderBy('part')
                 ->limit(9),
+            'latestCondition',
+            'forecasts',
         ]);
 
         $nearbySites = $diveSite->nearbySites(3);
 
-        // ---- Build daypart forecasts with real values ----
-        $forecasts = $diveSite->forecasts;
-        $grouped = [];
+        // --- Build EXACT output from DB values ---
+        $daypartForecasts = $diveSite->dayparts
+            ->groupBy('local_date')
+            ->map(function ($rows, $date) {
 
-        foreach ($diveSite->dayparts->groupBy('local_date') as $date => $rows) {
-            $grouped[$date] = [
-                'date' => $date,
-                'morning'   => $this->summarizeForecastWindow($diveSite, $forecasts, $date, 6, 11, $rows->firstWhere('part', 'morning')?->status),
-                'afternoon' => $this->summarizeForecastWindow($diveSite, $forecasts, $date, 12, 16, $rows->firstWhere('part', 'afternoon')?->status),
-                'night'     => $this->summarizeForecastWindow($diveSite, $forecasts, $date, 17, 21, $rows->firstWhere('part', 'night')?->status),
-            ];
-        }
+                // Normalise each DB row into simplified arrays
+                $normalised = $rows->mapWithKeys(function ($row) {
+                    $key = strtolower(trim($row->part));
 
-        $daypartForecasts = array_values(collect($grouped)->take(3)->sortKeys()->toArray());
+                    return [
+                        $key => [
+                            'status'          => $row->status,
+                            'wave_height_max' => $row->wave_height_max,
+                            'wave_period_max' => $row->wave_period_max,
+                            'wind_speed_max'  => $row->wind_speed_max,
+                            'swell_dir_avg'   => $row->swell_dir_avg,
+                            'wind_dir_avg'    => $row->wind_dir_avg,
+                            'score'           => $row->score,
+                        ]
+                    ];
+                });
+
+                return [
+                    'date'      => $date,
+                    'morning'   => $normalised['morning']   ?? null,
+                    'afternoon' => $normalised['afternoon'] ?? null,
+                    'night'     => $normalised['night']     ?? null,
+                ];
+            })
+            ->sortKeys()
+            ->values()
+            ->take(3)
+            ->toArray();
 
         log_activity('divesite_viewed', $diveSite, [
             'slug' => $diveSite->slug,
@@ -138,9 +136,9 @@ class DiveDirectoryController extends Controller
         ]);
 
         return view('dive-sites.show', [
-            'diveSite' => $diveSite,
-            'daypartForecasts' => $daypartForecasts,
-            'nearbySites' => $nearbySites,
+            'diveSite'          => $diveSite,
+            'daypartForecasts'  => $daypartForecasts,
+            'nearbySites'       => $nearbySites,
         ]);
     }
 

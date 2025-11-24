@@ -16,213 +16,234 @@ class BuildDaypartForecasts extends Command
         {--site= : ID or slug/name of a specific site}
         {--hours=72 : Horizon to consider from now (UTC)}
         {--chunk=200 : Upsert batch size}
-        {--prune=1 : Prune dayparts before today (local) (1=yes, 0=no)}
-        {--dry-run : Compute but do not write}';
+        {--prune=1 : Prune dayparts before today (local)}
+        {--dry-run : Only compute, do not write}';
 
-    protected $description = 'Summarize hourly forecasts into morning/afternoon/night rollups per site-day';
-
-    // Mirror thresholds used by OpenMeteoService (read from env with same keys)
-    private float $greenMaxWaveM;
-    private float $greenMaxWindKt;
-    private float $yellowMaxWaveM;
-    private float $yellowMaxWindKt;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->greenMaxWaveM   = (float) env('VIZZBUD_GREEN_MAX_WAVE_M',  1.2);
-        $this->greenMaxWindKt  = (float) env('VIZZBUD_GREEN_MAX_WIND_KT', 10.0);
-        $this->yellowMaxWaveM  = (float) env('VIZZBUD_YELLOW_MAX_WAVE_M', 1.8);
-        $this->yellowMaxWindKt = (float) env('VIZZBUD_YELLOW_MAX_WIND_KT',16.0);
-    }
+    protected $description = 'Aggregate hourly forecast data into morning/afternoon/night daypart rollups.';
 
     public function handle(): int
     {
-        $hours   = max(1, (int) $this->option('hours'));
-        $chunk   = max(10, (int) $this->option('chunk'));
-        $dryRun  = (bool) $this->option('dry-run');
-        $prune   = (bool) $this->option('prune');
-        $siteOpt = $this->option('site');
+        $hours  = max(1, (int) $this->option('hours'));
+        $chunk  = max(10, (int) $this->option('chunk'));
+        $dryRun = (bool) $this->option('dry-run');
+        $prune  = (bool) $this->option('prune');
+        $siteOpt= $this->option('site');
 
-        $this->info("Building daypart rollups (horizon: {$hours}h, chunk: {$chunk}, dry-run: " . ($dryRun ? 'yes' : 'no') . ")");
+        $this->info("Building dayparts (horizon {$hours}h, chunk {$chunk}, dry-run " . ($dryRun ? 'yes':'no') . ")");
 
+        // Fetch sites
         $sites = DiveSite::query()
             ->when($siteOpt, function ($q) use ($siteOpt) {
                 if (is_numeric($siteOpt)) {
-                    $q->where('id', (int) $siteOpt);
+                    $q->where('id', $siteOpt);
                 } else {
-                    $q->where(fn($qq) => $qq->where('slug', $siteOpt)->orWhere('name', $siteOpt));
+                    $q->where(fn($qq) => $qq->where('slug',$siteOpt)->orWhere('name',$siteOpt));
                 }
-            }, function ($q) {
-                // Only include active sites when no specific site is requested
-                $q->where('is_active', true);
-            })
-            ->select(['id','name','slug','lat','lng','timezone'])
+            }, fn($q) => $q->where('is_active', true))
+            ->select(['id','name','slug','timezone'])
             ->orderBy('id')
             ->get();
 
         if ($sites->isEmpty()) {
-            $this->warn('No sites matched.');
+            $this->warn("No sites matched.");
             return self::SUCCESS;
         }
 
         $nowUtc = CarbonImmutable::now('UTC')->floorHour();
         $endUtc = $nowUtc->addHours($hours);
 
-        // Optional prune (remove any rollups strictly before "today" in each site’s local date)
+        // Optional prune
         if ($prune && !$dryRun) {
             $deletedTotal = 0;
             foreach ($sites as $site) {
-                $tz = $site->timezone ?: 'UTC';
+                $tz  = $site->timezone ?: 'UTC';
                 $todayLocal = $nowUtc->setTimezone($tz)->toDateString();
+
                 $deleted = DB::table('external_condition_dayparts')
                     ->where('dive_site_id', $site->id)
                     ->where('local_date', '<', $todayLocal)
                     ->delete();
+
                 $deletedTotal += $deleted;
             }
-            $this->line("Pruned {$deletedTotal} old daypart rows.");
+            $this->info("Pruned {$deletedTotal} old daypart rows.");
         }
 
         $bar = $this->output->createProgressBar($sites->count());
         $bar->start();
 
-        $upserts = 0;
-        $sitesOk = 0;
-        $sitesFail = 0;
+        $upserts=0; $sitesOk=0; $sitesFail=0;
 
         foreach ($sites as $site) {
             try {
-                if (!is_numeric($site->lat) || !is_numeric($site->lng)) {
-                    $this->warn(PHP_EOL . "Skipping {$site->name}: invalid coordinates.");
-                    $sitesFail++;
-                    $bar->advance();
-                    continue;
-                }
-
                 $tz = $site->timezone ?: 'UTC';
 
-                // Pull the needed horizon of hourly forecasts (UTC in DB)
+                // Pull hourly forecasts
                 $hoursRows = ExternalConditionForecast::query()
-                    ->where('dive_site_id', $site->id)
-                    ->whereBetween('forecast_time', [$nowUtc->toDateTimeString(), $endUtc->toDateTimeString()])
+                    ->where('dive_site_id',$site->id)
+                    ->whereBetween('forecast_time', [$nowUtc, $endUtc])
                     ->orderBy('forecast_time')
-                    ->get(['forecast_time','wave_height','wind_speed']);
+                    ->get([
+                        'forecast_time',
+                        'wave_height',
+                        'wave_period',
+                        'wave_direction',
+                        'wind_speed',
+                        'wind_direction',
+                        'score'
+                    ]);
 
                 if ($hoursRows->isEmpty()) {
-                    $this->line(PHP_EOL . "No hourly forecasts for {$site->name} in horizon.");
                     $sitesFail++;
                     $bar->advance();
                     continue;
                 }
 
-                // Bucket -> local_date + part
-                $buckets = []; // key: "{$localDate}|{$part}" => ['waves'=>[], 'winds'=>[]]
+                // Bucket hours
+                $buckets = [];
+
                 foreach ($hoursRows as $row) {
-                    $local = CarbonImmutable::parse($row->forecast_time, 'UTC')->setTimezone($tz);
-                    $hour  = (int) $local->format('G'); // 0-23
+                    $local = CarbonImmutable::parse($row->forecast_time)->setTimezone($tz);
+                    $hour  = (int) $local->format('G');
 
                     $part = $this->hourToPart($hour);
-                    if ($part === null) {
-                        continue; // skip hours outside 06–21
-                    }
+                    if (!$part) continue;
 
                     $key = $local->toDateString() . '|' . $part;
 
-                    if (!isset($buckets[$key])) {
-                        $buckets[$key] = [
-                            'waves' => [],
-                            'winds' => [],
-                            'local_date' => $local->toDateString(),
-                            'part' => $part,
-                        ];
-                    }
+                    $buckets[$key]['local_date'] = $local->toDateString();
+                    $buckets[$key]['part'] = $part;
 
-                    // Only push numeric values
-                    if (is_numeric($row->wave_height)) {
-                        $buckets[$key]['waves'][] = (float) $row->wave_height;
-                    }
-                    if (is_numeric($row->wind_speed)) {
-                        $buckets[$key]['winds'][] = (float) $row->wind_speed; // already knots in your pipeline
-                    }
+                    $buckets[$key]['wave_height'][] = $row->wave_height;
+                    $buckets[$key]['wave_period'][] = $row->wave_period;
+                    $buckets[$key]['wave_direction'][] = $row->wave_direction;
+                    $buckets[$key]['wind_speed'][] = $row->wind_speed;
+                    $buckets[$key]['wind_direction'][] = $row->wind_direction;
+                    $buckets[$key]['scores'][] = $row->score;
                 }
 
-                if (empty($buckets)) {
-                    $this->line(PHP_EOL . "No bucketable hours for {$site->name}.");
+                if (!$buckets) {
                     $sitesFail++;
                     $bar->advance();
                     continue;
                 }
 
-                // Build rows
-                $now = CarbonImmutable::now('UTC')->toDateTimeString();
+                // Build aggregated rows
                 $rows = [];
-                foreach ($buckets as $b) {
-                    $waveMax = empty($b['waves']) ? null : max($b['waves']);
-                    $windMax = empty($b['winds']) ? null : max($b['winds']);
-                    $status = compute_condition_status(
-                        $waveMax,
-                        $windMax,
-                        $this->greenMaxWaveM,
-                        $this->greenMaxWindKt,
-                        $this->yellowMaxWaveM,
-                        $this->yellowMaxWindKt
-                    );
+                $now = now();
+
+                foreach ($buckets as $key => $bucket) {
+
+                    // Max values
+                    $waveMax = $this->maxOrNull($bucket['wave_height']);
+                    $windMax = $this->maxOrNull($bucket['wind_speed']);
+                    $periodMax = $this->maxOrNull($bucket['wave_period']);
+
+                    // Circular means for directions
+                    $swellDirAvg = $this->circularMean($bucket['wave_direction']);
+                    $windDirAvg  = $this->circularMean($bucket['wind_direction']);
+
+                    // Score percentile
+                    $p75 = $this->percentile($bucket['scores'], 0.75);
+
+                    // Final status
+                    $status = compute_condition_status_from_score($p75);
 
                     $rows[] = [
-                        'dive_site_id'   => $site->id,
-                        'local_date'     => $b['local_date'],
-                        'part'           => $b['part'], // morning|afternoon|night
-                        'status'         => $status,
-                        'wave_height_max'=> $waveMax,
-                        'wind_speed_max' => $windMax,
-                        'computed_at'    => $now,
-                        'updated_at'     => $now,
-                        'created_at'     => $now,
+                        'dive_site_id'    => $site->id,
+                        'local_date'      => $bucket['local_date'],
+                        'part'            => $bucket['part'],
+                        'status'          => $status,
+                        'wave_height_max' => $waveMax,
+                        'wind_speed_max'  => $windMax,
+                        'wave_period_max' => $periodMax,
+                        'swell_dir_avg'   => $swellDirAvg,
+                        'wind_dir_avg'    => $windDirAvg,
+                        'score'           => $p75,
+                        'computed_at'     => $now,
+                        'updated_at'      => $now,
+                        'created_at'      => $now,
                     ];
                 }
 
-                if ($dryRun) {
-                    $this->line(PHP_EOL . "Dry-run: would upsert " . count($rows) . " dayparts for {$site->name}");
-                } else {
+                if (!$dryRun) {
                     foreach (array_chunk($rows, $chunk) as $batch) {
                         DB::table('external_condition_dayparts')->upsert(
                             $batch,
-                            ['dive_site_id', 'local_date', 'part'],
-                            ['status', 'wave_height_max', 'wind_speed_max', 'computed_at', 'updated_at']
+                            ['dive_site_id','local_date','part'],
+                            [
+                                'status','wave_height_max','wind_speed_max',
+                                'wave_period_max','swell_dir_avg','wind_dir_avg',
+                                'score','computed_at','updated_at'
+                            ]
                         );
                         $upserts += count($batch);
                     }
                 }
 
                 $sitesOk++;
+
             } catch (Throwable $e) {
-                $this->error(PHP_EOL . "Error building dayparts for {$site->name}: {$e->getMessage()}");
-                Log::warning('BuildDaypartForecasts error', ['site_id' => $site->id, 'err' => $e->getMessage()]);
+                Log::error("Daypart error: {$e->getMessage()}", ['site'=>$site->id]);
                 $sitesFail++;
-            } finally {
-                $bar->advance();
             }
+
+            $bar->advance();
         }
 
         $bar->finish();
         $this->newLine(2);
-        $this->info("Done. Sites OK: {$sitesOk} | Sites Fail: {$sitesFail} | Dayparts upserted: {$upserts}");
+        $this->info("Done. Sites OK: {$sitesOk} | Fail: {$sitesFail} | Upserted: {$upserts}");
 
         return self::SUCCESS;
     }
 
-    /** Map a 24h local hour to a daypart bucket. */
     private function hourToPart(int $hour): ?string
     {
-        // morning 06–11
-        if ($hour >= 6 && $hour <= 11) return 'morning';
-        // afternoon 12–16
-        if ($hour >= 12 && $hour <= 16) return 'afternoon';
-        // night 17–21
-        if ($hour >= 17 && $hour <= 21) return 'night';
+        return match (true) {
+            $hour >= 6 && $hour <= 11 => 'morning',
+            $hour >= 12 && $hour <= 16 => 'afternoon',
+            $hour >= 17 && $hour <= 21 => 'night',
+            default => null,
+        };
+    }
 
-        // everything else (late night 22–05) => no rollup
-        return null;
+    private function maxOrNull(array $values)
+    {
+        $nums = array_filter($values, fn($v)=>is_numeric($v));
+        return empty($nums) ? null : max($nums);
+    }
+
+    private function percentile(array $values, float $p)
+    {
+        $vals = array_values(array_filter($values, fn($v)=>is_numeric($v)));
+        if (!$vals) return null;
+
+        sort($vals);
+        $index = (count($vals)-1) * $p;
+        $lower = floor($index);
+        $upper = ceil($index);
+
+        if ($lower === $upper) return $vals[$lower];
+
+        return $vals[$lower] + ($vals[$upper]-$vals[$lower]) * ($index-$lower);
+    }
+
+    private function circularMean(array $angles)
+    {
+        $valid = array_values(array_filter($angles, fn($a)=>is_numeric($a)));
+
+        if (!$valid) return null;
+
+        $sumSin = 0;
+        $sumCos = 0;
+
+        foreach ($valid as $deg) {
+            $rad = deg2rad($deg);
+            $sumSin += sin($rad);
+            $sumCos += cos($rad);
+        }
+
+        return fmod(rad2deg(atan2($sumSin,$sumCos))+360,360);
     }
 }

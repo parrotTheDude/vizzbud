@@ -9,20 +9,39 @@ class ExternalConditionForecast extends Model
 {
     use HasFactory;
 
+    protected $table = 'external_condition_forecasts';
+
     protected $fillable = [
         'dive_site_id',
         'forecast_time',
+
         'wave_height',
         'wave_period',
         'wave_direction',
         'water_temperature',
+
         'wind_speed',
         'wind_direction',
         'air_temperature',
+
+        'score',
+        'status',
     ];
 
     protected $casts = [
-        'forecast_time' => 'datetime',
+        'forecast_time'     => 'datetime',
+
+        'wave_height'       => 'float',
+        'wave_period'       => 'float',
+        'wave_direction'    => 'float',
+        'water_temperature' => 'float',
+
+        'wind_speed'        => 'float',
+        'wind_direction'    => 'float',
+        'air_temperature'   => 'float',
+
+        'score'             => 'float',
+        'status'            => 'string',
     ];
 
     public $timestamps = true;

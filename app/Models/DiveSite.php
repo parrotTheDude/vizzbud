@@ -35,6 +35,7 @@ class DiveSite extends Model
         'is_active',
         'needs_review',
         'last_condition_sync_at',
+        'exposure_bearing',
     ];
 
     protected $casts = [
@@ -45,6 +46,7 @@ class DiveSite extends Model
         'is_active' => 'boolean',
         'needs_review' => 'boolean',
         'last_condition_sync_at' => 'datetime',
+        'exposure_bearing' => 'integer',
     ];
 
     protected static function booted(): void
