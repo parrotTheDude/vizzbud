@@ -15,6 +15,6 @@ class UpdateConditions extends Command
         $this->call('vizzbud:fetch-forecast');
         $this->call('vizzbud:build-dayparts');
 
-        $this->info('✅ All Vizzbud data updated successfully!');
+        $this->info('All Vizzbud data updated successfully!');
     }
 }

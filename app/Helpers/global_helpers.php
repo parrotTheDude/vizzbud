@@ -87,28 +87,34 @@ if (!function_exists('compute_condition_score')) {
             $score += min(2, ($wavePeriodS - 12) / 2);
         }
 
-        // 4) Exposure adjustments
+        // 4) Exposure adjustments (cosine-based weighting)
         if ($exposureBearing !== null) {
 
-            // Swell direction
+            // --- Swell Exposure Weight (0 to 1) ---
             if ($waveDirDeg !== null) {
                 $diff = cond_angle_diff($waveDirDeg, $exposureBearing);
+                $swellWeight = max(0.0, cos(deg2rad($diff))); // 0°→1 , 90°→0
 
-                if ($diff < 30) {
-                    $score += 2;      // direct swell exposure
-                } elseif ($diff > 110) {
-                    $score -= 1;      // significantly sheltered
+                // Apply effect: up to +2 for direct exposure
+                $score += 2.0 * $swellWeight;
+
+                // Mild sheltering: opposite direction reduces score slightly
+                if ($diff > 90) {
+                    $score -= 0.5 * ($diff - 90) / 90; // up to -0.5 at 180°
                 }
             }
 
-            // Wind direction
+            // --- Wind Exposure Weight (0 to 1) ---
             if ($windDirDeg !== null) {
                 $diff = cond_angle_diff($windDirDeg, $exposureBearing);
+                $windWeight = max(0.0, cos(deg2rad($diff))); // 0°→1 , 90°→0
 
-                if ($diff < 30) {
-                    $score += 1.5;    // direct wind exposure
-                } elseif ($diff > 110) {
-                    $score -= 0.5;    // sheltered from wind
+                // Apply effect: up to +1.5 for direct wind
+                $score += 1.5 * $windWeight;
+
+                // Mild sheltering effect for offshore winds
+                if ($diff > 90) {
+                    $score -= 0.25 * ($diff - 90) / 90; // up to -0.25 at 180°
                 }
             }
         }
