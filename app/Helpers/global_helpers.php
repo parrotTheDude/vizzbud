@@ -47,80 +47,116 @@ if (!function_exists('cond_angle_diff')) {
  * COMPUTE NUMERIC CONDITION SCORE 0–10
  * ---------------------------------------------------------
  */
-if (!function_exists('compute_condition_score')) {
-    function compute_condition_score(
-        ?float $waveHeightM,
-        ?float $wavePeriodS,
-        ?float $waveDirDeg,
-        ?float $windSpeedKt,
-        ?float $windDirDeg,
-        ?int   $exposureBearing = null
-    ): float {
+function compute_condition_score(
+    ?float $waveHeightM,
+    ?float $wavePeriodS,
+    ?float $waveDirDeg,
+    ?float $windSpeedKt,
+    ?float $windDirDeg,
+    ?int   $exposureBearing = null,
+    string $diveType = 'shore'
+): float {
 
-        if ($waveHeightM === null || $windSpeedKt === null) {
-            return -1; // unknown
-        }
-
-        $score = 0;
-
-        // 1) Wave height (0–4)
-        $score += min(4, $waveHeightM / 0.6);
-
-        // 2) Wind speed score — de-emphasise < 10 kt
-        $windPoints = 0.0;
-
-        if ($windSpeedKt !== null) {
-            if ($windSpeedKt <= 10) {
-                // Up to 10 kt: tiny influence (max 0.5 points)
-                $windPoints = $windSpeedKt / 20.0;   // 0–0.5
-            } else {
-                // Above 10 kt: ramp up more aggressively, cap at 4 total
-                // 10→25 kt gives roughly 0.5 → 4 points
-                $windPoints = 0.5 + min(3.5, ($windSpeedKt - 10) / 4.0);
-            }
-        }
-
-        $score += $windPoints;
-
-        // 3) Long period swell penalty (0–2)
-        if ($wavePeriodS !== null && $wavePeriodS >= 12) {
-            $score += min(2, ($wavePeriodS - 12) / 2);
-        }
-
-        // 4) Exposure adjustments (cosine-based weighting)
-        if ($exposureBearing !== null) {
-
-            // --- Swell Exposure Weight (0 to 1) ---
-            if ($waveDirDeg !== null) {
-                $diff = cond_angle_diff($waveDirDeg, $exposureBearing);
-                $swellWeight = max(0.0, cos(deg2rad($diff))); // 0°→1 , 90°→0
-
-                // Apply effect: up to +2 for direct exposure
-                $score += 2.0 * $swellWeight;
-
-                // Mild sheltering: opposite direction reduces score slightly
-                if ($diff > 90) {
-                    $score -= 0.5 * ($diff - 90) / 90; // up to -0.5 at 180°
-                }
-            }
-
-            // --- Wind Exposure Weight (0 to 1) ---
-            if ($windDirDeg !== null) {
-                $diff = cond_angle_diff($windDirDeg, $exposureBearing);
-                $windWeight = max(0.0, cos(deg2rad($diff))); // 0°→1 , 90°→0
-
-                // Apply effect: up to +1.5 for direct wind
-                $score += 1.5 * $windWeight;
-
-                // Mild sheltering effect for offshore winds
-                if ($diff > 90) {
-                    $score -= 0.25 * ($diff - 90) / 90; // up to -0.25 at 180°
-                }
-            }
-        }
-
-        return max(0, min(10, $score));
+    if ($waveHeightM === null || $windSpeedKt === null) {
+        return -1; // unknown
     }
+
+    $score = 0;
+
+    // ------------------------------------------------
+    // 1) Wave height (0–4)
+    // ------------------------------------------------
+    $score += min(4, $waveHeightM / 0.6);
+
+    // ------------------------------------------------
+    // 2) Wind base score (keep your logic)
+    // ------------------------------------------------
+    // Wind impact: soft ≤12 kt, then ramps to max 4 at 30 kt
+    if ($windSpeedKt <= 12) {
+        // 0–12 kt → 0–0.4 (gentle)
+        $score += $windSpeedKt / 30.0;   // 12/30 = 0.4
+    } else {
+        // 12→30 kt → 0.4 → 4.0
+        // Increase needed from 0.4 to 4.0 = 3.6 points
+        // Over 18 kt range (30-12)
+        $score += min(4.0, 0.4 + (($windSpeedKt - 12) * (3.6 / 18)));
+    }
+
+    // ------------------------------------------------
+    // 3) Long-period swell penalty (0–2)
+    // ------------------------------------------------
+    if ($wavePeriodS !== null && $wavePeriodS >= 12) {
+        $score += min(2, ($wavePeriodS - 12) / 2);
+    }
+
+    // ------------------------------------------------
+    // 4) Exposure adjustments (Sydney realistic)
+    // ------------------------------------------------
+    if ($exposureBearing !== null) {
+
+        // ---- Helper: determine exposure band ----
+        $exp = function(float $dir, int $bearing) {
+            $diff = cond_angle_diff($dir, $bearing);
+
+            if ($diff <= 20)       return ['zone' => 'strong', 'diff' => $diff];
+            elseif ($diff <= 60)   return ['zone' => 'medium', 'diff' => $diff];
+            elseif ($diff <= 120)  return ['zone' => 'weak',   'diff' => $diff];
+            else                   return ['zone' => 'off',    'diff' => $diff];
+        };
+
+        // ----------------------
+        //  SWELL EXPOSURE
+        // ----------------------
+        if ($waveDirDeg !== null) {
+            $e = $exp($waveDirDeg, $exposureBearing);
+
+            switch ($e['zone']) {
+                case 'strong':
+                    $score += 1.8;  // direct hit
+                    break;
+
+                case 'medium':
+                    // 20° → +1.8  ,  60° → 0
+                    $score += 1.8 * (1 - (($e['diff'] - 20) / 40));
+                    break;
+
+                case 'off':
+                    $score -= 0.6; // offshore swell
+                    break;
+            }
+        }
+
+        // ----------------------
+        //  WIND EXPOSURE
+        // ----------------------
+        if ($windDirDeg !== null) {
+            $e = $exp($windDirDeg, $exposureBearing);
+
+            $maxWind =
+                ($diveType === 'shore') ? 0.7 :  // strong
+                0.5;                              // moderate
+
+            $maxShelter =
+                ($diveType === 'shore') ? -0.15 : // strong shelter benefit
+                -0.1;                            // mild shelter
+
+            switch ($e['zone']) {
+                case 'strong':
+                    $score += $maxWind;
+                    break;
+
+                case 'medium':
+                    $score += $maxWind * (1 - (($e['diff'] - 20) / 40));
+                    break;
+
+                case 'off':
+                    $score += $maxShelter;
+                    break;
+            }
+        }
+    }
+
+    return max(0, min(10, $score));
 }
 
 /**

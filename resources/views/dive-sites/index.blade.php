@@ -359,11 +359,12 @@
 >
   <div
     class="relative max-w-sm w-[90%] p-6 rounded-2xl text-center
-           border border-white/20 ring-1 ring-cyan-500/20
-           bg-gradient-to-br from-slate-800/90 via-blue-900/80 to-slate-800/90
-           backdrop-blur-xl backdrop-saturate-150
-           shadow-[0_8px_32px_rgba(14,165,233,0.35)]
-           text-white"
+          border border-white/20
+          ring-1 ring-cyan-400/20
+          bg-gradient-to-br from-blue-900/50 via-slate-900/40 to-blue-800/50
+          backdrop-blur-2xl backdrop-saturate-150
+          shadow-[0_8px_32px_rgba(14,165,233,0.35)]
+          text-white"
   >
     <!-- Subtle cyan glow accent -->
     <div class="pointer-events-none absolute inset-x-6 top-2 h-10 rounded-full bg-cyan-400/30 blur-2xl"></div>
